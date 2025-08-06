@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import FilteredResourceBox from '@/components/FilterNotes';
 import { BookOpen as BookIcon, Code2, Cog, DatabaseZap } from 'lucide-react';
 import CategoryTabs from '@/components/categories';
-import AiLogicChecker from '../sections/AiLogicChecker';
+import AiLogicChecker from '../../sections/AiLogicChecker';
 
 const categories = [
   { id: 'P1', title: 'Theory Fundamentals', count: 5, icon: <BookIcon size={18} /> },

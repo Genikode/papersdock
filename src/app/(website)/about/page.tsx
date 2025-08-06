@@ -2,9 +2,9 @@
 import Image from 'next/image';
 import { Heart, Users, FileText, Clock, ShieldCheck, Globe, Users2 } from 'lucide-react';
 import Link from 'next/link';
-import Banner from '../sections/Banner';
-import Mission from '../sections/Mission';
-import Value from '../sections/Values';
+import Banner from '../../sections/Banner';
+import Mission from '../../sections/Mission';
+import Value from '../../sections/Values';
 
 export default function AboutPage() {
   return (

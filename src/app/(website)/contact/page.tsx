@@ -1,9 +1,9 @@
 // app/about/page.tsx
 import Image from 'next/image';
 import { Heart, Users, FileText, Clock, ShieldCheck, Globe, Users2 } from 'lucide-react';
-import Banner from '../sections/Banner';
-import ContactSection from '../sections/Contact';
-import FaqCardGrid from '../sections/FaqCardGrid';
+import Banner from '../../sections/Banner';
+import ContactSection from '../../sections/Contact';
+import FaqCardGrid from '../../sections/FaqCardGrid';
 
 export default function ContactPage() {
   return (
