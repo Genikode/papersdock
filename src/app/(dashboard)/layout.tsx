@@ -42,6 +42,10 @@ export default function RootLayout({
   { label: 'Fee Approval', href: '/fee-approval', icon: BadgeCheck },
   { label: 'Student Approval', href: '/student-approval', icon: BadgeCheck },
   { label: 'Authentication', href: '/authentication', icon: Lock },
+  { label: "Recorded Lectures" , href: '/recorded-lectures', icon: Video },
+  { label: 'Assignments' , href: '/assignments', icon: FileText },  
+  { label: 'Notes' , href: '/notes', icon: StickyNote },
+  {label: 'Fees', href: '/fees', icon: BadgeCheck },
 ];
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
