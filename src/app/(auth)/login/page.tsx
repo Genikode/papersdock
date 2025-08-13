@@ -1,10 +1,24 @@
 "use client";
 import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
+import { isLoggedIn, setAccessToken, setUserData, UserData } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+      if (isLoggedIn()) {
+        router.replace('/dashboard');
+      }
+    }, [router]);
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
       {/* Left: Login Form */}
@@ -20,7 +34,38 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm">Info related portal</p>
         </div>
 
-        <form className="space-y-5">
+        <form
+          className="space-y-5"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setError(null);
+            setLoading(true);
+            try {
+              // Replace path/body according to your login API
+              const result = await api.post<{
+                status: number;
+                success: boolean;
+                message: string;
+                accessToken: string;
+                userData: UserData;
+              }>(
+                '/users/login-user',
+                { email, password }
+              );
+              setAccessToken(result.accessToken);
+              if (result.userData) {
+                setUserData(result.userData);
+              }
+              router.replace('/dashboard');
+            } catch (err: any) {
+              const message = err?.message || 'Login failed';
+              setError(message);
+            } finally {
+              setLoading(false);
+            }
+          }}
+        >
+          <Image src="https://papers-dock.s3.ap-south-1.amazonaws.com/papers-dock/private/PSXInvestor.pdf" alt="Logo" width={100} height={100} className="mx-auto mb-4" />
           <div>
             <label className="text-sm font-medium">Email*</label>
             <div className="mt-1 border rounded-md overflow-hidden">
@@ -28,6 +73,8 @@ export default function LoginPage() {
                 type="email"
                 placeholder="mail@website.com"
                 className="w-full px-4 py-2 outline-none"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
@@ -39,6 +86,8 @@ export default function LoginPage() {
       type={showPassword ? 'text' : 'password'}
       placeholder="Min. 8 character"
       className="w-full px-4 py-2 outline-none"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
     />
     <button
       type="button"
@@ -57,11 +106,15 @@ export default function LoginPage() {
             <a href="#" className="text-blue-600">Forget password?</a>
           </div>
 
+          {error && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
           <button
             type="submit"
-            className="w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-md"
+            disabled={loading}
+            className="w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-md disabled:opacity-60"
           >
-            Login
+            {loading ? 'Logging in...' : 'Login'}
           </button>
 
           <p className="text-sm text-center">

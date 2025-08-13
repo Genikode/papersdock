@@ -1,65 +1,66 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
-import TableComponent from '@/components/TableComponent';
-import { Eye, Edit, Trash2 } from 'lucide-react';
+import TableComponent, { TableColumn } from '@/components/TableComponent';
+import { Edit, Trash2 } from 'lucide-react';
 import ImageModal from '@/components/ImageModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { api } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+
+interface ChapterRow {
+  id: string;
+  title: string;
+  courseName?: string;
+  chapterImageUrl?: string;
+}
+
+interface GetAllChaptersResponse {
+  status: number;
+  success: boolean;
+  message: string;
+  data: Array<{
+    id: string;
+    title: string;
+    chapterImageUrl?: string;
+    courseName?: string
+  }>;
+  pagination: { total: number; page: number; limit: number; totalPages: number };
+}
 
 export default function ViewChapter() {
+  const router = useRouter();
+
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
   const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const data = [
-    {
-      id: 'CH091',
-      name: 'Introduction to Algorithms',
-      course: 'AS',
-      status: 'published',
-      created: '2024-01-15',
-      image: '/loginbg.jpeg',
-    },
-    {
-      id: 'CH002',
-      name: 'Data Structures Fundamentals',
-      course: 'A2',
-      status: 'draft',
-      created: '2024-01-20',
-     image: '/loginbg.jpeg',
-    },
-  ];
+  // Server-driven table state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState<ChapterRow[]>([]);
 
-  const columns = [
+  const columns: TableColumn[] = useMemo(() => [
     { header: 'Chapter ID', accessor: 'id' },
-    { header: 'Chapter Name', accessor: 'name' },
-    { header: 'Courses', accessor: 'course' },
-    {
-      header: 'Status',
-      accessor: 'status',
-      render: (value: string) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            value === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-          }`}
-        >
-          {value}
-        </span>
-      ),
-    },
-    { header: 'Created', accessor: 'created' },
+    { header: 'Chapter Name', accessor: 'title' },
+    { header: 'Course', accessor: 'courseName' },
     {
       header: 'Chapter Image',
-      accessor: 'image',
-      render: (_: string, row: any) => (
+      accessor: 'chapterImageUrl',
+      render: (_: string, row: ChapterRow) => (
         <button
           onClick={() => {
-            setImageSrc(row.image);
+            if (!row.chapterImageUrl) return;
+            setImageSrc(row.chapterImageUrl);
             setShowImageModal(true);
           }}
-          className="border px-3 py-1 rounded text-sm"
+          className="border px-3 py-1 rounded text-sm disabled:opacity-40"
+          disabled={!row.chapterImageUrl}
         >
           View
         </button>
@@ -68,9 +69,12 @@ export default function ViewChapter() {
     {
       header: 'Actions',
       accessor: 'actions',
-      render: (_: any, row: any) => (
+      render: (_: any, row: ChapterRow) => (
         <div className="flex gap-3">
-          <button className="text-blue-600 hover:text-blue-800">
+          <button
+            className="text-blue-600 hover:text-blue-800"
+            onClick={() => router.push(`/update-chapter/${row.id}`)}
+          >
             <Edit size={18} />
           </button>
           <button
@@ -85,7 +89,49 @@ export default function ViewChapter() {
         </div>
       ),
     },
-  ];
+  ], [router]);
+
+  async function fetchChapters() {
+    setLoading(true);
+    try {
+      const res = await api.get<GetAllChaptersResponse>(
+        '/chapters/get-all-chapters',
+        { page: currentPage, limit: itemsPerPage, search: searchTerm }
+      );
+      const mapped: ChapterRow[] = res.data.map((c) => ({
+        id: c.id,
+        title: c.title,
+        courseName: c.courseName,
+        chapterImageUrl: c.chapterImageUrl,
+      }));
+      setRows(mapped);
+      setTotalItems(res.pagination?.total ?? mapped.length);
+    } catch (err) {
+      // optionally show toast
+      setRows([]);
+      setTotalItems(0);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchChapters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, itemsPerPage, searchTerm]);
+
+  async function handleConfirmDelete() {
+    if (!deleteRowId) return;
+    try {
+      await api.delete(`/chapters/delete-chapter/${deleteRowId}`);
+      setShowDeleteModal(false);
+      setDeleteRowId(null);
+      // Refresh current page
+      fetchChapters();
+    } catch (err) {
+      setShowDeleteModal(false);
+    }
+  }
 
   return (
     <main className="bg-[#F9FAFB] text-gray-800">
@@ -97,10 +143,21 @@ export default function ViewChapter() {
       />
 
       <div className="px-4 py-6">
-        <TableComponent columns={columns} data={data} />
+        <div className="mb-3 text-sm text-gray-600">{loading ? 'Loading chapters…' : null}</div>
+        <TableComponent
+          columns={columns}
+          data={rows}
+          serverMode
+          searchTerm={searchTerm}
+          onSearchTermChange={setSearchTerm}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={setItemsPerPage}
+          totalItems={totalItems}
+        />
       </div>
 
-      {/* Image Modal */}
       {showImageModal && imageSrc && (
         <ImageModal
           src={imageSrc}
@@ -111,16 +168,12 @@ export default function ViewChapter() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <ConfirmationModal
           title="Confirm Deletion"
           description={`Are you sure you want to delete chapter ID: ${deleteRowId}?`}
           onCancel={() => setShowDeleteModal(false)}
-          onConfirm={() => {
-            console.log('Deleted:', deleteRowId);
-            setShowDeleteModal(false);
-          }}
+          onConfirm={handleConfirmDelete}
         />
       )}
     </main>

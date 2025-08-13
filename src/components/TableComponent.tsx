@@ -12,24 +12,53 @@ export interface TableColumn {
 interface TableProps {
   columns: TableColumn[];
   data: any[];
+  // Optional server-driven mode: parent controls search/pagination and supplies paged data
+  serverMode?: boolean;
+  searchTerm?: string;
+  onSearchTermChange?: (value: string) => void;
+  currentPage?: number;
+  onPageChange?: (page: number) => void;
+  itemsPerPage?: number;
+  onItemsPerPageChange?: (n: number) => void;
+  totalItems?: number;
 }
 
-export default function TableComponent({ columns, data }: TableProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+export default function TableComponent({
+  columns,
+  data,
+  serverMode = false,
+  searchTerm: controlledSearchTerm,
+  onSearchTermChange,
+  currentPage: controlledCurrentPage,
+  onPageChange,
+  itemsPerPage: controlledItemsPerPage,
+  onItemsPerPageChange,
+  totalItems,
+}: TableProps) {
+  const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const [localCurrentPage, setLocalCurrentPage] = useState(1);
+  const [localItemsPerPage, setLocalItemsPerPage] = useState(10);
 
-  const filteredData = data.filter((row) =>
-    Object.values(row).some((value) =>
-      String(value).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const effectiveSearchTerm = serverMode ? controlledSearchTerm ?? '' : localSearchTerm;
+  const effectiveCurrentPage = serverMode ? controlledCurrentPage ?? 1 : localCurrentPage;
+  const effectiveItemsPerPage = serverMode ? controlledItemsPerPage ?? 10 : localItemsPerPage;
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const pageData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const filteredData = serverMode
+    ? data // assume server already filtered by search
+    : data.filter((row) =>
+        Object.values(row).some((value) =>
+          String(value).toLowerCase().includes(effectiveSearchTerm.toLowerCase())
+        )
+      );
+
+  const totalCount = serverMode ? totalItems ?? filteredData.length : filteredData.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / effectiveItemsPerPage));
+  const pageData = serverMode
+    ? filteredData // assume server provided just the current page data
+    : filteredData.slice(
+        (effectiveCurrentPage - 1) * effectiveItemsPerPage,
+        effectiveCurrentPage * effectiveItemsPerPage
+      );
 
   return (
     <div className="bg-white shadow rounded-md">
@@ -47,10 +76,15 @@ export default function TableComponent({ columns, data }: TableProps) {
           <input
             type="text"
             placeholder="Search..."
-            value={searchTerm}
+            value={effectiveSearchTerm}
             onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
+              if (serverMode) {
+                onSearchTermChange?.(e.target.value);
+                onPageChange?.(1);
+              } else {
+                setLocalSearchTerm(e.target.value);
+                setLocalCurrentPage(1);
+              }
             }}
             className="border rounded pl-8 pr-3 py-1 text-sm w-64"
           />
@@ -102,10 +136,16 @@ export default function TableComponent({ columns, data }: TableProps) {
           <span>Showing</span>
           <select
             className="border rounded px-2 py-1"
-            value={itemsPerPage}
+            value={effectiveItemsPerPage}
             onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
+              const newValue = Number(e.target.value);
+              if (serverMode) {
+                onItemsPerPageChange?.(newValue);
+                onPageChange?.(1);
+              } else {
+                setLocalItemsPerPage(newValue);
+                setLocalCurrentPage(1);
+              }
             }}
           >
             {[5, 10, 20, 50].map((num) => (
@@ -115,16 +155,22 @@ export default function TableComponent({ columns, data }: TableProps) {
             ))}
           </select>
           <span>
-            items | Showing {(currentPage - 1) * itemsPerPage + 1} -
-            {Math.min(currentPage * itemsPerPage, filteredData.length)} of{' '}
-            {filteredData.length} entries
+            items | Showing {(effectiveCurrentPage - 1) * effectiveItemsPerPage + 1} -
+            {Math.min(effectiveCurrentPage * effectiveItemsPerPage, totalCount)} of{' '}
+            {totalCount} entries
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
+            disabled={effectiveCurrentPage === 1}
+            onClick={() => {
+              if (serverMode) {
+                onPageChange?.(Math.max(1, (effectiveCurrentPage ?? 1) - 1));
+              } else {
+                setLocalCurrentPage((p) => Math.max(1, p - 1));
+              }
+            }}
             className="border rounded px-2 py-1 disabled:opacity-30"
           >
             <ChevronLeft size={16} />
@@ -134,17 +180,29 @@ export default function TableComponent({ columns, data }: TableProps) {
             <button
               key={idx}
               className={`border rounded px-2 py-1 ${
-                currentPage === idx + 1 ? 'bg-gray-200 font-semibold' : ''
+                effectiveCurrentPage === idx + 1 ? 'bg-gray-200 font-semibold' : ''
               }`}
-              onClick={() => setCurrentPage(idx + 1)}
+              onClick={() => {
+                if (serverMode) {
+                  onPageChange?.(idx + 1);
+                } else {
+                  setLocalCurrentPage(idx + 1);
+                }
+              }}
             >
               {idx + 1}
             </button>
           ))}
 
           <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => p + 1)}
+            disabled={effectiveCurrentPage === totalPages}
+            onClick={() => {
+              if (serverMode) {
+                onPageChange?.(Math.min(totalPages, (effectiveCurrentPage ?? 1) + 1));
+              } else {
+                setLocalCurrentPage((p) => Math.min(totalPages, p + 1));
+              }
+            }}
             className="border rounded px-2 py-1 disabled:opacity-30"
           >
             <ChevronRight size={16} />

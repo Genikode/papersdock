@@ -1,42 +1,171 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { UploadCloud, Save } from 'lucide-react';
+import { api } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+
+interface CoursesResponse {
+  status: number;
+  success: boolean;
+  message: string;
+  data: Array<{ id: string; title: string; fees?: string }>;
+  pagination: { total: number; page: number; limit: number; totalPages: number };
+}
+
+interface SignedUrlResponse {
+  status: number;
+  success: boolean;
+  message: string;
+  signedUrl: string;
+}
 
 export default function AddChapter() {
-  const [chapterName, setChapterName] = useState('');
-  const [course, setCourse] = useState('');
-  const [image, setImage] = useState<File | null>(null);
+  const router = useRouter();
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setImage(file);
+  const [title, setTitle] = useState('');
+  const [courseId, setCourseId] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [attachmentExtension, setAttachmentExtension] = useState('pdf');
+  const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadCourses() {
+      setLoadingCourses(true);
+      try {
+        const res = await api.get<CoursesResponse>('/courses/get-all-courses', { page: 1, limit: 50 });
+        setCourses(res.data);
+      } catch {
+        setCourses([]);
+      } finally {
+        setLoadingCourses(false);
+      }
+    }
+    loadCourses();
+  }, []);
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextFile = e.target.files?.[0] || null;
+    setFile(nextFile);
+    if (nextFile) {
+      const inferredExt = inferExtensionFromFilename(nextFile.name) || inferExtensionFromMime(nextFile.type) || 'pdf';
+      setAttachmentExtension(inferredExt);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function inferExtensionFromFilename(name: string): string | null {
+    const match = name.split('.').pop();
+    if (!match) return null;
+    return match.toLowerCase();
+  }
+
+  function inferExtensionFromMime(mime: string): string | null {
+    if (!mime) return null;
+    const map: Record<string, string> = {
+      'application/pdf': 'pdf',
+      'application/msword': 'doc',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+      'application/vnd.ms-powerpoint': 'ppt',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+      'image/png': 'png',
+      'image/jpeg': 'jpg',
+    };
+    return map[mime] || null;
+  }
+
+  function sanitizeKeyPart(input: string): string {
+    return input
+      .toLowerCase()
+      .replace(/[^a-z0-9.-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  function deriveContentType(file: File, fallbackExt: string): string {
+    if (file.type) return file.type;
+    const map: Record<string, string> = {
+      pdf: 'application/pdf',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ppt: 'application/vnd.ms-powerpoint',
+      pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      png: 'image/png',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+    };
+    return map[fallbackExt] || 'application/octet-stream';
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Handle save logic
-    console.log({ chapterName, course, image });
-  };
+    setError(null);
+
+    if (!title.trim()) {
+      setError('Please enter a chapter title.');
+      return;
+    }
+    if (!courseId) {
+      setError('Please select a course.');
+      return;
+    }
+    if (!file) {
+      setError('Please upload an attachment.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const cleanedName = sanitizeKeyPart(file.name) || `file.${attachmentExtension}`;
+      const timestamp = Date.now();
+      const key = `chapters/${timestamp}-${cleanedName}`;
+      const contentType = deriveContentType(file, attachmentExtension);
+
+      const signed = await api.post<SignedUrlResponse>('/get-signed-url', {
+        key,
+        contentType,
+      });
+
+      const signedUrl = signed.signedUrl;
+      if (!signedUrl) throw new Error('Failed to get signed URL');
+
+  
+
+      const objectUrl = signedUrl.split('?')[0];
+
+      console.log(objectUrl);
+
+      router.replace('/view-chapter');
+    } catch (e: any) {
+      console.error('Create chapter error', e);
+      setError(e?.message || 'Failed to create chapter');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const attachmentOptions = useMemo(
+    () => ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'png', 'jpg', 'jpeg'],
+    []
+  );
 
   return (
     <main className="bg-[#F9FAFB] min-h-screen px-6 py-6">
       <h1 className="text-2xl font-bold text-gray-900">Add Chapter</h1>
       <p className="text-sm text-gray-600 mb-6">Create and upload chapter</p>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow px-6 py-6 max-w-3xl w-full"
-      >
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow px-6 py-6 max-w-3xl w-full">
         <h2 className="text-lg font-semibold mb-4">Chapter Details</h2>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Chapter Name</label>
+          <label className="block text-sm font-medium mb-1">Title</label>
           <input
             type="text"
-            value={chapterName}
-            onChange={(e) => setChapterName(e.target.value)}
-            placeholder="Enter chapter name"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter chapter title"
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           />
         </div>
@@ -44,35 +173,60 @@ export default function AddChapter() {
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Course</label>
           <select
-            value={course}
-            onChange={(e) => setCourse(e.target.value)}
+            value={courseId}
+            onChange={(e) => setCourseId(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           >
-            <option value="">Select Course</option>
-            <option value="AS">AS</option>
-            <option value="A2">A2</option>
-            <option value="Composite">Composite</option>
+            <option value="">{loadingCourses ? 'Loading courses…' : 'Select Course'}</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Attachment Extension</label>
+          <select
+            value={attachmentExtension}
+            onChange={(e) => setAttachmentExtension(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          >
+            {attachmentOptions.map((ext) => (
+              <option value={ext} key={ext}>
+                {ext}
+              </option>
+            ))}
           </select>
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Upload Chapter Image</label>
+          <label className="block text-sm font-medium mb-1">Upload Attachment</label>
           <div className="border border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center">
             <UploadCloud size={24} className="text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600 mb-2">Upload chapter image</p>
+            <p className="text-sm text-gray-600 mb-2">Choose a file to upload</p>
             <label className="cursor-pointer text-sm font-medium text-indigo-600">
-              <input type="file" onChange={handleImageChange} className="hidden" />
-              Choose Image
+              <input type="file" onChange={onFileChange} className="hidden" />
+              {file ? 'Change File' : 'Choose File'}
             </label>
+            {file && (
+              <p className="mt-2 text-xs text-gray-500">
+                Selected: <span className="font-medium">{file.name}</span>
+              </p>
+            )}
           </div>
         </div>
 
+        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium py-2 rounded-md flex justify-center items-center gap-2"
+          disabled={submitting}
+          className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium py-2 rounded-md flex justify-center items-center gap-2 disabled:opacity-60"
         >
           <Save size={16} />
-          Save Chapter
+          {submitting ? 'Saving…' : 'Save Chapter'}
         </button>
       </form>
     </main>

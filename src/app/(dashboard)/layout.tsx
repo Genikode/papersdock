@@ -18,8 +18,12 @@ import {
   BadgeCheck,
   Lock,
   Code,
+  Edit,
 } from 'lucide-react';
 import Link from "next/link";
+import { useEffect } from 'react';
+import { clearAccessToken, clearUserData, getUserData, isLoggedIn } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 
 
@@ -29,26 +33,45 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const navItems = [
-  { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { label: 'View Chapter', href: '/view-chapter', icon: Code },
-  { label: 'Add Chapter', href: '/add-chapter', icon: Plus },
-  { label: 'View Lectures', href: '/view-lectures', icon: BookOpen },
-  { label: 'Add Lectures', href: '/add-lectures', icon: Plus },
-  { label: 'View Assignments', href: '/view-assignments', icon: FileText },
-  { label: 'Add Assignment', href: '/add-assignment', icon: Plus },
-  { label: 'View Notes', href: '/view-notes', icon: StickyNote },
-  { label: 'Add Notes', href: '/add-notes', icon: StickyNote },
-  { label: 'Fee Approval', href: '/fee-approval', icon: BadgeCheck },
-  { label: 'Student Approval', href: '/student-approval', icon: BadgeCheck },
-  { label: 'Authentication', href: '/authentication', icon: Lock },
-  { label: "Recorded Lectures" , href: '/recorded-lectures', icon: Video },
-  { label: 'Assignments' , href: '/assignments', icon: FileText },  
-  { label: 'Notes' , href: '/notes', icon: StickyNote },
-  {label: 'Fees', href: '/fees', icon: BadgeCheck },
-];
+    const router = useRouter();
+
+    // Role-based navigation items
+    const adminNavItems = [
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { label: 'View Chapter', href: '/view-chapter', icon: Code },
+      { label: 'Add Chapter', href: '/add-chapter', icon: Plus },
+      { label: 'Update Chapter', href: '/update-chapter/:id', icon: Edit },
+      { label: 'View Lectures', href: '/view-lectures', icon: BookOpen },
+      { label: 'Add Lectures', href: '/add-lectures', icon: Plus },
+      { label: 'View Assignments', href: '/view-assignments', icon: FileText },
+      { label: 'Add Assignment', href: '/add-assignment', icon: Plus },
+      { label: 'View Notes', href: '/view-notes', icon: StickyNote },
+      { label: 'Add Notes', href: '/add-notes', icon: StickyNote },
+      { label: 'Fee Approval', href: '/fee-approval', icon: BadgeCheck },
+      { label: 'Student Approval', href: '/student-approval', icon: BadgeCheck },
+      { label: 'Authentication', href: '/authentication', icon: Lock },
+    ];
+
+    const studentNavItems = [
+      { label: 'Recorded Lectures', href: '/recorded-lectures', icon: Video },
+      { label: 'Assignments', href: '/assignments', icon: FileText },
+      { label: 'Notes', href: '/notes', icon: StickyNote },
+      { label: 'Fees', href: '/fees', icon: BadgeCheck },
+    ];
+
+    const currentUser = getUserData();
+    console.log(currentUser);
+    const roleName = currentUser?.roleName;
+    const navItems = roleName === 'student' ? studentNavItems : roleName === 'super_admin' ? adminNavItems : [];
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+
+  // Simple client-side guard: redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      router.replace('/login');
+    }
+  }, [router]);
   return (
   <html lang="en">
       <body className="antialiased">
@@ -93,10 +116,17 @@ export default function RootLayout({
                 <h1 className="font-semibold text-lg text-gray-800">Dashboard</h1>
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span>Welcome, Admin</span>
-                <Link href="#" className="flex items-center gap-1 text-red-500 hover:underline">
+                <span>Welcome</span>
+                <button
+                  onClick={() => {
+                    clearAccessToken();
+                    clearUserData();
+                    router.replace('/login');
+                  }}
+                  className="flex items-center gap-1 text-red-500 hover:underline"
+                >
                   <LogOut size={18} /> Logout
-                </Link>
+                </button>
               </div>
             </header>
 
