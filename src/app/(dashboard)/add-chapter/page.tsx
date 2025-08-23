@@ -5,11 +5,17 @@ import { UploadCloud, Save } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
+interface CourseItem {
+  id: string;
+  title: string;
+  fees?: string;
+}
+
 interface CoursesResponse {
   status: number;
   success: boolean;
   message: string;
-  data: Array<{ id: string; title: string; fees?: string }>;
+  data: Array<CourseItem>;
   pagination: { total: number; page: number; limit: number; totalPages: number };
 }
 
@@ -17,7 +23,7 @@ interface SignedUrlResponse {
   status: number;
   success: boolean;
   message: string;
-  signedUrl: string;
+  signedUrl: string; // presigned PUT url
 }
 
 export default function AddChapter() {
@@ -26,18 +32,27 @@ export default function AddChapter() {
   const [title, setTitle] = useState('');
   const [courseId, setCourseId] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [attachmentExtension, setAttachmentExtension] = useState('pdf');
-  const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
+  const [attachmentExtension, setAttachmentExtension] = useState('png');
+
+  const [courses, setCourses] = useState<Array<CourseItem>>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /* --------------------------- load courses (robust) --------------------------- */
   useEffect(() => {
     async function loadCourses() {
       setLoadingCourses(true);
       try {
         const res = await api.get<CoursesResponse>('/courses/get-all-courses', { page: 1, limit: 50 });
-        setCourses(res.data);
+        // Some api clients return { data }, some return the body directly. Handle both.
+        const body: any = res as any;
+        const list: CourseItem[] =
+          Array.isArray(body?.data) ? body.data :
+          Array.isArray(body?.data?.data) ? body.data.data :
+          [];
+        setCourses(list);
       } catch {
         setCourses([]);
       } finally {
@@ -47,14 +62,11 @@ export default function AddChapter() {
     loadCourses();
   }, []);
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const nextFile = e.target.files?.[0] || null;
-    setFile(nextFile);
-    if (nextFile) {
-      const inferredExt = inferExtensionFromFilename(nextFile.name) || inferExtensionFromMime(nextFile.type) || 'pdf';
-      setAttachmentExtension(inferredExt);
-    }
-  };
+  /* --------------------------- helpers --------------------------- */
+  const attachmentOptions = useMemo(
+    () => ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'png', 'jpg', 'jpeg'],
+    []
+  );
 
   function inferExtensionFromFilename(name: string): string | null {
     const match = name.split('.').pop();
@@ -79,9 +91,9 @@ export default function AddChapter() {
   function sanitizeKeyPart(input: string): string {
     return input
       .toLowerCase()
-      .replace(/[^a-z0-9.-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+      .replace(/[^a-z0-9.-]/g, '-')  // keep letters/numbers/dot/dash
+      .replace(/-+/g, '-')           // collapse dashes
+      .replace(/^-|-$/g, '');        // trim leading/trailing dashes
   }
 
   function deriveContentType(file: File, fallbackExt: string): string {
@@ -99,6 +111,25 @@ export default function AddChapter() {
     return map[fallbackExt] || 'application/octet-stream';
   }
 
+  function extractObjectUrl(presignedUrl: string): string {
+    // Remove the querystring from the presigned URL to get the stable object URL
+    return presignedUrl.split('?')[0];
+  }
+
+  /* --------------------------- file change --------------------------- */
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextFile = e.target.files?.[0] || null;
+    setFile(nextFile);
+    if (nextFile) {
+      const inferredExt =
+        inferExtensionFromFilename(nextFile.name) ||
+        inferExtensionFromMime(nextFile.type) ||
+        'pdf';
+      setAttachmentExtension(inferredExt);
+    }
+  };
+
+  /* --------------------------- submit --------------------------- */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -118,24 +149,42 @@ export default function AddChapter() {
 
     setSubmitting(true);
     try {
+      // Build a safe key for storage
       const cleanedName = sanitizeKeyPart(file.name) || `file.${attachmentExtension}`;
       const timestamp = Date.now();
       const key = `chapters/${timestamp}-${cleanedName}`;
       const contentType = deriveContentType(file, attachmentExtension);
 
-      const signed = await api.post<SignedUrlResponse>('/get-signed-url', {
-        key,
-        contentType,
-      });
-
-      const signedUrl = signed.signedUrl;
+      // 1) Get presigned PUT URL from backend
+      const signed = await api.post<SignedUrlResponse>('/get-signed-url', { key, contentType });
+      const signedUrl = (signed as any)?.signedUrl ?? (signed as any)?.data?.signedUrl;
       if (!signedUrl) throw new Error('Failed to get signed URL');
 
-  
+     
+      const objectUrl = extractObjectUrl(signedUrl);
 
-      const objectUrl = signedUrl.split('?')[0];
+      
 
-      console.log(objectUrl);
+      // 2) Upload binary to storage via PUT
+      await fetch(signedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': contentType,
+        },
+        body: file,
+      })
+     
+
+      // 3) Use the object URL (without the query) as the persistent attachment URL
+      const attachmentUrl = extractObjectUrl(objectUrl);
+
+      // 4) Create chapter with persistent URL + extension
+      await api.post('/chapters/create-chapter', {
+        title,
+        courseId,
+        chapterImageUrl: attachmentUrl,       // <— persistent URL (no query)
+        attachmentExtension,                  // keep extension you inferred/selected
+      });
 
       router.replace('/view-chapter');
     } catch (e: any) {
@@ -146,11 +195,7 @@ export default function AddChapter() {
     }
   }
 
-  const attachmentOptions = useMemo(
-    () => ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'png', 'jpg', 'jpeg'],
-    []
-  );
-
+  /* --------------------------- UI --------------------------- */
   return (
     <main className="bg-[#F9FAFB] min-h-screen px-6 py-6">
       <h1 className="text-2xl font-bold text-gray-900">Add Chapter</h1>
@@ -186,20 +231,7 @@ export default function AddChapter() {
           </select>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Attachment Extension</label>
-          <select
-            value={attachmentExtension}
-            onChange={(e) => setAttachmentExtension(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-          >
-            {attachmentOptions.map((ext) => (
-              <option value={ext} key={ext}>
-                {ext}
-              </option>
-            ))}
-          </select>
-        </div>
+       
 
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1">Upload Attachment</label>

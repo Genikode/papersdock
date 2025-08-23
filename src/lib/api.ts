@@ -48,7 +48,7 @@ export async function apiRequest<T = unknown>(options: RequestOptions): Promise<
   const initHeaders: Record<string, string> = {
     Accept: "application/json",
     [API_KEY_HEADER_NAME]: API_KEY_HEADER_VALUE,
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(token ? { accessToken: `Bearer ${token}` } : {}),
     ...headers,
   };
 

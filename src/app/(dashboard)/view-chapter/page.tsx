@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import TableComponent, { TableColumn } from '@/components/TableComponent';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import ImageModal from '@/components/ImageModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { api } from '@/lib/api';
@@ -14,6 +14,7 @@ interface ChapterRow {
   title: string;
   courseName?: string;
   chapterImageUrl?: string;
+  courseId?: string; // <- optional (useful if your API returns it)
 }
 
 interface GetAllChaptersResponse {
@@ -24,7 +25,8 @@ interface GetAllChaptersResponse {
     id: string;
     title: string;
     chapterImageUrl?: string;
-    courseName?: string
+    courseName?: string;
+    courseId?: string; // <- optional if available
   }>;
   pagination: { total: number; page: number; limit: number; totalPages: number };
 }
@@ -45,51 +47,76 @@ export default function ViewChapter() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ChapterRow[]>([]);
 
-  const columns: TableColumn[] = useMemo(() => [
-    { header: 'Chapter ID', accessor: 'id' },
-    { header: 'Chapter Name', accessor: 'title' },
-    { header: 'Course', accessor: 'courseName' },
-    {
-      header: 'Chapter Image',
-      accessor: 'chapterImageUrl',
-      render: (_: string, row: ChapterRow) => (
-        <button
-          onClick={() => {
-            if (!row.chapterImageUrl) return;
-            setImageSrc(row.chapterImageUrl);
-            setShowImageModal(true);
-          }}
-          className="border px-3 py-1 rounded text-sm disabled:opacity-40"
-          disabled={!row.chapterImageUrl}
-        >
-          View
-        </button>
-      ),
-    },
-    {
-      header: 'Actions',
-      accessor: 'actions',
-      render: (_: any, row: ChapterRow) => (
-        <div className="flex gap-3">
+  const columns: TableColumn[] = useMemo(
+    () => [
+      { header: 'Chapter ID', accessor: 'id' },
+      { header: 'Chapter Name', accessor: 'title' },
+      { header: 'Course', accessor: 'courseName' },
+      {
+        header: 'Chapter Image',
+        accessor: 'chapterImageUrl',
+        render: (_: string, row: ChapterRow) => (
           <button
-            className="text-blue-600 hover:text-blue-800"
-            onClick={() => router.push(`/update-chapter/${row.id}`)}
-          >
-            <Edit size={18} />
-          </button>
-          <button
-            className="text-red-600 hover:text-red-800"
             onClick={() => {
-              setDeleteRowId(row.id);
-              setShowDeleteModal(true);
+              if (!row.chapterImageUrl) return;
+              setImageSrc(row.chapterImageUrl);
+              setShowImageModal(true);
             }}
+            className="border px-3 py-1 rounded text-sm disabled:opacity-40"
+            disabled={!row.chapterImageUrl}
           >
-            <Trash2 size={18} />
+            View
           </button>
-        </div>
-      ),
-    },
-  ], [router]);
+        ),
+      },
+      // NEW COLUMN — Add Lecture
+      {
+        header: 'Add Lecture',
+        accessor: 'addLecture',
+        render: (_: any, row: ChapterRow) => (
+          <button
+            onClick={() =>
+              router.push(
+                `/view-lectures/${encodeURIComponent(row.id)
+                }`
+              )
+            }
+            className="inline-flex items-center gap-2 text-sm border px-3 py-1 rounded hover:bg-gray-50"
+            title="Add a lecture to this chapter"
+          >
+            <PlusCircle size={16} />
+            Add
+          </button>
+        ),
+      },
+      {
+        header: 'Actions',
+        accessor: 'actions',
+        render: (_: any, row: ChapterRow) => (
+          <div className="flex gap-3">
+            <button
+              className="text-blue-600 hover:text-blue-800"
+              onClick={() => router.push(`/update-chapter/${row.id}`)}
+              title="Edit"
+            >
+              <Edit size={18} />
+            </button>
+            <button
+              className="text-red-600 hover:text-red-800"
+              onClick={() => {
+                setDeleteRowId(row.id);
+                setShowDeleteModal(true);
+              }}
+              title="Delete"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [router]
+  );
 
   async function fetchChapters() {
     setLoading(true);
@@ -98,16 +125,18 @@ export default function ViewChapter() {
         '/chapters/get-all-chapters',
         { page: currentPage, limit: itemsPerPage, search: searchTerm }
       );
+
       const mapped: ChapterRow[] = res.data.map((c) => ({
         id: c.id,
         title: c.title,
         courseName: c.courseName,
         chapterImageUrl: c.chapterImageUrl,
+        courseId: (c as any).courseId, // keep if backend returns it
       }));
+
       setRows(mapped);
       setTotalItems(res.pagination?.total ?? mapped.length);
-    } catch (err) {
-      // optionally show toast
+    } catch {
       setRows([]);
       setTotalItems(0);
     } finally {
@@ -126,9 +155,8 @@ export default function ViewChapter() {
       await api.delete(`/chapters/delete-chapter/${deleteRowId}`);
       setShowDeleteModal(false);
       setDeleteRowId(null);
-      // Refresh current page
-      fetchChapters();
-    } catch (err) {
+      fetchChapters(); // refresh
+    } catch {
       setShowDeleteModal(false);
     }
   }

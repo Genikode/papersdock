@@ -50,6 +50,7 @@ export default function RootLayout({
       { label: 'Fee Approval', href: '/fee-approval', icon: BadgeCheck },
       { label: 'Student Approval', href: '/student-approval', icon: BadgeCheck },
       { label: 'Authentication', href: '/authentication', icon: Lock },
+
     ];
 
     const studentNavItems = [
@@ -62,7 +63,7 @@ export default function RootLayout({
     const currentUser = getUserData();
     console.log(currentUser);
     const roleName = currentUser?.roleName;
-    const navItems = roleName === 'student' ? studentNavItems : roleName === 'super_admin' ? adminNavItems : [];
+    const navItems = roleName === 'student' ? studentNavItems : roleName === 'admin' || roleName === null ? adminNavItems : [];
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
@@ -116,7 +117,7 @@ export default function RootLayout({
                 <h1 className="font-semibold text-lg text-gray-800">Dashboard</h1>
               </div>
               <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span>Welcome</span>
+                <span>Welcome back, {currentUser?.name}</span>
                 <button
                   onClick={() => {
                     clearAccessToken();

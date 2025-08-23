@@ -64,9 +64,7 @@ export default function LoginPage() {
               setLoading(false);
             }
           }}
-        >
-          <Image src="https://papers-dock.s3.ap-south-1.amazonaws.com/papers-dock/private/PSXInvestor.pdf" alt="Logo" width={100} height={100} className="mx-auto mb-4" />
-          <div>
+        >          <div>
             <label className="text-sm font-medium">Email*</label>
             <div className="mt-1 border rounded-md overflow-hidden">
               <input
