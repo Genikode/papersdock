@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import Modal from '@/components/Modal';
 import { api } from '@/lib/api';
-import { Download, Trash2, UploadCloud } from 'lucide-react';
+import { Download, Trash2, UploadCloud, CreditCard } from 'lucide-react';
 
 /* ---------------- Types from API ---------------- */
 type FeeHistoryItem = {
@@ -101,6 +101,9 @@ export default function StudentFeesPage() {
   // delete confirm
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // paying state
+  const [payingKey, setPayingKey] = useState<string | null>(null);
 
   async function loadYear(y: number) {
     const res = await api.get<FeeHistoryResponse>(`/fee/get-fee-history/${y}`, { page: 1, limit: 100 });
@@ -236,6 +239,35 @@ export default function StudentFeesPage() {
     }
   }
 
+  /* ---------- Pay (NTL) online ---------- */
+  async function handlePay(row: Row) {
+    const key = `${row.year}-${row.month}`;
+    setPayingKey(key);
+    setErrorMsg(null);
+    setInfoMsg(null);
+    try {
+      const res = await api.post<{ status:number; success:boolean; message:string; redirectUrl?: string }>(
+        '/payments/pay-fee',
+        { month: row.month, year: row.year }
+      );
+      const redirectUrl =
+        (res as any)?.redirectUrl ??
+        (res as any)?.data?.redirectUrl ??
+        undefined;
+
+      if (Number((res as any)?.status) === 200 && redirectUrl) {
+        // Same tab for mobile-safety & to avoid popup blockers
+        window.location.href = redirectUrl;
+        return;
+      }
+      throw new Error((res as any)?.message || 'Failed to start payment');
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Payment initiation failed.');
+    } finally {
+      setPayingKey(null);
+    }
+  }
+
   return (
     <main className="bg-[#F9FAFB] min-h-screen p-6 text-gray-800">
       <PageHeader title="Fee Records" description="Manage and track your fee payments" />
@@ -267,19 +299,23 @@ export default function StudentFeesPage() {
               <th className="text-left py-3 px-4">Status</th>
               <th className="text-left py-3 px-4">Amount</th>
               <th className="text-left py-3 px-4">Invoice</th>
+              <th className="text-left py-3 px-4">Pay (NTL)</th>
               <th className="text-left py-3 px-4">Action</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td className="py-4 px-4 text-gray-500" colSpan={6}>Loading…</td></tr>
+              <tr><td className="py-4 px-4 text-gray-500" colSpan={7}>Loading…</td></tr>
             )}
 
             {!loading && paginated.map((r) => {
               const canSubmit = r.status !== 'Paid';
               const canDelete = !!r.id && !!r.invoiceUrl && r.status !== 'Paid';
+              const rowKey = `${r.year}-${r.month}`;
+              const canPayOnline = r.status !== 'Paid'; // allow paying unless already paid
+
               return (
-                <tr key={`${r.year}-${r.month}`} className="border-b">
+                <tr key={rowKey} className="border-b">
                   <td className="py-3 px-4">{r.monthLabel}</td>
                   <td className="py-3 px-4">{r.year}</td>
                   <td className="py-3 px-4">
@@ -308,6 +344,20 @@ export default function StudentFeesPage() {
                       <span className="text-gray-400">-</span>
                     )}
                   </td>
+
+                  {/* NEW: Pay (NTL) */}
+                  <td className="py-3 px-4">
+                    <button
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-indigo-600 text-white disabled:opacity-50"
+                      onClick={() => handlePay(r)}
+                      disabled={!canPayOnline || payingKey === rowKey}
+                      title={canPayOnline ? 'Pay online' : 'Already paid'}
+                    >
+                      <CreditCard size={16} />
+                      {payingKey === rowKey ? 'Redirecting…' : 'Pay Now'}
+                    </button>
+                  </td>
+
                   <td className="py-3 px-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <button
@@ -335,7 +385,7 @@ export default function StudentFeesPage() {
 
             {!loading && paginated.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-4 px-4 text-gray-500">No records match your search.</td>
+                <td colSpan={7} className="py-4 px-4 text-gray-500">No records match your search.</td>
               </tr>
             )}
           </tbody>
