@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { ArrowLeft, FileText, Play } from 'lucide-react';
@@ -69,6 +69,8 @@ export default function LectureDetailPage() {
   }, [hasPresentation]);
 
   return (
+     <Suspense fallback={<div>Loading lectures...</div>}>
+
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto p-4 sm:p-6">
         <button
@@ -166,5 +168,6 @@ export default function LectureDetailPage() {
         </div>
       </div>
     </main>
+     </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import PageHeader from '@/components/PageHeader';
 import TableComponent, { TableColumn } from '@/components/TableComponent';
@@ -175,6 +175,8 @@ export default function ViewLecturePage() {
   }
 
   return (
+    <Suspense fallback={<div>Loading lectures...</div>}>
+
     <main className="bg-[#F9FAFB] min-h-screen p-4">
       <PageHeader
         title="View Lectures"
@@ -243,5 +245,6 @@ export default function ViewLecturePage() {
         </Modal>
       )}
     </main>
+    </Suspense>
   );
 }
