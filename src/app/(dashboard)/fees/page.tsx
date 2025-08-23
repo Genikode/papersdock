@@ -102,10 +102,16 @@ export default function StudentFeesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // paying state (for spinner/disable on the row being paid)
+  const [payingKey, setPayingKey] = useState<string | null>(null);
+
   async function loadYear(y: number) {
     const res = await api.get<FeeHistoryResponse>(`/fee/get-fee-history/${y}`, { page: 1, limit: 100 });
-    return res.data ?? [];
+    // some api wrappers return payload directly as `res`, some as `res.data`
+    const payload = (res as any)?.data ?? res;
+    return payload?.data ?? [];
   }
+
   async function refresh() {
     setLoading(true);
     setErrorMsg(null);
@@ -113,7 +119,7 @@ export default function StudentFeesPage() {
       const [y1, y2] = await Promise.all([loadYear(START_YEAR), loadYear(SECOND_YEAR)]);
       const all = [...y1, ...y2];
       const map: Record<string, FeeHistoryItem> = {};
-      all.forEach(item => {
+      all.forEach((item: FeeHistoryItem) => {
         const key = `${Number(item.year)}-${item.month}`;
         map[key] = item;
       });
@@ -124,6 +130,13 @@ export default function StudentFeesPage() {
       setLoading(false);
     }
   }
+
+  // fetch a single item fresh (used after Stripe return)
+  async function fetchItem(year: number, month: number): Promise<FeeHistoryItem | undefined> {
+    const list = await loadYear(year);
+    return (list as FeeHistoryItem[]).find(i => Number(i.year) === year && i.month === month);
+  }
+
   useEffect(() => { refresh(); }, []);
 
   // Build display rows (fill gaps as Upcoming/Pending)
@@ -178,6 +191,7 @@ export default function StudentFeesPage() {
     setInfoMsg(null);
     setErrorMsg(null);
   }
+
   async function handleUploadSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!uploadFile || !uploadTarget.month || !uploadTarget.year) return;
@@ -191,7 +205,8 @@ export default function StudentFeesPage() {
       const key = `fee/invoices/${uploadTarget.year}-${String(uploadTarget.month).padStart(2,'0')}-${Date.now()}-${sanitizeKeyPart(uploadFile.name)}`;
       const contentType = contentTypeForExt(ext);
       const signed = await api.post<SignedUrlResponse>('/get-signed-url', { key, contentType });
-      const signedUrl = (signed as any)?.signedUrl ?? (signed as any)?.data?.signedUrl;
+      const sPayload = (signed as any)?.data ?? signed;
+      const signedUrl = sPayload?.signedUrl ?? sPayload?.data?.signedUrl;
       if (!signedUrl) throw new Error('Failed to get signed URL');
 
       // 2) upload
@@ -236,6 +251,104 @@ export default function StudentFeesPage() {
     }
   }
 
+  /* ---------- Payment (Stripe) flow ---------- */
+
+  function openOrDownload(url: string) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  async function payNow(row: Row) {
+    setErrorMsg(null);
+    const key = `${row.year}-${row.month}`;
+    try {
+      setPayingKey(key);
+
+      // 1) Call your Pay Fee API
+      const res = await api.post('/payments/pay-fee', {
+        month: row.month,
+        year: row.year,
+      });
+
+      const data = (res as any)?.data ?? res;
+      const status = data?.status ?? (data?.statusCode ?? 0);
+      const redirectUrl = data?.redirectUrl;
+
+      if (status === 200 && redirectUrl) {
+        // store context for fallback if backend doesn't append query params on return
+        sessionStorage.setItem('lastPayment', JSON.stringify({
+          month: row.month,
+          year: row.year,
+          t: Date.now(),
+        }));
+
+        // 2) Redirect to Stripe Checkout
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      throw new Error(data?.message || 'Payment could not be initiated.');
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Failed to start payment');
+    } finally {
+      setPayingKey(null);
+    }
+  }
+
+  // A) If redirected back with ?paid=1&month=10&year=2025, refresh and open invoice
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paid = params.get('paid') || params.get('payment'); // supports ?paid=1 or ?payment=success
+    if (!paid) return;
+
+    const m = Number(params.get('month') || '');
+    const y = Number(params.get('year') || '');
+
+    if (!m || !y) return;
+
+    (async () => {
+      try {
+        // fetch that one item fresh to avoid stale state
+        const latest = await fetchItem(y, m);
+        // refresh entire table in background
+        refresh();
+
+        if (latest?.invoiceUrl) {
+          openOrDownload(latest.invoiceUrl);
+          setInfoMsg('Payment successful. Opening your invoice…');
+        } else {
+          setInfoMsg('Payment successful. Invoice will appear shortly.');
+        }
+      } catch {
+        // fallback: just refresh list
+        refresh();
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // B) SessionStorage fallback (no query params case) – open once Paid+invoiceUrl appears
+  useEffect(() => {
+    const last = sessionStorage.getItem('lastPayment');
+    if (!last) return;
+    try {
+      const parsed = JSON.parse(last) as { month: number; year: number; t: number };
+      const key = `${parsed.year}-${parsed.month}`;
+      const it = mapByYM[key];
+      if (it?.status === 'Paid' && it?.invoiceUrl) {
+        openOrDownload(it.invoiceUrl);
+        setInfoMsg('Payment successful. Opening your invoice…');
+        sessionStorage.removeItem('lastPayment');
+      }
+    } catch {
+      /* noop */
+    }
+  }, [mapByYM]);
+
   return (
     <main className="bg-[#F9FAFB] min-h-screen p-6 text-gray-800">
       <PageHeader title="Fee Records" description="Manage and track your fee payments" />
@@ -267,12 +380,13 @@ export default function StudentFeesPage() {
               <th className="text-left py-3 px-4">Status</th>
               <th className="text-left py-3 px-4">Amount</th>
               <th className="text-left py-3 px-4">Invoice</th>
+              <th className="text-left py-3 px-4">Pay</th> {/* NEW */}
               <th className="text-left py-3 px-4">Action</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
-              <tr><td className="py-4 px-4 text-gray-500" colSpan={6}>Loading…</td></tr>
+              <tr><td className="py-4 px-4 text-gray-500" colSpan={7}>Loading…</td></tr>
             )}
 
             {!loading && paginated.map((r) => {
@@ -308,6 +422,24 @@ export default function StudentFeesPage() {
                       <span className="text-gray-400">-</span>
                     )}
                   </td>
+
+                  {/* NEW: Pay column */}
+                  <td className="py-3 px-4">
+                    {r.status !== 'Paid' ? (
+                      <button
+                        className="bg-emerald-600 text-white px-4 py-1.5 rounded disabled:opacity-50"
+                        onClick={() => payNow(r)}
+                        disabled={payingKey === `${r.year}-${r.month}`}
+                        title="Pay with Stripe"
+                      >
+                        {payingKey === `${r.year}-${r.month}` ? 'Redirecting…' : 'Pay'}
+                      </button>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+
+                  {/* Existing Action column */}
                   <td className="py-3 px-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <button
@@ -335,7 +467,7 @@ export default function StudentFeesPage() {
 
             {!loading && paginated.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-4 px-4 text-gray-500">No records match your search.</td>
+                <td colSpan={7} className="py-4 px-4 text-gray-500">No records match your search.</td>
               </tr>
             )}
           </tbody>
