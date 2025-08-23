@@ -368,15 +368,7 @@ export default function StudentFeesPage() {
                       >
                         {r.invoiceUrl && canSubmit ? 'Replace Invoice' : 'Submit Invoice'}
                       </button>
-                      {canDelete && (
-                        <button
-                          className="inline-flex items-center gap-1 border px-3 py-1 rounded hover:bg-red-50"
-                          onClick={() => setDeleteId(r.id!)}
-                          title="Delete invoice"
-                        >
-                          <Trash2 size={14} /> Delete
-                        </button>
-                      )}
+                  
                     </div>
                   </td>
                 </tr>

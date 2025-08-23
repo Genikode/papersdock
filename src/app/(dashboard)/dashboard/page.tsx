@@ -144,7 +144,7 @@ function PaymentSuccessInner() {
             <header className="flex items-center justify-between pb-4 border-b">
               <div>
                 <div className="text-lg font-bold">Papers Dock</div>
-                <div className="text-xs text-gray-500">papersdock.example</div>
+        
               </div>
               <div className="text-right">
                 <div className="text-sm font-semibold">Invoice</div>
