@@ -314,6 +314,10 @@ export default function StudentFeesPage() {
               const rowKey = `${r.year}-${r.month}`;
               const canPayOnline = r.status !== 'Paid'; // allow paying unless already paid
 
+              function handleFail(r: { monthLabel: string; month: number; year: number; status: string; amount: string; invoiceUrl?: string; id?: string; }): void {
+                throw new Error('Function not implemented.');
+              }
+
               return (
                 <tr key={rowKey} className="border-b">
                   <td className="py-3 px-4">{r.monthLabel}</td>
@@ -369,6 +373,18 @@ export default function StudentFeesPage() {
                         {r.invoiceUrl && canSubmit ? 'Replace Invoice' : 'Submit Invoice'}
                       </button>
                   
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        className="bg-[#E11D48] text-white px-4 py-1.5 rounded disabled:opacity-50"
+                        disabled={!canSubmit}
+                        onClick={() => handleFail(r)}
+                        title={canSubmit ? (r.invoiceUrl ? 'Mark as failed' : 'Mark as failed') : 'Already paid'}
+                      >
+                        {r.invoiceUrl && canSubmit ? 'Mark as failed' : 'Mark as failed'}
+                      </button>
                     </div>
                   </td>
                 </tr>
