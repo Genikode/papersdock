@@ -40,9 +40,9 @@ export default function ResourcesPage() {
   const paginatedResources = filteredResources.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <>
+    <div className='bg-white'>
   
-    <div className="px-4 py-16 max-w-7xl mx-auto">
+    <div className="px-4 py-16 max-w-7xl mx-auto bg-white">
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-1 px-4 py-1.5 bg-gray-100 rounded-full text-sm font-medium text-gray-600 mb-4">
           🚀 <span>Complete Learning Resources</span>
@@ -135,6 +135,6 @@ export default function ResourcesPage() {
       </div>
     </div>
       <AiLogicChecker/>
-      </>
+      </div>
   );
 }

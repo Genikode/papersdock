@@ -20,7 +20,7 @@ export default function LoginPage() {
       }
     }, [router]);
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-white">
       {/* Left: Login Form */}
       <div className="flex flex-col justify-center px-8 sm:px-20">
         <button className="text-sm text-gray-600 mb-8">&larr; Back to home</button>
@@ -30,7 +30,7 @@ export default function LoginPage() {
 
           <Image src="/logo.webp" alt="Logo" width={100} height={100} />
             </div>
-          <h2 className="text-xl font-bold mt-4">Login</h2>
+          <h2 className="text-xl font-bold mt-4 text-black">Login</h2>
           <p className="text-gray-500 text-sm">Info related portal</p>
         </div>
 
@@ -65,12 +65,12 @@ export default function LoginPage() {
             }
           }}
         >          <div>
-            <label className="text-sm font-medium">Email*</label>
+            <label className="text-sm text-black font-medium">Email*</label>
             <div className="mt-1 border rounded-md overflow-hidden">
               <input
                 type="email"
                 placeholder="mail@website.com"
-                className="w-full px-4 py-2 outline-none"
+                className="w-full px-4 py-2 outline-none text-black placeholder:text-gray-400"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -78,12 +78,12 @@ export default function LoginPage() {
           </div>
 
          <div>
-  <label className="text-sm font-medium">Password*</label>
+  <label className="text-sm font-medium text-black">Password*</label>
   <div className="mt-1 border rounded-md overflow-hidden flex items-center">
     <input
       type={showPassword ? 'text' : 'password'}
       placeholder="Min. 8 character"
-      className="w-full px-4 py-2 outline-none"
+      className="w-full px-4 py-2 outline-none text-black placeholder:text-gray-400"
       value={password}
       onChange={(e) => setPassword(e.target.value)}
     />
@@ -98,7 +98,7 @@ export default function LoginPage() {
 </div>
 
           <div className="flex justify-between items-center text-sm">
-            <label className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-black">
               <input type="checkbox" /> Remember me
             </label>
             <a href="#" className="text-blue-600">Forget password?</a>
@@ -115,7 +115,7 @@ export default function LoginPage() {
             {loading ? 'Logging in...' : 'Login'}
           </button>
 
-          <p className="text-sm text-center">
+          <p className="text-sm text-center text-black">
             Not registered yet? <a className="text-blue-600" href="#">Contact Coordinator</a>
           </p>
         </form>

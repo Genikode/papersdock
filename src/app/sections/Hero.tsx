@@ -7,10 +7,10 @@ export default function Hero() {
   return (
     <section className="bg-[url('/background.png')] bg-cover bg-center py-20 px-4">
 
-      <div className="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center justify-between gap-12">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 ">
         {/* Left Content */}
-        <div className="max-w-xl">
-          <div className="inline-block px-4 py-1 mb-4 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+        <div className="max-w-xl order-1">
+          <div className="inline-block px-4 py-1 mb-4 bg-blue-100  text-blue-700 rounded-full text-sm font-medium">
             🚀 A-Level Computer Science Platform
           </div>
 
@@ -77,57 +77,52 @@ export default function Hero() {
         </div>
 
         {/* Right Side Card */}
-        <div className="w-full md:w-[400px] bg-gradient-to-br from-[#E0E7FF] to-[#E0E7FF] rounded-3xl p-6 relative shadow-xl">
-                <div className="absolute top-0 right-0 w-3 h-3 bg-orange-400 rounded-full z-50"></div>
+        <div className="w-full max-w-xs md:max-w-[400px] bg-gradient-to-br from-[#E0E7FF] to-[#E0E7FF] rounded-3xl p-4 md:p-6 relative shadow-xl order-2">
+          <div className="absolute top-0 right-0 w-3 h-3 bg-orange-400 rounded-full z-50"></div>
           {/* Decorative dots */}
           <div className="absolute bottom-0 left-0 w-3 h-3 bg-green-400 rounded-full"></div>
           <div className="absolute right-0 top-1/2 w-3 h-3 bg-pink-400 rounded-full"></div>
 
           {/* Top Boxes */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 md:mb-6">
+            <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm">
               <div className="flex items-center gap-2 mb-2">
-              
-                  <Image src="/icons/icon2.png" alt="Practice" width={44} height={24} />
-                
-                <h4 className="font-semibold text-sm">Interactive Practice</h4>
+                <Image src="/icons/icon2.png" alt="Practice" width={36} height={20} className="md:w-[44px] md:h-[24px]" />
+                <h4 className="font-semibold text-xs md:text-sm text-black">Interactive Practice</h4>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs md:text-sm text-gray-500">
                 Learn by doing with real coding excurses and instant feedback.
               </p>
             </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm">
+            <div className="bg-white p-3 md:p-4 rounded-lg shadow-sm">
               <div className="flex items-center gap-2 mb-2">
-                             <Image src="/icons/icon1.png" alt="Practice" width={44} height={24} />
-
-                <h4 className="font-semibold text-sm">Exam-Ready Content</h4>
+                <Image src="/icons/icon1.png" alt="Practice" width={36} height={20} className="md:w-[44px] md:h-[24px]" />
+                <h4 className="font-semibold text-xs md:text-sm text-black">Exam-Ready Content</h4>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs md:text-sm text-gray-500">
                 Study materials and mock content aligned with your goals.
               </p>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-4 text-center mb-4">
+          <div className="grid grid-cols-2 gap-2 md:gap-4 text-center mb-3 md:mb-4">
             <div className="bg-white p-2 rounded-lg shadow">
-             
-               <div className='text-2xl font-bold text-transparent bg-clip-text  bg-gradient-to-tl from-[#2563EB]  to-[#16A34A] '>
+              <div className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-tl from-[#2563EB] to-[#16A34A]">
                 4+
-                </div> 
-                
-              <p className="text-xs text-gray-500">Distinction</p>
+              </div>
+              <p className="text-xs md:text-sm text-gray-500">Distinction</p>
             </div>
             <div className="bg-white p-2 rounded-lg shadow">
-                  <div className='text-2xl font-bold text-transparent bg-clip-text  bg-gradient-to-tl from-[#DB2777] to-[#9333EA] '>
+              <div className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-tl from-[#DB2777] to-[#9333EA]">
                 500+
-                </div> 
-              <p className="text-xs text-gray-500">Learning Resources</p>
+              </div>
+              <p className="text-xs md:text-sm text-gray-500">Learning Resources</p>
             </div>
           </div>
 
           {/* Why Learn */}
-          <div className="bg-white rounded-lg p-3 text-xs text-gray-700 flex items-start gap-2 shadow-sm">
+          <div className="bg-white rounded-lg p-2 md:p-3 text-xs md:text-sm text-gray-700 flex items-start gap-2 shadow-sm">
             <div className="w-2 h-2 mt-1 bg-green-500 rounded-full"></div>
             <p>
               <strong>Why Learn with Us?</strong> <br />

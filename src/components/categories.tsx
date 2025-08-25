@@ -34,7 +34,7 @@ export default function CategoryTabs({
           )}
         >
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-black">
               {cat.icon}
             </div>
             <div>
