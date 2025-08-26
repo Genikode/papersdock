@@ -178,46 +178,13 @@ export default function AssignmentSubmissionsPage() {
         description={`Manage submissions for assignment ID: ${assignmentId}`}
       />
 
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-600">Items:</span>
-          <select
-            value={limit}
-            onChange={(e) => {
-              setPage(1);
-              setLimit(Number(e.target.value));
-            }}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            {[5, 10, 20, 50].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-          <input
-            value={search}
-            onChange={(e) => {
-              setPage(1);
-              setSearch(e.target.value);
-            }}
-            placeholder="Search by student…"
-            className="w-full border rounded pl-8 pr-3 py-2 text-sm"
-          />
-        </div>
-      </div>
-
       {/* Table */}
       <div className="bg-white border rounded-md shadow-sm overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b">
-              <th className="text-left font-medium px-4 py-3 text-gray-600">Submission ID</th>
+              {/* CHANGED: "Submission ID" -> "S.No" */}
+              <th className="text-left font-medium px-4 py-3 text-gray-600">S.No</th>
               <th className="text-left font-medium px-4 py-3 text-gray-600">Student</th>
               <th className="text-left font-medium px-4 py-3 text-gray-600">Submitted At</th>
               <th className="text-left font-medium px-4 py-3 text-gray-600">Deadline</th>
@@ -244,11 +211,13 @@ export default function AssignmentSubmissionsPage() {
             )}
 
             {!loading &&
-              rows.map((r) => {
+              rows.map((r, idx) => {
                 const hasFile = Boolean(r.submissionFile);
+                const sno = (page - 1) * limit + idx + 1; // <-- S.No computed per page
                 return (
-                  <tr key={r.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-2">{r.id}</td>
+                  <tr key={r.id} className="border-b hover:bg-gray-50 text-black">
+                    {/* CHANGED: show S.No, not the submission id */}
+                    <td className="px-4 py-2">{sno}</td>
                     <td className="px-4 py-2">{r.studentName || '-'}</td>
                     <td className="px-4 py-2">{formatDate(r.createdAt)}</td>
                     <td className="px-4 py-2">
@@ -331,7 +300,7 @@ export default function AssignmentSubmissionsPage() {
 
       {/* View Submission Modal */}
       {viewUrl && (
-        <Modal title="Submission Preview" onClose={() => setViewUrl(null)} widthClass="max-w-4xl">
+        <Modal title="Submission Preview" onClose={() => setViewUrl(null)} widthClass="max-w-4xl text-black">
           {(() => {
             const kind = getFileKind(viewUrl);
             if (kind === 'pdf') {
@@ -373,24 +342,24 @@ export default function AssignmentSubmissionsPage() {
 
       {/* Check / Grade Modal */}
       {checkId && (
-        <Modal title="Check Assignment" onClose={() => setCheckId(null)}>
+        <Modal title="Check Assignment" onClose={() => setCheckId(null)} widthClass="max-w-lg text-black">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Obtained Marks</label>
+              <label className="block text-sm font-medium mb-1 text-black">Obtained Marks</label>
               <input
                 type="number"
                 min={0}
-                className="w-full border rounded px-3 py-2 text-sm"
+                className="w-full border rounded px-3 py-2 text-sm text-black placeholder:text-grey-900"
                 value={marks}
                 onChange={(e) => setMarks(e.target.value === '' ? '' : Number(e.target.value))}
                 placeholder="e.g. 95"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Remarks</label>
+              <label className="block text-sm font-medium mb-1 text-black">Remarks</label>
               <textarea
                 rows={3}
-                className="w-full border rounded px-3 py-2 text-sm"
+                className="w-full border rounded px-3 py-2 text-sm text-black placeholder:text-grey-900"
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
                 placeholder="Short feedback for the student"

@@ -53,8 +53,8 @@ interface SignedUrlResponse {
   status: number;
   success: boolean;
   message: string;
-  signedUrl?: string;              // sometimes direct
-  data?: { signedUrl?: string };   // sometimes nested
+  signedUrl?: string;
+  data?: { signedUrl?: string };
 }
 
 /* ========= Helpers ========= */
@@ -62,9 +62,9 @@ interface SignedUrlResponse {
 function sanitizeKeyPart(input: string): string {
   return input
     .toLowerCase()
-    .replace(/[^a-z0-9.-]/g, '-')   // keep letters/numbers/dot/dash
-    .replace(/-+/g, '-')            // collapse dashes
-    .replace(/^-|-$/g, '');         // trim
+    .replace(/[^a-z0-9.-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 function inferExtFromName(name: string): string | null {
@@ -88,13 +88,42 @@ function contentTypeFor(ext: string, fallback = 'application/octet-stream') {
 }
 
 function extractObjectUrl(presignedUrl: string): string {
-  // strip query so we store a stable URL
   return presignedUrl.split('?')[0];
 }
 
 async function getSignedUrl(key: string, contentType: string) {
   const res = await api.post<SignedUrlResponse>('/get-signed-url', { key, contentType });
   return (res as any)?.signedUrl ?? (res as any)?.data?.signedUrl;
+}
+
+/** PUT with progress (uses XHR so we can track upload bytes) */
+function putWithProgress(
+  url: string,
+  file: File | Blob,
+  contentType: string,
+  onDelta: (deltaBytes: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    let lastLoaded = 0;
+
+    xhr.open('PUT', url);
+    xhr.setRequestHeader('Content-Type', contentType);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const delta = e.loaded - lastLoaded;
+        lastLoaded = e.loaded;
+        onDelta(Math.max(0, delta));
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed (${xhr.status})`));
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.send(file);
+  });
 }
 
 /* ========= Page ========= */
@@ -109,7 +138,7 @@ export default function UpdateLecturePage() {
   const [courseId, setCourseId] = useState('');
   const [chapterId, setChapterId] = useState('');
 
-  // current (existing) urls from server
+  // current urls from server
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string>('');
   const [currentSlidesUrl, setCurrentSlidesUrl] = useState<string>('');
 
@@ -127,6 +156,10 @@ export default function UpdateLecturePage() {
   const [loadingLecture, setLoadingLecture] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Progress UI
+  const [uploadProgress, setUploadProgress] = useState(0); // 0-100
+  const [progressLabel, setProgressLabel] = useState('');
 
   /* ===== Load courses ===== */
   useEffect(() => {
@@ -169,9 +202,10 @@ export default function UpdateLecturePage() {
       setLoadingLecture(true);
       setError(null);
       try {
+        // Note: adjust to /lectures/admin/get-lecture/${id} if that's your admin route
         const res = await api.get<GetLectureByIdResponse>(`/lectures/get-lecture/${id}`);
         const d = (res as any)?.data ?? (res as any);
-        const item = d?.data ?? d; // tolerate nesting
+        const item = d?.data ?? d;
         setTitle(item?.title || '');
         setCourseId(item?.courseId || '');
         setChapterId(item?.chapterId || '');
@@ -186,7 +220,7 @@ export default function UpdateLecturePage() {
     loadLecture();
   }, [id]);
 
-  /* ===== Filter chapters by course (if courseId exists on items) ===== */
+  /* ===== Filter chapters by course ===== */
   const filteredChapters = useMemo(() => {
     if (!courseId) return chaptersAll;
     const anyHasCourseId = chaptersAll.some((c) => Boolean(c.courseId));
@@ -226,32 +260,58 @@ export default function UpdateLecturePage() {
     }
 
     setSubmitting(true);
+    setUploadProgress(0);
+    setProgressLabel('Preparing…');
+
     try {
       let videoUrl = currentVideoUrl || '';
       let presentationUrl = currentSlidesUrl || '';
 
+      const totalBytes = (videoFile?.size || 0) + (slidesFile?.size || 0);
+      let uploadedBytes = 0;
+
+      const bump = (delta: number) => {
+        uploadedBytes += delta;
+        const pct = totalBytes > 0 ? Math.min(99, Math.round((uploadedBytes / totalBytes) * 100)) : uploadProgress;
+        setUploadProgress(pct);
+      };
+
       // 1) Upload new video if provided
       if (videoFile) {
+        setProgressLabel('Requesting upload URL (video)…');
         const clean = sanitizeKeyPart(videoFile.name) || 'video.mp4';
         const ext = inferExtFromName(clean) || 'mp4';
         const ctype = videoFile.type || contentTypeFor(ext);
         const key = `lectures/video/${Date.now()}-${clean}`;
         const signed = await getSignedUrl(key, ctype);
         if (!signed) throw new Error('Failed to get signed URL for video.');
-        await fetch(signed, { method: 'PUT', headers: { 'Content-Type': ctype }, body: videoFile });
+
+        setProgressLabel('Uploading video…');
+        await putWithProgress(signed, videoFile, ctype, bump);
         videoUrl = extractObjectUrl(signed);
       }
 
       // 2) Upload new slides if provided
       if (slidesFile) {
+        setProgressLabel('Requesting upload URL (slides)…');
         const clean = sanitizeKeyPart(slidesFile.name) || 'slides.pdf';
         const ext = inferExtFromName(clean) || 'pdf';
         const ctype = slidesFile.type || contentTypeFor(ext);
         const key = `lectures/slides/${Date.now()}-${clean}`;
         const signed = await getSignedUrl(key, ctype);
         if (!signed) throw new Error('Failed to get signed URL for slides.');
-        await fetch(signed, { method: 'PUT', headers: { 'Content-Type': ctype }, body: slidesFile });
+
+        setProgressLabel('Uploading slides…');
+        await putWithProgress(signed, slidesFile, ctype, bump);
         presentationUrl = extractObjectUrl(signed);
+      }
+
+      // If no files were uploaded, still show a quick progress transition
+      if (!videoFile && !slidesFile) {
+        setProgressLabel('Saving changes…');
+        setUploadProgress(60);
+      } else {
+        setProgressLabel('Saving changes…');
       }
 
       // 3) Patch lecture
@@ -260,16 +320,18 @@ export default function UpdateLecturePage() {
         courseId,
         chapterId,
         videoUrl,
-        presentationUrl,     // correct key
+        presentationUrl,         // correct key
       };
-      // In case backend expects typo variant (as seen in create example)
-      (payload as any).presentationUr = presentationUrl;
+      (payload as any).presentationUr = presentationUrl; // in case backend expects typo variant
 
       await api.patch(`/lectures/update-lecture/${id}`, payload);
 
-      router.back(); // or back to chapter-specific page if you prefer
+      setUploadProgress(100);
+      setProgressLabel('Done');
+      router.back();
     } catch (e: any) {
       setError(e?.message || 'Failed to update lecture');
+      setProgressLabel('Failed');
     } finally {
       setSubmitting(false);
     }
@@ -278,11 +340,11 @@ export default function UpdateLecturePage() {
   /* ===== UI ===== */
   return (
     <main className="bg-[#F9FAFB] min-h-screen px-6 py-6">
-      <h1 className="text-2xl font-bold text-gray-900">Update Lecture</h1>
+      <h1 className="text-2xl font-bold text-black">Update Lecture</h1>
       <p className="text-sm text-gray-600 mb-6">Modify lecture details and assets</p>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow px-6 py-6 max-w-4xl w-full">
-        <h2 className="text-lg font-semibold mb-4">Lecture Details</h2>
+        <h2 className="text-lg font-semibold mb-4 text-black">Lecture Details</h2>
 
         {loadingLecture && (
           <p className="text-sm text-gray-500 mb-4">Loading lecture…</p>
@@ -290,7 +352,7 @@ export default function UpdateLecturePage() {
 
         {/* Title */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Lecture Title</label>
+          <label className="block text-sm font-medium mb-1 text-black">Lecture Title</label>
           <input
             type="text"
             value={title}
@@ -302,12 +364,12 @@ export default function UpdateLecturePage() {
 
         {/* Course */}
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Course</label>
+          <label className="block text-sm font-medium mb-1 text-black">Course</label>
           <select
             value={courseId}
             onChange={(e) => {
               setCourseId(e.target.value);
-              setChapterId(''); // reset dependent field
+              setChapterId('');
             }}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           >
@@ -322,7 +384,7 @@ export default function UpdateLecturePage() {
 
         {/* Chapter */}
         <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Chapter</label>
+          <label className="block text-sm font-medium mb-1 text-black">Chapter</label>
           <select
             value={chapterId}
             onChange={(e) => setChapterId(e.target.value)}
@@ -336,13 +398,33 @@ export default function UpdateLecturePage() {
             ))}
           </select>
         </div>
+   <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+          {/* New Video */}
+          <div className="border border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center">
+            <UploadCloud size={24} className="text-gray-400 mb-2" />
+            <p className="text-sm text-gray-600 mb-2">
+              Re-upload video (optional)
+            </p>
+            <label className="cursor-pointer text-sm font-medium text-indigo-600">
+              <input type="file" accept="video/*" onChange={onVideoChange} className="hidden" />
+              {videoFile ? 'Change Video' : 'Choose Video'}
+            </label>
+            {videoFile && (
+              <p className="mt-2 text-xs text-gray-500">
+                Selected: <span className="font-medium">{videoFile.name}</span>
+              </p>
+            )}
+          </div>
 
+          {/* New Slides */}
+       
+        </div>
         {/* Current assets */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
           {/* Current Video */}
           <div className="rounded-lg border p-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-sm">Current Video</h3>
+              <h3 className="font-semibold text-sm text-black">Current Video</h3>
               {currentVideoUrl ? (
                 <a
                   href={currentVideoUrl}
@@ -364,68 +446,29 @@ export default function UpdateLecturePage() {
           </div>
 
           {/* Current Slides */}
-          <div className="rounded-lg border p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-sm">Current Slides</h3>
-              {currentSlidesUrl ? (
-                <a
-                  href={currentSlidesUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-indigo-600"
-                >
-                  <LinkIcon size={14} /> Open
-                </a>
-              ) : (
-                <span className="text-xs text-gray-400">None</span>
-              )}
-            </div>
-            {currentSlidesUrl ? (
-              <iframe className="w-full aspect-video rounded" src={currentSlidesUrl} />
-            ) : (
-              <p className="text-xs text-gray-500">No slides uploaded.</p>
-            )}
-          </div>
+       
         </div>
 
         {/* Re-upload boxes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* New Video */}
-          <div className="border border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center">
-            <UploadCloud size={24} className="text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600 mb-2">
-              Re-upload video (optional)
-            </p>
-            <label className="cursor-pointer text-sm font-medium text-indigo-600">
-              <input type="file" accept="video/*" onChange={onVideoChange} className="hidden" />
-              {videoFile ? 'Change Video' : 'Choose Video'}
-            </label>
-            {videoFile && (
-              <p className="mt-2 text-xs text-gray-500">
-                Selected: <span className="font-medium">{videoFile.name}</span>
-              </p>
-            )}
-          </div>
-
-          {/* New Slides */}
-          <div className="border border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center">
-            <UploadCloud size={24} className="text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600 mb-2">
-              Re-upload slides (optional)
-            </p>
-            <label className="cursor-pointer text-sm font-medium text-indigo-600">
-              <input type="file" accept=".pdf,.ppt,.pptx" onChange={onSlidesChange} className="hidden" />
-              {slidesFile ? 'Change File' : 'Choose File'}
-            </label>
-            {slidesFile && (
-              <p className="mt-2 text-xs text-gray-500">
-                Selected: <span className="font-medium">{slidesFile.name}</span>
-              </p>
-            )}
-          </div>
-        </div>
+     
 
         {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+
+        {/* Progress Bar — border and text in gray-900 */}
+        {submitting && (
+          <div className="mb-4 border border-gray-900 rounded p-3">
+            <div className="flex items-center justify-between text-xs text-black mb-1">
+              <span>{progressLabel || 'Uploading…'}</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="w-full h-2 bg-gray-200 rounded">
+              <div
+                className="h-2 rounded bg-gray-900 transition-all"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         <button
           type="submit"

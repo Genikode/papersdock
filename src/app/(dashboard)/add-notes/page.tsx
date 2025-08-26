@@ -30,7 +30,7 @@ export default function AddNotes() {
   const [courseId, setCourseId] = useState('');
   const [attachmentType, setAttachmentType] = useState<'dark' | 'light' | ''>('dark'); // mode
   const [webNote, setWebNote] = useState<'Y' | 'N'>('Y');
-
+  const [paper, setPaper] = useState<'Paper 1' | 'Paper 2' | 'Paper 3' | 'Paper 4'| ''>('Paper 1'); // mode
   const [bgFile, setBgFile] = useState<File | null>(null);
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [attachmentExtension, setAttachmentExtension] = useState('pdf');
@@ -146,9 +146,10 @@ export default function AddNotes() {
         attachmentType: attachmentType || 'dark', // mode
         attachmentExtension: att.ext,
         webNote,
+        paper: paper
       });
 
-      router.replace('/notes');
+      router.back();
     } catch (e: any) {
       setError(e?.message || 'Failed to create note');
     } finally {
@@ -161,8 +162,8 @@ export default function AddNotes() {
       <PageHeader title="Add Notes" description="Create comprehensive study notes and resources" />
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-md shadow border max-w-4xl mx-auto">
         <h2 className="text-lg font-semibold mb-4">Notes Details</h2>
-
-        <div className="mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div >
           <label className="block text-sm font-medium mb-1">Title</label>
           <input
             className="w-full border rounded px-3 py-2 text-sm"
@@ -171,6 +172,20 @@ export default function AddNotes() {
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
+              <div>
+            <label className="block text-sm font-medium mb-1">Paper</label>
+            <select
+              className="w-full border rounded px-3 py-2 text-sm"
+              value={paper}
+              onChange={(e) => setPaper(e.target.value as 'Paper 1' | 'Paper 2' | 'Paper 3' | 'Paper 4'| '')}
+            >
+              <option value="Paper 1">Paper 1</option>
+              <option value="Paper 2">Paper 2</option>
+              <option value="Paper 3">Paper 3</option>
+              <option value="Paper 4">Paper 4</option>
+            </select>
+          </div>
+          </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>

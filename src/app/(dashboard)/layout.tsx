@@ -39,17 +39,14 @@ export default function RootLayout({
     const adminNavItems = [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { label: 'View Chapter', href: '/view-chapter', icon: Code },
-      { label: 'Add Chapter', href: '/add-chapter', icon: Plus },
-      { label: 'Update Chapter', href: '/update-chapter/:id', icon: Edit },
       { label: 'View Lectures', href: '/view-lectures', icon: BookOpen },
-      { label: 'Add Lectures', href: '/add-lectures', icon: Plus },
       { label: 'View Assignments', href: '/view-assignments', icon: FileText },
-      { label: 'Add Assignment', href: '/add-assignment', icon: Plus },
-      { label: 'View Notes', href: '/view-notes', icon: StickyNote },
-      { label: 'Add Notes', href: '/add-notes', icon: StickyNote },
+          { label: 'View Notes', href: '/view-notes', icon: StickyNote },
       { label: 'Fee Approval', href: '/fee-approval', icon: BadgeCheck },
       { label: 'Student Approval', href: '/student-approval', icon: BadgeCheck },
       { label: 'Authentication', href: '/authentication', icon: Lock },
+      { label: 'Zoom Meeting', href: '/create-link', icon: Edit },
+
 
     ];
 
@@ -58,10 +55,11 @@ export default function RootLayout({
       { label: 'Assignments', href: '/assignments', icon: FileText },
       { label: 'Notes', href: '/notes', icon: StickyNote },
       { label: 'Fees', href: '/fees', icon: BadgeCheck },
+      {label: 'Zoom Meeting', href: '/student-link', icon: Edit}
     ];
 
     const currentUser = getUserData();
-    console.log(currentUser);
+    // console.log(currentUser);
     const roleName = currentUser?.roleName;
     const navItems = roleName === 'student' ? studentNavItems : roleName === 'admin' || roleName === null ? adminNavItems : [];
   const [collapsed, setCollapsed] = useState(false);

@@ -144,7 +144,7 @@ export default function StudentChaptersPage() {
                 <span className="text-xs text-gray-400">Chapter</span>
                 <button
                   onClick={() =>
-                    router.push(`/view-lectures?chapterTitle=${encodeURIComponent(c.title)}`)
+                    router.push(`/lectures-view/${c.id}`)
                   }
                   className="bg-gray-800 text-white px-3 py-1 text-xs rounded flex items-center gap-1"
                 >

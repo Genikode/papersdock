@@ -77,9 +77,7 @@ export default function AddAssignment() {
     if (!firstDeadline || !/^\d{4}-\d{2}-\d{2}$/.test(firstDeadline)) {
       return setError('First deadline must be YYYY-MM-DD.');
     }
-    if (!lastDeadline || !/^\d{4}-\d{2}-\d{2}$/.test(lastDeadline)) {
-      return setError('Last deadline must be YYYY-MM-DD.');
-    }
+  
 
     setSubmitting(true);
     try {
@@ -148,9 +146,9 @@ export default function AddAssignment() {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block font-medium text-sm mb-1">First Deadline (YYYY-MM-DD)</label>
+                <label className="block font-medium text-sm mb-1">Deadline (YYYY-MM-DD)</label>
                 <input
                   type="date"
                   value={firstDeadline}
@@ -158,15 +156,7 @@ export default function AddAssignment() {
                   className="w-full border rounded px-3 py-2"
                 />
               </div>
-              <div>
-                <label className="block font-medium text-sm mb-1">Last Deadline (YYYY-MM-DD)</label>
-                <input
-                  type="date"
-                  value={lastDeadline}
-                  onChange={(e) => setLastDeadline(e.target.value)}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
+            
               <div>
                 <label className="block font-medium text-sm mb-1">Total Marks (optional)</label>
                 <input

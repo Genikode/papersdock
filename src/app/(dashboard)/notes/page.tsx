@@ -17,6 +17,7 @@ type NoteApiItem = {
   webNote?: 'Y' | 'N';
   courseName?: string;
   createdByName?: string;
+  paper?: string;
 };
 
 type NotesListResponse = {
@@ -64,6 +65,7 @@ export default function StudyNotesPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(6);
+  const [paper, setPaper] = useState<'' | 'Paper 1' | 'Paper 2' | 'Paper 3' | 'Paper 4'>('');
 
   // Light/Dark filter (client-side)
   const [modeFilter, setModeFilter] = useState<'' | 'light' | 'dark'>('');
@@ -83,6 +85,7 @@ export default function StudyNotesPage() {
       const res = await api.get<NotesListResponse>('/notes/get-all-notes', {
         page,
         limit,
+        paper: paper || '',
         search: search || '',
       });
       setItems(res.data || []);
@@ -98,7 +101,7 @@ export default function StudyNotesPage() {
   useEffect(() => {
     fetchNotes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit, search]);
+  }, [page, limit, search , paper]);
 
   // apply client-only mode filter (light/dark) on the current page
   const filteredItems = useMemo(() => {
@@ -141,22 +144,22 @@ export default function StudyNotesPage() {
             <option value="light">Light only</option>
             <option value="dark">Dark only</option>
           </select>
-
-          {/* page size */}
-          <select
+ <select
             className="border px-3 py-2 rounded text-sm"
-            value={limit}
+            value={paper}
             onChange={(e) => {
-              setLimit(Number(e.target.value));
-              setPage(1);
+              setPaper(e.target.value as '' | 'Paper 1' | 'Paper 2' | 'Paper 3' | 'Paper 4');
+              // Keep same page; feel free to reset page(1) if desired
             }}
           >
-            {[6, 9, 12].map((n) => (
-              <option key={n} value={n}>
-                {n} per page
-              </option>
-            ))}
+            <option value="">All Papers</option>
+            <option value="Paper 1">Paper 1</option>
+            <option value="Paper 2">Paper 2</option>
+            <option value="Paper 3">Paper 3</option>
+            <option value="Paper 4">Paper 4</option>
           </select>
+          {/* page size */}
+       
         </div>
 
         {/* search */}

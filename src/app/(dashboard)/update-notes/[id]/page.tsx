@@ -25,6 +25,7 @@ type NoteEntity = {
   attachmentExtension?: string;
   webNote?: 'Y' | 'N';
   courseId?: string;
+  paper?: 'Paper 1' | 'Paper 2' | 'Paper 3' | 'Paper 4' | string;
   courseName?: string;
 };
 
@@ -52,6 +53,7 @@ export default function UpdateNotesPage() {
   const [courseId, setCourseId] = useState('');
   const [attachmentType, setAttachmentType] = useState<'dark' | 'light' | ''>('dark');
   const [webNote, setWebNote] = useState<'Y' | 'N'>('Y');
+  const [paper, setPaper] = useState<'Paper 1' | 'Paper 2' | 'Paper 3' | 'Paper 4' | ''>('Paper 1');
 
   const [currentBgUrl, setCurrentBgUrl] = useState<string | undefined>(undefined);
   const [currentAttachmentUrl, setCurrentAttachmentUrl] = useState<string | undefined>(undefined);
@@ -102,6 +104,7 @@ export default function UpdateNotesPage() {
         setCourseId(n.courseId || '');
         setAttachmentType((n.attachmentType as any) || 'dark');
         setWebNote((n.webNote as any) || 'Y');
+        setPaper((n.paper as any) || 'Paper 1');
         setCurrentBgUrl(n.backgroundImageUrl);
         setCurrentAttachmentUrl(n.attachmentUrl);
         setAttachmentExtension(n.attachmentExtension || 'pdf');
@@ -191,9 +194,10 @@ export default function UpdateNotesPage() {
         attachmentType: attachmentType || 'dark',
         attachmentExtension: attExt,
         webNote,
+        paper: paper
       });
 
-      router.replace('/notes');
+      router.back();
     } catch (e: any) {
       setError(e?.message || 'Failed to update note');
     } finally {
@@ -210,8 +214,8 @@ export default function UpdateNotesPage() {
 
         {loading && <p className="text-sm text-gray-500 mb-3">Loading…</p>}
         {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
-
-        <div className="mb-4">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Title</label>
           <input
             className="w-full border rounded px-3 py-2 text-sm"
@@ -220,6 +224,21 @@ export default function UpdateNotesPage() {
             placeholder="Lecture 1 Notes"
           />
         </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Paper</label>
+            <select
+              className="w-full border rounded px-3 py-2 text-sm"
+              value={paper}
+              onChange={(e) => setPaper(e.target.value as 'Paper 1' | 'Paper 2' | 'Paper 3' | 'Paper 4' | '')}
+            >
+              <option value="Paper 1">Paper 1</option>
+              <option value="Paper 2">Paper 2</option>
+              <option value="Paper 3">Paper 3</option>
+              <option value="Paper 4">Paper 4</option>
+            </select>
+          </div>
+ </div>
+      
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>

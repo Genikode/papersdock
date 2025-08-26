@@ -10,11 +10,12 @@ import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
 interface ChapterRow {
-  id: string;
+  sno: number;         // <-- NEW: serial number for table
+  id: string;          // kept internally, not shown in table
   title: string;
   courseName?: string;
   chapterImageUrl?: string;
-  courseId?: string; // <- optional (useful if your API returns it)
+  courseId?: string;
 }
 
 interface GetAllChaptersResponse {
@@ -26,7 +27,7 @@ interface GetAllChaptersResponse {
     title: string;
     chapterImageUrl?: string;
     courseName?: string;
-    courseId?: string; // <- optional if available
+    courseId?: string;
   }>;
   pagination: { total: number; page: number; limit: number; totalPages: number };
 }
@@ -36,7 +37,9 @@ export default function ViewChapter() {
 
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
+
   const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
+  const [deleteRowTitle, setDeleteRowTitle] = useState<string | null>(null); // <-- NEW
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Server-driven table state
@@ -47,9 +50,14 @@ export default function ViewChapter() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ChapterRow[]>([]);
 
+  // helper to shorten title for delete dialog
+  const shortTitle = (t?: string) =>
+    (t ?? '').length > 30 ? (t ?? '').slice(0, 30) + '…' : (t ?? '');
+
   const columns: TableColumn[] = useMemo(
     () => [
-      { header: 'Chapter ID', accessor: 'id' },
+      // REPLACED: Chapter ID -> S.No
+      { header: 'S.No', accessor: 'sno' },
       { header: 'Chapter Name', accessor: 'title' },
       { header: 'Course', accessor: 'courseName' },
       {
@@ -69,18 +77,12 @@ export default function ViewChapter() {
           </button>
         ),
       },
-      // NEW COLUMN — Add Lecture
       {
         header: 'Add Lecture',
         accessor: 'addLecture',
         render: (_: any, row: ChapterRow) => (
           <button
-            onClick={() =>
-              router.push(
-                `/view-lectures/${encodeURIComponent(row.id)
-                }`
-              )
-            }
+            onClick={() => router.push(`/view-lectures/${row.id}`)}
             className="inline-flex items-center gap-2 text-sm border px-3 py-1 rounded hover:bg-gray-50"
             title="Add a lecture to this chapter"
           >
@@ -105,6 +107,7 @@ export default function ViewChapter() {
               className="text-red-600 hover:text-red-800"
               onClick={() => {
                 setDeleteRowId(row.id);
+                setDeleteRowTitle(row.title); // <-- capture title for dialog
                 setShowDeleteModal(true);
               }}
               title="Delete"
@@ -126,12 +129,14 @@ export default function ViewChapter() {
         { page: currentPage, limit: itemsPerPage, search: searchTerm }
       );
 
-      const mapped: ChapterRow[] = res.data.map((c) => ({
+      const list = res.data ?? [];
+      const mapped: ChapterRow[] = list.map((c, idx) => ({
+        sno: (currentPage - 1) * itemsPerPage + idx + 1, // <-- serial number
         id: c.id,
         title: c.title,
         courseName: c.courseName,
         chapterImageUrl: c.chapterImageUrl,
-        courseId: (c as any).courseId, // keep if backend returns it
+        courseId: (c as any).courseId,
       }));
 
       setRows(mapped);
@@ -155,6 +160,7 @@ export default function ViewChapter() {
       await api.delete(`/chapters/delete-chapter/${deleteRowId}`);
       setShowDeleteModal(false);
       setDeleteRowId(null);
+      setDeleteRowTitle(null);
       fetchChapters(); // refresh
     } catch {
       setShowDeleteModal(false);
@@ -199,7 +205,8 @@ export default function ViewChapter() {
       {showDeleteModal && (
         <ConfirmationModal
           title="Confirm Deletion"
-          description={`Are you sure you want to delete chapter ID: ${deleteRowId}?`}
+          // Show short chapter name instead of ID
+          description={`Are you sure you want to delete chapter: "${shortTitle(deleteRowTitle ?? '')}"?`}
           onCancel={() => setShowDeleteModal(false)}
           onConfirm={handleConfirmDelete}
         />

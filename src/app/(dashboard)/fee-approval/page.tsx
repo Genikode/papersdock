@@ -18,12 +18,12 @@ type FeeApiItem = {
   contact: string;
   isBlocked: 'Y' | 'N';
   isFeesPaid: 'Y' | 'N';
-  allowedCourses: string; // JSON string array
+  allowedCourses: string;
   feeId: string;
-  month: number;          // 1..12
-  year: string;           // "2025"
+  month: number;
+  year: string;
   invoiceUrl: string;
-  feeExpiryDate: string;  // ISO
+  feeExpiryDate: string;
   status: 'Paid' | 'Pending' | 'Rejected' | string;
   feesAmount: string;
   approvedBy?: string | null;
@@ -84,8 +84,8 @@ export default function FeeApprovalPage() {
   const [month, setMonth] = useState<number>(now.getMonth() + 1);
   const [year, setYear] = useState<number>(now.getFullYear());
   const [courseId, setCourseId] = useState<string>('');
+  const [status, setStatus] = useState<string>('');
 
-  /* ---- Courses (limit = 2) with "load more" ---- */
   const COURSE_LIMIT = 2;
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [coursePage, setCoursePage] = useState(1);
@@ -105,8 +105,7 @@ export default function FeeApprovalPage() {
         : [];
 
       const pagination =
-        body?.pagination ??
-        body?.data?.pagination ?? {
+        body?.pagination ?? body?.data?.pagination ?? {
           total: items.length,
           page,
           limit: COURSE_LIMIT,
@@ -114,7 +113,6 @@ export default function FeeApprovalPage() {
         };
 
       setCourses(prev => {
-        // de-dup by id if user clicks load more multiple times
         const next = [...prev];
         items.forEach(i => {
           if (!next.find(x => x.id === i.id)) next.push(i);
@@ -141,7 +139,7 @@ export default function FeeApprovalPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>(''); // <-- student-name search
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
 
@@ -160,7 +158,9 @@ export default function FeeApprovalPage() {
         page: currentPage,
         limit: itemsPerPage,
         courseId: courseId || undefined,
-        search: searchTerm || undefined,
+        // IMPORTANT: search strictly by student name
+        search : searchTerm || undefined,   // <— changed from `search` to `name`
+        status: status || undefined,
       });
       setRows(res.data || []);
       setTotalItems(res.pagination?.total ?? (res.data?.length ?? 0));
@@ -175,7 +175,7 @@ export default function FeeApprovalPage() {
   useEffect(() => {
     fetchFees();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [month, year, courseId, currentPage, itemsPerPage, searchTerm]);
+  }, [month, year, courseId, status, currentPage, itemsPerPage, searchTerm]);
 
   /* Stats */
   const stats = useMemo(() => {
@@ -239,40 +239,21 @@ export default function FeeApprovalPage() {
       },
       { header: 'Year', accessor: 'year' },
       {
-        header: 'Invoice',
-        accessor: 'invoiceUrl',
-        render: (value: string) =>
-          value ? (
-            <button
-              className="text-sm border px-3 py-1 rounded"
-              onClick={() => setReceiptUrl(value)}
-            >
-              View Receipt
-            </button>
-          ) : (
-            <span className="text-xs text-gray-400">—</span>
-          ),
-      },
-      {
         header: 'Fee Status',
         accessor: 'status',
         render: (_: any, row: FeeApiItem) => {
           const overdue = isOverdue(row);
-          const status = overdue ? 'Overdue' : row.status;
+          const statusText = overdue ? 'Overdue' : row.status;
           const map: Record<string, string> = {
             Paid: 'bg-green-100 text-green-800',
             Pending: 'bg-yellow-100 text-yellow-800',
             Overdue: 'bg-red-100 text-red-800',
             Rejected: 'bg-gray-100 text-gray-800',
+            Unpaid: 'bg-red-100 text-red-800',
           };
-          const cls = map[status] ?? 'bg-gray-100 text-gray-700';
-          return <span className={`text-xs px-2 py-1 rounded ${cls}`}>{status}</span>;
+          const cls = map[statusText] ?? 'bg-gray-100 text-gray-700';
+          return <span className={`text-xs px-2 py-1 rounded ${cls}`}>{statusText}</span>;
         },
-      },
-      {
-        header: 'Approved By',
-        accessor: 'approvedBy',
-        render: (v: string) => v ?? '—',
       },
       {
         header: 'Approved At',
@@ -322,85 +303,91 @@ export default function FeeApprovalPage() {
     [currentPage, itemsPerPage]
   );
 
+  /* Toolbar with filters */
+  const toolbar = (
+    <div className="flex flex-wrap items-center gap-3">
+      {/* Month */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm text-gray-600">Month</label>
+        <select
+          value={month}
+          onChange={(e) => {
+            setMonth(Number(e.target.value));
+            setCurrentPage(1);
+          }}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          {MONTHS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Year */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm text-gray-600">Year</label>
+        <select
+          value={year}
+          onChange={(e) => {
+            setYear(Number(e.target.value));
+            setCurrentPage(1);
+          }}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          {Array.from({ length: 7 }, (_, i) => now.getFullYear() - 3 + i).map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Course */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm text-gray-600">Course</label>
+        <select
+          value={courseId}
+          onChange={(e) => {
+            setCourseId(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="border rounded px-2 py-1 text-sm min-w-[120px]"
+        >
+          <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
+          {courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Status */}
+      <div className="flex items-center gap-2">
+        <label className="text-sm text-gray-600">Status</label>
+        <select
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="">All</option>
+          <option value="Approved">Approved</option>
+          <option value="Pending">Pending</option>
+          <option value="Unpaid">Unpaid</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+    </div>
+  );
+
   return (
     <main className="bg-[#F9FAFB] p-6 text-gray-800">
       <PageHeader title="Fee Approval" description="Review and approve student fee submissions" />
-
-      {/* Filters */}
-      <div className="bg-white border rounded-md p-4 mb-4">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Month */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Month</label>
-            <select
-              value={month}
-              onChange={(e) => {
-                setMonth(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border rounded px-2 py-1 text-sm"
-            >
-              {MONTHS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Year */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Year</label>
-            <select
-              value={year}
-              onChange={(e) => {
-                setYear(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border rounded px-2 py-1 text-sm"
-            >
-              {Array.from({ length: 7 }, (_, i) => now.getFullYear() - 3 + i).map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Course (limit=2, with optional load more) */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-600">Course</label>
-            <select
-              value={courseId}
-              onChange={(e) => {
-                setCourseId(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border rounded px-2 py-1 text-sm min-w-[220px]"
-            >
-              <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-
-            {/* Show a tiny "Load more" if backend has more pages */}
-            {courseHasMore && (
-              <button
-                type="button"
-                onClick={() => loadCourses(coursePage + 1)}
-                className="text-xs border px-2 py-1 rounded hover:bg-gray-50"
-                disabled={loadingCourses}
-                title="Load more courses"
-              >
-                {loadingCourses ? 'Loading…' : 'Load more'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -415,17 +402,18 @@ export default function FeeApprovalPage() {
         ))}
       </div>
 
-      {/* Table (server-driven) */}
+      {/* Table */}
       <div className="bg-white rounded-md shadow-md">
         {loading && <p className="px-4 py-2 text-sm text-gray-500">Loading fees…</p>}
         <TableComponent
           columns={columns}
           data={tableData}
           serverMode
-          searchTerm={searchTerm}
+          toolbarLeft={toolbar}
+          searchTerm={searchTerm}                 // type the student name here
           onSearchTermChange={(v) => {
             setCurrentPage(1);
-            setSearchTerm(v);
+            setSearchTerm(v);                     // used as `name` in fetch
           }}
           currentPage={currentPage}
           onPageChange={setCurrentPage}
@@ -442,18 +430,9 @@ export default function FeeApprovalPage() {
       {receiptUrl && (
         <Modal title="Fee Receipt" onClose={() => setReceiptUrl(null)}>
           <div className="w-full">
-            <iframe
-              src={receiptUrl}
-              className="w-full h-[70vh] border rounded"
-              title="Receipt"
-            />
+            <iframe src={receiptUrl} className="w-full h-[70vh] border rounded" title="Receipt" />
             <div className="mt-2 text-right">
-              <a
-                href={receiptUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm text-indigo-600 underline"
-              >
+              <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline">
                 Open in new tab
               </a>
             </div>
@@ -461,7 +440,7 @@ export default function FeeApprovalPage() {
         </Modal>
       )}
 
-      {/* Approve confirm */}
+      {/* Approve */}
       {approveId && (
         <ConfirmationModal
           title="Approve Fee"
@@ -471,7 +450,7 @@ export default function FeeApprovalPage() {
         />
       )}
 
-      {/* Reject confirm */}
+      {/* Reject */}
       {rejectId && (
         <ConfirmationModal
           title="Reject Fee"

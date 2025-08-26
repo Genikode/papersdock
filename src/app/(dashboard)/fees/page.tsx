@@ -376,16 +376,7 @@ export default function StudentFeesPage() {
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        className="bg-[#E11D48] text-white px-4 py-1.5 rounded disabled:opacity-50"
-                        disabled={!canSubmit}
-                        onClick={() => handleFail(r)}
-                        title={canSubmit ? (r.invoiceUrl ? 'Mark as failed' : 'Mark as failed') : 'Already paid'}
-                      >
-                        {r.invoiceUrl && canSubmit ? 'Mark as failed' : 'Mark as failed'}
-                      </button>
-                    </div>
+                 
                   </td>
                 </tr>
               );

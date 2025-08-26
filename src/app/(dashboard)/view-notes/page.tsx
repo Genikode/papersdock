@@ -12,12 +12,15 @@ type NoteRow = {
   id: string;
   title: string;
   courseName?: string;
+  paper?: string;
   backgroundImageUrl?: string;
   attachmentUrl?: string;
   attachmentType?: 'dark' | 'light' | string;
   attachmentExtension?: string;
   createdByName?: string;
 };
+
+type NoteRowWithSno = NoteRow & { sno: number };
 
 interface GetAllNotesResponse {
   status: number;
@@ -31,7 +34,7 @@ export default function ViewNotesPage() {
   const router = useRouter();
 
   // table (server-side) controls
-  const [rows, setRows] = useState<NoteRow[]>([]);
+  const [rows, setRows] = useState<NoteRowWithSno[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -41,14 +44,26 @@ export default function ViewNotesPage() {
   // modals
   const [bgPreview, setBgPreview] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteTitle, setDeleteTitle] = useState<string | null>(null);
+
+  const shortText = (t?: string, max = 60) =>
+    (t ?? '').length > max ? (t ?? '').slice(0, max) + '…' : (t ?? '');
 
   const columns: TableColumn[] = useMemo(
     () => [
-      { header: 'ID', accessor: 'id' },
+      // Replaced "ID" with "S.No"
+      { header: 'S.No', accessor: 'sno' },
       { header: 'Title', accessor: 'title' },
       {
         header: 'Course',
         accessor: 'courseName',
+        render: (value?: string) => (
+          <span className="text-xs bg-gray-100 rounded-full px-2 py-0.5">{value || '-'}</span>
+        ),
+      },
+      {
+        header: 'Paper',
+        accessor: 'paper',
         render: (value?: string) => (
           <span className="text-xs bg-gray-100 rounded-full px-2 py-0.5">{value || '-'}</span>
         ),
@@ -80,7 +95,7 @@ export default function ViewNotesPage() {
       {
         header: 'Background',
         accessor: 'backgroundImageUrl',
-        render: (_: any, row: NoteRow) => (
+        render: (_: any, row: NoteRowWithSno) => (
           <button
             className="border px-3 py-1 rounded text-sm disabled:opacity-50"
             onClick={() => row.backgroundImageUrl && setBgPreview(row.backgroundImageUrl)}
@@ -110,7 +125,7 @@ export default function ViewNotesPage() {
       {
         header: 'Actions',
         accessor: 'actions',
-        render: (_: any, row: NoteRow) => (
+        render: (_: any, row: NoteRowWithSno) => (
           <div className="flex items-center gap-3">
             <button
               className="hover:text-blue-600"
@@ -121,7 +136,10 @@ export default function ViewNotesPage() {
             </button>
             <button
               className="hover:text-red-600"
-              onClick={() => setDeleteId(row.id)}
+              onClick={() => {
+                setDeleteId(row.id);
+                setDeleteTitle(row.title); // show name in delete modal
+              }}
               title="Delete"
             >
               <Trash2 size={16} />
@@ -141,8 +159,15 @@ export default function ViewNotesPage() {
         limit: itemsPerPage,
         search: searchTerm || '',
       });
-      setRows(res.data || []);
-      setTotalItems(res.pagination?.total ?? 0);
+
+      const list = res.data || [];
+      const mapped: NoteRowWithSno[] = list.map((n, idx) => ({
+        ...n,
+        sno: (currentPage - 1) * itemsPerPage + idx + 1, // serial number per page
+      }));
+
+      setRows(mapped);
+      setTotalItems(res.pagination?.total ?? list.length);
     } catch {
       setRows([]);
       setTotalItems(0);
@@ -160,11 +185,13 @@ export default function ViewNotesPage() {
     try {
       await api.delete(`/notes/delete-note/${id}`);
       setDeleteId(null);
-      // keep UX clean if last row on page was deleted
+      setDeleteTitle(null);
+      // if last row on page was deleted, step back a page
       if (rows.length === 1 && currentPage > 1) setCurrentPage((p) => p - 1);
       else fetchNotes();
     } catch {
       setDeleteId(null);
+      setDeleteTitle(null);
     }
   }
 
@@ -210,15 +237,15 @@ export default function ViewNotesPage() {
         </Modal>
       )}
 
-      {/* Delete confirm modal */}
+      {/* Delete confirm modal with note title */}
       {deleteId && (
-        <Modal title="Confirm Delete" onClose={() => setDeleteId(null)}>
+        <Modal title="Confirm Delete" onClose={() => { setDeleteId(null); setDeleteTitle(null); }}>
           <p className="text-sm text-gray-700 mb-4">
-            Are you sure you want to delete this note?
+            Are you sure you want to delete <strong>“{shortText(deleteTitle || 'this note')}”</strong>?
           </p>
           <div className="flex justify-end gap-2">
             <button
-              onClick={() => setDeleteId(null)}
+              onClick={() => { setDeleteId(null); setDeleteTitle(null); }}
               className="px-4 py-1 border rounded"
             >
               Cancel

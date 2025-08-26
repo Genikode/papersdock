@@ -22,7 +22,7 @@ interface CoursesResponse {
 interface ChapterItem {
   id: string;
   title: string;
-  courseId?: string;   // not guaranteed in list; we filter if present
+  courseId?: string;
 }
 interface ChaptersListResponse {
   status: number;
@@ -36,17 +36,17 @@ interface SignedUrlResponse {
   status: number;
   success: boolean;
   message: string;
-  signedUrl?: string;              // some servers use this
-  data?: { signedUrl?: string };   // others wrap it
+  signedUrl?: string;
+  data?: { signedUrl?: string };
 }
 
 /* -------------------- Helpers -------------------- */
 function sanitizeKeyPart(input: string): string {
   return input
     .toLowerCase()
-    .replace(/[^a-z0-9.-]/g, '-')  // keep letters/numbers/dot/dash
-    .replace(/-+/g, '-')           // collapse multiple dashes
-    .replace(/^-|-$/g, '');        // trim leading/trailing dashes
+    .replace(/[^a-z0-9.-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 function inferExtFromName(name: string): string | null {
   const part = name.split('.').pop();
@@ -67,12 +67,42 @@ function contentTypeFor(ext: string, fallback = 'application/octet-stream') {
   return map[ext] || fallback;
 }
 function extractObjectUrl(presignedUrl: string): string {
-  // remove query so we store a stable object URL
   return presignedUrl.split('?')[0];
 }
 async function getSignedUrl(key: string, contentType: string) {
   const res = await api.post<SignedUrlResponse>('/get-signed-url', { key, contentType });
   return (res as any)?.signedUrl ?? (res as any)?.data?.signedUrl;
+}
+
+/** PUT upload with progress (XMLHttpRequest so we can monitor upload bytes). */
+function putWithProgress(
+  url: string,
+  file: File | Blob,
+  contentType: string,
+  onDelta: (deltaBytes: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    let lastLoaded = 0;
+
+    xhr.open('PUT', url);
+    xhr.setRequestHeader('Content-Type', contentType);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const delta = e.loaded - lastLoaded;
+        lastLoaded = e.loaded;
+        onDelta(Math.max(0, delta));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed (${xhr.status})`));
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.send(file);
+  });
 }
 
 /* -------------------- Component -------------------- */
@@ -84,7 +114,7 @@ export default function AddLecture() {
   const [courseId, setCourseId] = useState('');
   const [chapterId, setChapterId] = useState('');
   const [video, setVideo] = useState<File | null>(null);
-  const [slides, setSlides] = useState<File | null>(null);
+  const [slides, setSlides] = useState<File | null>(null); // optional (UI currently hidden)
 
   // Data lists
   const [courses, setCourses] = useState<CourseItem[]>([]);
@@ -95,6 +125,10 @@ export default function AddLecture() {
   // UX
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Progress UI
+  const [uploadProgress, setUploadProgress] = useState(0); // 0-100
+  const [progressLabel, setProgressLabel] = useState('');
 
   /* load courses */
   useEffect(() => {
@@ -113,7 +147,7 @@ export default function AddLecture() {
     loadCourses();
   }, []);
 
-  /* load chapters (we’ll filter by course later if courseId is present on items) */
+  /* load chapters */
   useEffect(() => {
     async function loadChapters() {
       setLoadingChapters(true);
@@ -130,11 +164,10 @@ export default function AddLecture() {
     loadChapters();
   }, []);
 
-  /* chapters filtered by selected course (falls back to all if courseId not provided in API items) */
   const filteredChapters = useMemo(() => {
     if (!courseId) return chaptersAll;
     const anyHasCourseId = chaptersAll.some((c) => Boolean(c.courseId));
-    if (!anyHasCourseId) return chaptersAll; // graceful fallback
+    if (!anyHasCourseId) return chaptersAll;
     return chaptersAll.filter((c) => c.courseId === courseId);
   }, [chaptersAll, courseId]);
 
@@ -171,25 +204,36 @@ export default function AddLecture() {
     }
 
     setSubmitting(true);
+    setUploadProgress(0);
+    setProgressLabel('Preparing…');
+
     try {
-      /* 1) Upload video */
+      /* Total bytes for combined progress (video + optional slides) */
+      const totalBytes = (video?.size || 0) + (slides?.size || 0);
+      let uploadedBytes = 0;
+
+      const bumpProgress = (delta: number) => {
+        uploadedBytes += delta;
+        const pct = totalBytes > 0 ? Math.min(99, Math.round((uploadedBytes / totalBytes) * 100)) : 0;
+        setUploadProgress(pct);
+      };
+
+      /* 1) Signed URL for video */
       const videoName = sanitizeKeyPart(video.name) || 'video.mp4';
       const videoExt = inferExtFromName(videoName) || 'mp4';
       const videoContentType = video.type || contentTypeFor(videoExt);
       const videoKey = `lectures/video/${Date.now()}-${videoName}`;
 
+      setProgressLabel('Requesting upload URL (video)…');
       const videoSigned = await getSignedUrl(videoKey, videoContentType);
       if (!videoSigned) throw new Error('Failed to get signed URL for video.');
 
-      await fetch(videoSigned, {
-        method: 'PUT',
-        headers: { 'Content-Type': videoContentType },
-        body: video,
-      });
-
+      /* 2) Upload video with progress */
+      setProgressLabel('Uploading video…');
+      await putWithProgress(videoSigned, video, videoContentType, bumpProgress);
       const videoUrl = extractObjectUrl(videoSigned);
 
-      /* 2) Upload slides (optional) */
+      /* 3) Optional slides */
       let slidesUrl: string | undefined = undefined;
       if (slides) {
         const slidesName = sanitizeKeyPart(slides.name) || 'slides.pdf';
@@ -197,19 +241,18 @@ export default function AddLecture() {
         const slidesContentType = slides.type || contentTypeFor(slidesExt);
         const slidesKey = `lectures/slides/${Date.now()}-${slidesName}`;
 
+        setProgressLabel('Requesting upload URL (slides)…');
         const slidesSigned = await getSignedUrl(slidesKey, slidesContentType);
         if (!slidesSigned) throw new Error('Failed to get signed URL for slides.');
-        await fetch(slidesSigned, {
-          method: 'PUT',
-          headers: { 'Content-Type': slidesContentType },
-          body: slides,
-        });
+
+        setProgressLabel('Uploading slides…');
+        await putWithProgress(slidesSigned, slides, slidesContentType, bumpProgress);
         slidesUrl = extractObjectUrl(slidesSigned);
       }
 
-      /* 3) Create lecture */
-      // The API examples show "presentationUr" typo in create; while update uses "presentationUrl".
-      // We send both keys to be safe; your backend will ignore the extra one.
+      /* 4) Create lecture (finalize) */
+      setProgressLabel('Saving lecture…');
+
       const payload: Record<string, unknown> = {
         title: lectureTitle,
         courseId,
@@ -218,25 +261,31 @@ export default function AddLecture() {
       };
       if (slidesUrl) {
         payload.presentationUrl = slidesUrl;
-        (payload as any).presentationUr = slidesUrl; // to support the typo variant if needed
+        (payload as any).presentationUr = slidesUrl; // in case backend expects the typo key
       }
 
       await api.post('/lectures/create-lecture', payload);
 
-      router.back(); // or redirect to lectures list if you prefer
+      setUploadProgress(100);
+      setProgressLabel('Done');
+      router.back(); // or router.push('/view-lectures')
     } catch (err: any) {
       setError(err?.message || 'Failed to create lecture');
+      setProgressLabel('Failed');
     } finally {
       setSubmitting(false);
+      // (Keep progress visible briefly if you want; otherwise you can reset here)
+      // setUploadProgress(0);
+      // setProgressLabel('');
     }
   }
 
   return (
-    <main className="bg-[#F9FAFB] min-h-screen px-6 py-6">
-      <h1 className="text-2xl font-bold text-gray-900">Add New Lecture</h1>
-      <p className="text-sm text-gray-600 mb-6">Create and upload educational content</p>
+    <main className="bg-[#F9FAFB] min-h-screen px-6 py-6 text-black">
+      <h1 className="text-2xl font-bold">Add New Lecture</h1>
+      <p className="text-sm mb-6">Create and upload educational content</p>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow px-6 py-6 max-w-4xl w-full">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow px-6 py-6 max-w-4xl w-full border border-black">
         <h2 className="text-lg font-semibold mb-4">Lecture Details</h2>
 
         {/* Lecture Title */}
@@ -247,7 +296,7 @@ export default function AddLecture() {
             value={lectureTitle}
             onChange={(e) => setLectureTitle(e.target.value)}
             placeholder="Enter lecture title"
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-black rounded px-3 py-2 text-sm"
           />
         </div>
 
@@ -258,9 +307,9 @@ export default function AddLecture() {
             value={courseId}
             onChange={(e) => {
               setCourseId(e.target.value);
-              setChapterId(''); // reset dependent field
+              setChapterId('');
             }}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-black rounded px-3 py-2 text-sm"
           >
             <option value="">{loadingCourses ? 'Loading courses…' : 'Select a course'}</option>
             {courses.map((c) => (
@@ -277,7 +326,7 @@ export default function AddLecture() {
           <select
             value={chapterId}
             onChange={(e) => setChapterId(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-black rounded px-3 py-2 text-sm"
           >
             <option value="">{loadingChapters ? 'Loading chapters…' : 'Choose chapter'}</option>
             {filteredChapters.map((ch) => (
@@ -289,39 +338,60 @@ export default function AddLecture() {
         </div>
 
         {/* Upload Boxes */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 gap-4 mb-6">
           {/* Video Upload */}
-          <div className="border border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center">
+          <div className="border border-black rounded-md p-6 flex flex-col items-center justify-center text-center">
             <UploadCloud size={24} className="text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600 mb-2">Upload video lecture <span className="text-red-500">*</span></p>
-            <label className="cursor-pointer text-sm font-medium text-indigo-600">
+            <p className="text-sm mb-2">
+              Upload video lecture <span className="text-red-500">*</span>
+            </p>
+            <label className="cursor-pointer text-sm font-medium">
               <input type="file" accept="video/*" onChange={handleVideoChange} className="hidden" />
               {video ? 'Change Video' : 'Choose Video'}
             </label>
             {video && (
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs">
                 Selected: <span className="font-medium">{video.name}</span>
               </p>
             )}
           </div>
 
-          {/* Slides Upload (optional) */}
-          <div className="border border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center">
+          {/* (Optional) Slides Upload UI — uncomment if needed */}
+          {/*
+          <div className="border border-black rounded-md p-6 flex flex-col items-center justify-center text-center">
             <UploadCloud size={24} className="text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600 mb-2">Upload presentation slides (optional)</p>
-            <label className="cursor-pointer text-sm font-medium text-indigo-600">
+            <p className="text-sm mb-2">Upload slides (optional)</p>
+            <label className="cursor-pointer text-sm font-medium">
               <input type="file" accept=".pdf,.ppt,.pptx" onChange={handleSlidesChange} className="hidden" />
-              {slides ? 'Change File' : 'Choose Files'}
+              {slides ? 'Change File' : 'Choose File'}
             </label>
             {slides && (
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs">
                 Selected: <span className="font-medium">{slides.name}</span>
               </p>
             )}
           </div>
+          */}
         </div>
 
+        {/* Error */}
         {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+
+        {/* Progress Bar (visible while submitting) */}
+        {submitting && (
+          <div className="mb-4">
+            <div className="flex items-center justify-between text-xs text-gray-700 mb-1">
+              <span>{progressLabel || 'Uploading…'}</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="w-full h-2 bg-gray-200 rounded">
+              <div
+                className="h-2 rounded bg-indigo-500 transition-all"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Submit */}
         <button

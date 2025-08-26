@@ -19,10 +19,13 @@ interface AssignmentListItem {
   status?: string;
   totalMarks?: number;
   courseTitle?: string;
-  courseId?: string; // if backend returns; optional
+  courseId?: string;
   createdByName?: string;
   createdAt?: string;
 }
+
+// Row type with serial number
+type AssignmentRow = AssignmentListItem & { sno: number };
 
 interface GetAllAssignmentsResponse {
   status: number;
@@ -35,7 +38,7 @@ interface GetAllAssignmentsResponse {
 export default function ViewAssignments() {
   const router = useRouter();
 
-  const [rows, setRows] = useState<AssignmentListItem[]>([]);
+  const [rows, setRows] = useState<AssignmentRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
 
@@ -47,10 +50,15 @@ export default function ViewAssignments() {
 
   // delete
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDeleteTitle, setPendingDeleteTitle] = useState<string | null>(null);
+
+  const shortText = (t?: string, max = 60) =>
+    (t ?? '').length > max ? (t ?? '').slice(0, max) + '…' : (t ?? '');
 
   const columns: TableColumn[] = useMemo(
     () => [
-      { header: 'Assignment ID', accessor: 'id' },
+      // Replaced "Assignment ID" with "S.No"
+      { header: 'S.No', accessor: 'sno' },
       { header: 'Title', accessor: 'assignmentTitle' },
       { header: 'Description', accessor: 'description' },
       {
@@ -63,15 +71,11 @@ export default function ViewAssignments() {
         ),
       },
       {
-        header: 'First Deadline',
+        header: 'Deadline',
         accessor: 'firstDeadline',
         render: (value: string) => (value ? new Date(value).toLocaleDateString() : '-'),
       },
-      {
-        header: 'Last Deadline',
-        accessor: 'lastDeadline',
-        render: (value: string) => (value ? new Date(value).toLocaleDateString() : '-'),
-      },
+
       {
         header: 'Status',
         accessor: 'status',
@@ -92,7 +96,7 @@ export default function ViewAssignments() {
       {
         header: 'File',
         accessor: 'assignmentFile',
-        render: (_: string, row: AssignmentListItem) => (
+        render: (_: string, row: AssignmentRow) => (
           <button
             className="border px-3 py-1 rounded text-sm disabled:opacity-50"
             onClick={() => row.assignmentFile && setFileUrl(row.assignmentFile)}
@@ -105,7 +109,7 @@ export default function ViewAssignments() {
       {
         header: 'Submissions',
         accessor: 'view',
-        render: (_: unknown, row: AssignmentListItem) => (
+        render: (_: unknown, row: AssignmentRow) => (
           <button
             className="border px-3 py-1 rounded text-sm"
             onClick={() => {
@@ -120,7 +124,7 @@ export default function ViewAssignments() {
       {
         header: 'Actions',
         accessor: 'actions',
-        render: (_: unknown, row: AssignmentListItem) => (
+        render: (_: unknown, row: AssignmentRow) => (
           <div className="flex gap-2">
             <button
               className="hover:text-blue-600"
@@ -132,7 +136,10 @@ export default function ViewAssignments() {
             <button
               className="hover:text-red-600"
               title="Delete"
-              onClick={() => setPendingDeleteId(row.id)}
+              onClick={() => {
+                setPendingDeleteId(row.id);
+                setPendingDeleteTitle(row.assignmentTitle); // show assignment name in dialog
+              }}
             >
               <Trash2 size={16} />
             </button>
@@ -151,8 +158,15 @@ export default function ViewAssignments() {
         limit: itemsPerPage,
         search: searchTerm || '',
       });
-      setRows(Array.isArray(res.data) ? res.data : []);
-      setTotalItems(res.pagination?.total ?? (Array.isArray(res.data) ? res.data.length : 0));
+
+      const list = Array.isArray(res.data) ? res.data : [];
+      const mapped: AssignmentRow[] = list.map((item, idx) => ({
+        ...item,
+        sno: (currentPage - 1) * itemsPerPage + idx + 1, // serial number
+      }));
+
+      setRows(mapped);
+      setTotalItems(res.pagination?.total ?? list.length);
     } catch {
       setRows([]);
       setTotalItems(0);
@@ -171,10 +185,12 @@ export default function ViewAssignments() {
     try {
       await api.delete(`/assignments/delete-assignment/${pendingDeleteId}`);
       setPendingDeleteId(null);
+      setPendingDeleteTitle(null);
       if (rows.length === 1 && currentPage > 1) setCurrentPage((p) => p - 1);
       else fetchAssignments();
     } catch {
       setPendingDeleteId(null);
+      setPendingDeleteTitle(null);
     }
   }
 
@@ -221,7 +237,6 @@ export default function ViewAssignments() {
             >
               <Eye size={16} /> Open in new tab
             </a>
-            {/* If it's a PDF you can show an iframe, otherwise just the link */}
             {/\.(pdf)$/i.test(fileUrl) && (
               <iframe className="w-full aspect-video rounded border" src={fileUrl} />
             )}
@@ -229,12 +244,14 @@ export default function ViewAssignments() {
         </Modal>
       )}
 
-      {/* Delete confirmation */}
+      {/* Delete confirmation shows assignment name */}
       {pendingDeleteId && (
         <ConfirmationModal
           title="Delete Assignment"
-          description="Are you sure you want to delete this assignment?"
-          onCancel={() => setPendingDeleteId(null)}
+          description={
+            `Are you sure you want to delete “${shortText(pendingDeleteTitle || 'this assignment')}”?`
+          }
+          onCancel={() => { setPendingDeleteId(null); setPendingDeleteTitle(null); }}
           onConfirm={handleDelete}
         />
       )}

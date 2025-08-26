@@ -13,7 +13,7 @@ export default function AuthPage() {
   const router = useRouter();
 
   /* ------- tabs ------- */
-  const [tab, setTab] = useState<'login' | 'register'>('register'); // default to register since you asked for create-user flow
+  const [tab, setTab] = useState< 'login' | 'register'>('register'); // default to register since you asked for create-user flow
 
   /* ------- shared UI ------- */
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +38,7 @@ export default function AuthPage() {
 
   const [roleId, setRoleId] = useState('');
   const selectedRole = useMemo(() => roles.find(r => r.id === roleId) || null, [roles, roleId]);
-  const isStudent = (selectedRole?.roleName || '').toLowerCase() === 'student';
+  const isStudent = true;
 
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
 
@@ -105,7 +105,7 @@ export default function AuthPage() {
         email,
         password,
         contact: contact || '000000000', // fallback if you want
-        roleId,
+        roleId: '72820b17-a80f-4707-9ed8-e15d92902a2b',
       };
       if (isStudent) {
         body.courseIds = selectedCourseIds;
@@ -171,14 +171,7 @@ export default function AuthPage() {
           </div>
 
           <div className="hidden md:flex gap-2 rounded-full bg-white/10 p-1">
-            <button
-              onClick={() => setTab('login')}
-              className={`px-4 py-1.5 text-sm rounded-full transition ${
-                tab === 'login' ? 'bg-white text-gray-900' : 'text-white/80'
-              }`}
-            >
-              Sign in
-            </button>
+         
             <button
               onClick={() => setTab('register')}
               className={`px-4 py-1.5 text-sm rounded-full transition ${
@@ -347,30 +340,7 @@ export default function AuthPage() {
                 />
 
                 {/* Role */}
-                <div>
-                  <Label>Role</Label>
-                  <div className="rounded-xl bg-white/5 border border-white/10 px-3 py-2">
-                    <select
-                      className="bg-transparent w-full outline-none"
-                      value={roleId}
-                      onChange={(e) => {
-                        setRoleId(e.target.value);
-                        setSelectedCourseIds([]); // reset courses when role changes
-                      }}
-                      required
-                    >
-                      <option value="" className="bg-gray-900"> {loadingRoles ? 'Loading…' : 'Select a role'} </option>
-                      {roles.map(r => (
-                        <option key={r.id} value={r.id} className="bg-gray-900">
-                          {r.roleName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {selectedRole?.description && (
-                    <p className="text-xs text-white/60 mt-1">{selectedRole.description}</p>
-                  )}
-                </div>
+             
 
                 {/* Courses (only for students) */}
                 {isStudent && (

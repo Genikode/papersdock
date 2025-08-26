@@ -6,7 +6,6 @@ import TableComponent, { TableColumn } from '@/components/TableComponent';
 import Modal from '@/components/Modal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { api } from '@/lib/api';
-import { CheckCircle } from 'lucide-react';
 
 /* =========================
    API Types
@@ -77,11 +76,23 @@ export default function StudentApprovalPage() {
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
 
-  // modals
+  // modals (Make Free)
   const [makeFreeId, setMakeFreeId] = useState<string | null>(null);
+
+  // modals (Access)
   const [accessUser, setAccessUser] = useState<UserApiItem | null>(null);
   const [accessSelections, setAccessSelections] = useState<string[]>([]);
   const [savingAccess, setSavingAccess] = useState(false);
+
+  // NEW: Edit User modal
+  const [editUser, setEditUser] = useState<UserApiItem | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPassword, setEditPassword] = useState(''); // optional; send only if non-empty
+  const [editContact, setEditContact] = useState('');
+  const [editRoleId, setEditRoleId] = useState('');     // text input; replace with roles dropdown if available
+  const [editCourseIds, setEditCourseIds] = useState<string[]>([]);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Build id -> title map
   const courseMap = useMemo(
@@ -212,6 +223,49 @@ export default function StudentApprovalPage() {
     }
   }
 
+  // ==== Edit User ====
+  function openEditModal(user: UserApiItem) {
+    setEditUser(user);
+    setEditName(user.name || '');
+    setEditEmail(user.email || '');
+    setEditPassword(''); // blank by default; send only if changed
+    setEditContact(user.contact || '');
+    setEditRoleId('');   // no roleId available in list; keep editable text
+    setEditCourseIds(parseAllowedCourses(user.allowedCourses));
+  }
+
+  function toggleCourseInEdit(id: string) {
+    setEditCourseIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  async function saveEditedUser() {
+    if (!editUser) return;
+    setSavingEdit(true);
+    try {
+      // Build body with required keys; include password only if provided
+      const body: any = {
+        name: editName.trim(),
+        email: editEmail.trim(),
+        contact: editContact.trim(),
+        roleId: "72820b17-a80f-4707-9ed8-e15d92902a2b",     // keep as free text unless you have a roles API
+        courseIds: editCourseIds,
+      };
+      if (editPassword.trim()) {
+        body.password = editPassword.trim();
+      }
+
+      await api.patch(`/users/update-user/${editUser.id}`, body);
+      setEditUser(null);
+      setSavingEdit(false);
+      fetchUsers();
+    } catch {
+      setSavingEdit(false);
+      // keep modal open on error
+    }
+  }
+
   /* Columns */
   const columns: TableColumn[] = useMemo<TableColumn[]>(
     () => [
@@ -272,19 +326,22 @@ export default function StudentApprovalPage() {
               className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-gray-50"
               onClick={() => openAccessModal(row)}
             >
-              🎓 Access
+              Access
             </button>
-            {row.isFeesPaid === 'N' ? (
-              <button
-                className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50"
-                onClick={() => setMakeFreeId(row.id)}
-                title="Make student free"
-              >
-                <CheckCircle size={14} /> Make Free
-              </button>
-            ) : (
-              <span className="text-xs text-gray-400">—</span>
-            )}
+            <button
+              className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-indigo-50"
+              onClick={() => openEditModal(row)}
+              title="Edit User"
+            >
+              Edit User
+            </button>
+            <button
+              className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50"
+              onClick={() => setMakeFreeId(row.id)}
+              title="Make student free"
+            >
+              Make Free
+            </button>
           </div>
         ),
       },
@@ -354,7 +411,7 @@ export default function StudentApprovalPage() {
 
   return (
     <main className="bg-[#F9FAFB] p-6 text-gray-800">
-      <PageHeader title="Student Approval" description="Review students, grant access, and mark fee exemptions" />
+      <PageHeader title="Student Approval" description="Review students, grant access, edit users, and mark fee exemptions" />
 
       <div className="bg-white rounded-md shadow-md">
         {loading && <p className="px-4 py-2 text-sm text-gray-500">Loading students…</p>}
@@ -428,6 +485,84 @@ export default function StudentApprovalPage() {
                 {savingAccess ? 'Saving…' : 'Save Access'}
               </button>
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Edit User Modal */}
+      {editUser && (
+        <Modal title={`Edit User — ${editUser.name}`} onClose={() => setEditUser(null)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm mb-1">Name</label>
+              <input
+                className="w-full border rounded px-3 py-2 text-sm"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Updated Student"
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Email</label>
+              <input
+                className="w-full border rounded px-3 py-2 text-sm"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="updatedstudent@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Password (optional)</label>
+              <input
+                type="password"
+                className="w-full border rounded px-3 py-2 text-sm"
+                value={editPassword}
+                onChange={(e) => setEditPassword(e.target.value)}
+                placeholder="newpassword123"
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Contact</label>
+              <input
+                className="w-full border rounded px-3 py-2 text-sm"
+                value={editContact}
+                onChange={(e) => setEditContact(e.target.value)}
+                placeholder="9876543210"
+              />
+            </div>
+          
+            <div className="md:col-span-2">
+              <label className="block text-sm mb-1">Course Access</label>
+              <div className="max-h-56 overflow-auto border rounded p-3">
+                {courses.length === 0 && <p className="text-sm text-gray-500">No courses found.</p>}
+                {courses.map((c) => {
+                  const checked = editCourseIds.includes(c.id);
+                  return (
+                    <label key={c.id} className="flex items-center gap-2 py-1">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleCourseInEdit(c.id)}
+                      />
+                      <span className="text-sm">{c.title}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <button className="px-3 py-1 border rounded" onClick={() => setEditUser(null)}>
+              Cancel
+            </button>
+            <button
+              className="px-3 py-1 rounded text-white bg-indigo-600 disabled:opacity-60"
+              onClick={saveEditedUser}
+              disabled={savingEdit}
+            >
+              {savingEdit ? 'Saving…' : 'Save Changes'}
+            </button>
           </div>
         </Modal>
       )}
