@@ -93,7 +93,7 @@ export default function AuthPage() {
     if (!name.trim()) return setErrorMsg('Please enter a name.');
     if (!email.trim()) return setErrorMsg('Please enter an email.');
     if (!password.trim()) return setErrorMsg('Please enter a password.');
-    if (!roleId) return setErrorMsg('Please select a role.');
+    // if (!roleId) return setErrorMsg('Please select a role.');
     if (isStudent && selectedCourseIds.length === 0) {
       return setErrorMsg('Students must be assigned at least one course.');
     }
