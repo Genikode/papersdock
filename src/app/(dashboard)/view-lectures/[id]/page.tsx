@@ -211,7 +211,7 @@ export default function ViewLecturePage() {
           title="View Lectures"
           description={`Lectures for Chapter ID: ${chapterId}`}
           buttonText="Add Lecture"
-          path="/add-lecture"
+          path="/add-lectures"
         />
 
         <div className="px-2 py-4">
