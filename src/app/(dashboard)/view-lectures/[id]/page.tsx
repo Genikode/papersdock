@@ -1,33 +1,32 @@
 'use client';
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
-import { useSearchParams, useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import PageHeader from '@/components/PageHeader';
 import TableComponent, { TableColumn } from '@/components/TableComponent';
 import Modal from '@/components/Modal';
 import { Edit2, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
-/* =========================
-   Types to match your API
-========================= */
 
-interface LectureListItem {
+interface LectureByChapterApiItem {
   id: string;
-  lectureTitle: string;
-  chapterTitle: string;
-  courseTitle: string;
-  videoUrl: string;
-  createdAt: string;
-  createdByName?: string;
+  title: string;          
+  courseId: string;
+  chapterId: string;
+  videoUrl?: string;
+  presentationUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string | null;
 }
 
-interface GetAllLecturesResponse {
+interface GetLecturesByChapterResponse {
   status: number;
   success: boolean;
   message: string;
-  data: LectureListItem[];
-  pagination: { total: number; page: number; limit: number; totalPages: number };
+  data: LectureByChapterApiItem[];
 }
 
 interface GetLectureByIdResponse {
@@ -48,35 +47,23 @@ interface GetLectureByIdResponse {
   };
 }
 
-/* Row used by the table: adds serial # without exposing ID column */
-type LectureRow = LectureListItem & { sno: number };
+type LectureRow = {
+  id: string;
+  sno: number;
+  lectureTitle: string;
+  videoUrl?: string;
+  createdAt?: string;
+};
 
-/* =========================
-          Page
-========================= */
+
 
 export default function ViewLecturePage() {
   const router = useRouter();
-  const params = useParams();
-  const searchParams = useSearchParams();
+  const params = useParams<{ chapterId: string }>();
+  const chapterId = typeof params?.chapterId === 'string' ? params.chapterId : '';
 
-  // Optional default filter by chapterTitle via route or query (?chapterTitle=)
-  const routeParamChapter =
-    typeof (params as any)?.chapterTitle === 'string'
-      ? (params as any).chapterTitle
-      : undefined;
-  const qsChapter = searchParams?.get('chapterTitle') || undefined;
-
-  /* Server-driven table state */
   const [rows, setRows] = useState<LectureRow[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const [searchTerm, setSearchTerm] = useState<string>(
-    routeParamChapter || qsChapter || ''
-  );
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
-  const [totalItems, setTotalItems] = useState<number>(0);
 
   /* Video Modal */
   const [videoLoading, setVideoLoading] = useState(false);
@@ -90,36 +77,26 @@ export default function ViewLecturePage() {
   const shortText = (t?: string, max = 40) =>
     (t ?? '').length > max ? (t ?? '').slice(0, max) + '…' : (t ?? '');
 
-  /* Columns for TableComponent */
+  /* Columns (no ID; S.No first) */
   const columns: TableColumn[] = useMemo(
     () => [
-      // Replaced Lecture ID with S.No
       { header: 'S.No', accessor: 'sno' },
       { header: 'Lecture Name', accessor: 'lectureTitle' },
-      { header: 'Chapter Title', accessor: 'chapterTitle' },
-      {
-        header: 'Courses',
-        accessor: 'courseTitle',
-        render: (value: string) => (
-          <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">
-            {value || '-'}
-          </span>
-        ),
-      },
       {
         header: 'Created',
         accessor: 'createdAt',
-        render: (value: string) =>
-          new Date(value).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-          }),
+        render: (value?: string) =>
+          value
+            ? new Date(value).toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              })
+            : '—',
       },
       {
         header: 'Lecture Video',
         accessor: 'videoUrl',
-        // Fetch by ID -> open modal with fetched video + title
         render: (_: string, row: LectureRow) => (
           <button
             type="button"
@@ -148,7 +125,7 @@ export default function ViewLecturePage() {
               className="hover:text-red-600"
               onClick={() => {
                 setPendingDeleteId(row.id);
-                setPendingDeleteTitle(row.lectureTitle); // show name in delete modal
+                setPendingDeleteTitle(row.lectureTitle);
               }}
               title="Delete"
             >
@@ -161,54 +138,53 @@ export default function ViewLecturePage() {
     [router]
   );
 
-  /* Fetch list */
-  async function fetchLectures() {
+  /* Fetch lectures by chapterId (ADMIN endpoint) */
+  async function fetchLecturesByChapter() {
+    if (!chapterId) return;
     setLoading(true);
     try {
-      const res = await api.get<GetAllLecturesResponse>(
-        '/lectures/get-all-lectures',
-        {
-          page: currentPage,
-          limit: itemsPerPage,
-          search: searchTerm || '',
-        }
+      const res = await api.get<GetLecturesByChapterResponse>(
+        `/lectures/admin/get-lectures-by-chapter/${chapterId}`
       );
-      const list = res.data || [];
+      const list = Array.isArray(res.data) ? res.data : [];
+
       const mapped: LectureRow[] = list.map((item, idx) => ({
-        ...item,
-        sno: (currentPage - 1) * itemsPerPage + idx + 1,
+        id: item.id,
+        sno: idx + 1, // sequential across entire dataset (TableComponent paginates locally)
+        lectureTitle: item.title || 'Untitled',
+        videoUrl: item.videoUrl,
+        createdAt: item.createdAt,
       }));
+
       setRows(mapped);
-      setTotalItems(res.pagination?.total ?? 0);
     } catch {
       setRows([]);
-      setTotalItems(0);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchLectures();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage, searchTerm]);
+    fetchLecturesByChapter();
+    
+  }, [chapterId]);
 
-  /* Fetch detail by ID for video modal */
+  
   async function openLecture(id: string) {
     setVideoLoading(true);
     try {
       const res = await api.get<GetLectureByIdResponse>(`/lectures/admin/get-lecture/${id}`);
       const detail = res.data;
       if (detail?.videoUrl) {
-        setSelectedVideoUrl(detail.videoUrl);
         setSelectedLectureTitle(detail.title || 'Lecture Preview');
+        setSelectedVideoUrl(detail.videoUrl);
       } else {
-        setSelectedVideoUrl(null);
         setSelectedLectureTitle('Video not available');
+        setSelectedVideoUrl(null);
       }
     } catch {
-      setSelectedVideoUrl(null);
       setSelectedLectureTitle('Failed to load lecture');
+      setSelectedVideoUrl(null);
     } finally {
       setVideoLoading(false);
     }
@@ -220,12 +196,8 @@ export default function ViewLecturePage() {
       await api.delete(`/lectures/delete-lecture/${id}`);
       setPendingDeleteId(null);
       setPendingDeleteTitle(null);
-      // If last item on a page was deleted, go back one page
-      if (rows.length === 1 && currentPage > 1) {
-        setCurrentPage((p) => p - 1);
-      } else {
-        fetchLectures();
-      }
+      // Refresh list
+      fetchLecturesByChapter();
     } catch {
       setPendingDeleteId(null);
       setPendingDeleteTitle(null);
@@ -234,36 +206,25 @@ export default function ViewLecturePage() {
 
   return (
     <Suspense fallback={<div>Loading lectures...</div>}>
-      <main className="bg-[#F9FAFB] min-h-screen p-4 ">
+      <main className="bg-[#F9FAFB] min-h-screen p-4">
         <PageHeader
           title="View Lectures"
-          description="Manage your lectures"
+          description={`Lectures for Chapter ID: ${chapterId}`}
           buttonText="Add Lecture"
-          path="/add-lectures"
+          path="/add-lecture"
         />
 
         <div className="px-2 py-4">
           {loading && <p className="text-sm text-gray-500 mb-2">Loading lectures…</p>}
 
+          {/* Local (client) search & pagination handled by TableComponent */}
           <TableComponent
             columns={columns}
             data={rows}
-            serverMode
-            /* server-side search */
-            searchTerm={searchTerm}
-            onSearchTermChange={(v) => {
-              setCurrentPage(1);
-              setSearchTerm(v);
-            }}
-            /* server-side pagination */
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-            onItemsPerPageChange={(n) => {
-              setCurrentPage(1);
-              setItemsPerPage(n);
-            }}
-            totalItems={totalItems}
+            /* serverMode omitted -> local mode:
+               - built-in search box works
+               - local pagination works
+            */
           />
         </div>
 
@@ -292,7 +253,13 @@ export default function ViewLecturePage() {
 
         {/* Delete confirmation modal with lecture name */}
         {pendingDeleteId && (
-          <Modal title="Confirm Delete" onClose={() => { setPendingDeleteId(null); setPendingDeleteTitle(null); }}>
+          <Modal
+            title="Confirm Delete"
+            onClose={() => {
+              setPendingDeleteId(null);
+              setPendingDeleteTitle(null);
+            }}
+          >
             <p className="text-sm text-gray-700 mb-4">
               Are you sure you want to delete{' '}
               <strong>“{shortText(pendingDeleteTitle || 'this lecture')}”</strong>?
@@ -300,7 +267,10 @@ export default function ViewLecturePage() {
             <div className="flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => { setPendingDeleteId(null); setPendingDeleteTitle(null); }}
+                onClick={() => {
+                  setPendingDeleteId(null);
+                  setPendingDeleteTitle(null);
+                }}
                 className="px-4 py-1 border rounded"
               >
                 Cancel

@@ -29,12 +29,7 @@ export default function FilteredResourceBox({
           fill
           className="object-cover"
         />
-        <span className="absolute top-2 left-2 bg-white text-gray-800 text-xs font-semibold rounded-full px-2 py-0.5 shadow">
-          {tag}
-        </span>
-        <span className="absolute bottom-2 left-3 text-white text-[11px] font-bold uppercase drop-shadow">
-          {title}
-        </span>
+      
       </div>
 
       {/* Content */}

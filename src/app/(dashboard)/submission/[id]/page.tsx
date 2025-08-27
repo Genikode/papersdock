@@ -115,6 +115,7 @@ export default function AssignmentSubmissionsPage() {
   const [marks, setMarks] = useState<number | ''>('');
   const [remarks, setRemarks] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<'' | 'pending' | 'checked' | 'submitted'>('');
 
   // debounce search
   useEffect(() => {
@@ -129,7 +130,7 @@ export default function AssignmentSubmissionsPage() {
     try {
       const res = await api.get<SubmissionsResponse>(
         `/assignments/get-assignments-submissions/${assignmentId}`,
-        { page, limit, search: debouncedSearch || '' }
+        { page, limit, search: debouncedSearch, status: status || ''  }
       );
       setRows(res.data || []);
       setTotal(res.pagination?.total ?? 0);
@@ -143,7 +144,7 @@ export default function AssignmentSubmissionsPage() {
   useEffect(() => {
     fetchSubmissions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assignmentId, page, limit, debouncedSearch]);
+  }, [assignmentId, page, limit, debouncedSearch , status]);
 
   async function handleCheckSubmit() {
     if (!checkId) return;
@@ -177,7 +178,27 @@ export default function AssignmentSubmissionsPage() {
         title="Assignment Submissions"
         description={`Manage submissions for assignment ID: ${assignmentId}`}
       />
-
+<div className="flex items-center justify-between mb-4">
+  <div className="flex gap-2">
+    <input
+      type="text"
+      placeholder="Search..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="px-2 py-1 border rounded-md"
+    />
+    <select
+      value={status}
+      onChange={(e) => setStatus(e.target.value as any)}
+      className="px-2 py-1 border rounded-md"
+    >
+      <option value="">All Statuses</option>
+      <option value="pending">Pending</option>
+      <option value="checked">Checked</option>
+      <option value="submitted">Submitted</option>
+    </select>
+  </div>
+</div>
       {/* Table */}
       <div className="bg-white border rounded-md shadow-sm overflow-x-auto">
         <table className="min-w-full text-sm">

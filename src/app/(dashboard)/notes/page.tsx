@@ -210,14 +210,7 @@ export default function StudyNotesPage() {
               </div>
 
               <div className="mt-3 flex gap-2">
-                <button
-                  className="text-xs border px-3 py-1 rounded"
-                  onClick={() => openImage(note)}
-                  disabled={!note.backgroundImageUrl}
-                  title={note.backgroundImageUrl ? 'View Image' : 'No image available'}
-                >
-                  View Image
-                </button>
+            
                 <button
                   className="text-xs border px-3 py-1 rounded"
                   onClick={() => openAttachment(note)}

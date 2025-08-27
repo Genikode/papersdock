@@ -1,17 +1,14 @@
 'use client';
-import type { Metadata } from "next";
 
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import { Geist, Geist_Mono } from "next/font/google";
-import "../globals.css";
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu,
   X,
   LogOut,
   LayoutDashboard,
   BookOpen,
-  Plus,
   Video,
   FileText,
   StickyNote,
@@ -20,116 +17,227 @@ import {
   Code,
   Edit,
 } from 'lucide-react';
-import Link from "next/link";
-import { useEffect } from 'react';
+
+import '../globals.css';
 import { clearAccessToken, clearUserData, getUserData, isLoggedIn } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
 
+/** Small helper so both sidebars (mobile + desktop) render the same list */
+function NavLinks({
+  items,
+  collapsed,
+  pathname,
+  onNavigate,
+}: {
+  items: { label: string; href: string; icon: any }[];
+  collapsed?: boolean;
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  return (
+    <nav className={`mt-4 flex flex-col space-y-1 ${collapsed ? 'items-center' : ''}`}>
+      {items.map((item) => {
+        const isActive = pathname === item.href;
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={`flex ${collapsed ? 'justify-center px-0' : 'justify-start px-4'} items-center py-3 gap-3 text-sm transition-colors duration-200 w-full ${
+              isActive ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <Icon size={20} className={isActive ? 'text-blue-600' : 'text-gray-600'} />
+            {!collapsed && <span>{item.label}</span>}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
 
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
 
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-    const router = useRouter();
-
-    // Role-based navigation items
-    const adminNavItems = [
+  // Role-based items
+  const adminNavItems = useMemo(
+    () => [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { label: 'View Chapter', href: '/view-chapter', icon: Code },
       { label: 'View Lectures', href: '/view-lectures', icon: BookOpen },
       { label: 'View Assignments', href: '/view-assignments', icon: FileText },
-          { label: 'View Notes', href: '/view-notes', icon: StickyNote },
+      { label: 'View Notes', href: '/view-notes', icon: StickyNote },
       { label: 'Fee Approval', href: '/fee-approval', icon: BadgeCheck },
       { label: 'Student Approval', href: '/student-approval', icon: BadgeCheck },
       { label: 'Authentication', href: '/authentication', icon: Lock },
+      { label: 'View Courses', href: '/view-course', icon: BookOpen },
       { label: 'Zoom Meeting', href: '/create-link', icon: Edit },
+    ],
+    []
+  );
 
-
-    ];
-
-    const studentNavItems = [
+  const studentNavItems = useMemo(
+    () => [
       { label: 'Recorded Lectures', href: '/recorded-lectures', icon: Video },
       { label: 'Assignments', href: '/assignments', icon: FileText },
       { label: 'Notes', href: '/notes', icon: StickyNote },
       { label: 'Fees', href: '/fees', icon: BadgeCheck },
-      {label: 'Zoom Meeting', href: '/student-link', icon: Edit}
-    ];
+      { label: 'Zoom Meeting', href: '/student-link', icon: Edit },
+    ],
+    []
+  );
 
-    const currentUser = getUserData();
-    // console.log(currentUser);
-    const roleName = currentUser?.roleName;
-    const navItems = roleName === 'student' ? studentNavItems : roleName === 'admin' || roleName === null ? adminNavItems : [];
+  const currentUser = getUserData();
+  const roleName = currentUser?.roleName;
+  const navItems =
+    roleName === 'student'
+      ? studentNavItems
+      : roleName === 'admin' || roleName == null
+      ? adminNavItems
+      : [];
+
+  // Desktop sidebar collapse
   const [collapsed, setCollapsed] = useState(false);
-  const pathname = usePathname();
 
-  // Simple client-side guard: redirect to login if not authenticated
+  // Mobile drawer state
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Guard
   useEffect(() => {
     if (!isLoggedIn()) {
       router.replace('/login');
     }
   }, [router]);
+
+  // Close the mobile drawer whenever route changes
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  function handleLogout() {
+    clearAccessToken();
+    clearUserData();
+    router.replace('/login');
+  }
+
   return (
-  <html lang="en">
+    <html lang="en">
       <body className="antialiased">
         <div className="flex h-screen overflow-hidden">
-          {/* Sidebar */}
-          <aside className={`bg-white border-[1.5px] border-[whitesmoke] shadow-sm transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'} overflow-y-auto`}>
+          {/* ========== Desktop Sidebar (md+) ========== */}
+          <aside
+            className={`hidden md:block bg-white border-[1.5px] border-[whitesmoke] shadow-sm transition-all duration-300 ${
+              collapsed ? 'w-16' : 'w-64'
+            } overflow-y-auto`}
+          >
             <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke]">
               <div className="flex items-center gap-2">
                 <div className="bg-blue-600 text-white font-bold p-2 rounded-md">PD</div>
                 {!collapsed && <span className="font-semibold text-gray-700">PapersDock</span>}
               </div>
-           
             </div>
-          <nav className={`mt-4 flex flex-col space-y-1 ${collapsed ? 'items-center' : ''}`}>
-  {navItems.map((item) => {
-    const isActive = pathname === item.href;
-    return (
-      <Link
-        key={item.href}
-        href={item.href}
-        className={`flex ${collapsed ? 'justify-center px-0' : 'justify-start px-4'} items-center py-3 gap-3 text-sm transition-colors duration-200 w-full ${
-          isActive ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-100'
-        }`}
-      >
-        <item.icon size={20} className={isActive ? 'text-blue-600' : 'text-gray-600'} />
-        {!collapsed && <span>{item.label}</span>}
-      </Link>
-    );
-  })}
-</nav>
 
+            <NavLinks items={navItems} collapsed={collapsed} pathname={pathname} />
           </aside>
 
-          {/* Main Content */}
+          {/* ========== Mobile Drawer (sm and below) ========== */}
+          <div className={`md:hidden`} aria-hidden={!mobileOpen}>
+            {/* Overlay */}
+            <div
+              className={`fixed inset-0 z-40 bg-black/40 transition-opacity ${
+                mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+              onClick={() => setMobileOpen(false)}
+            />
+
+            {/* Panel */}
+            <div
+              className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-[whitesmoke] shadow-lg transform transition-transform ${
+                mobileOpen ? 'translate-x-0' : '-translate-x-full'
+              }`}
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke]">
+                <div className="flex items-center gap-2">
+                  <div className="bg-blue-600 text-white font-bold p-2 rounded-md">PD</div>
+                  <span className="font-semibold text-gray-700">PapersDock</span>
+                </div>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded p-2 text-gray-600 hover:bg-gray-100"
+                  aria-label="Close navigation"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="px-1">
+                <NavLinks
+                  items={navItems}
+                  pathname={pathname}
+                  onNavigate={() => setMobileOpen(false)}
+                />
+              </div>
+
+              {/* Mobile footer actions */}
+              <div className="mt-auto border-t border-[whitesmoke] p-4">
+                <button
+                  onClick={handleLogout}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded border px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
+                >
+                  <LogOut size={18} /> Logout
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ========== Main Content ========== */}
           <div className="flex-1 flex flex-col">
             {/* Topbar */}
-            <header className="h-14 flex items-center justify-between px-6 border-b border-[whitesmoke] bg-white shadow-sm">
-              <div className="flex items-center gap-4">
-                <button onClick={() => setCollapsed(!collapsed)} className="text-gray-600 hover:text-black">
+            <header className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-[whitesmoke] bg-white shadow-sm">
+              <div className="flex items-center gap-3 sm:gap-4">
+                {/* Mobile burger (only on mobile) */}
+                <button
+                  onClick={() => setMobileOpen(true)}
+                  className="md:hidden rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100"
+                  aria-label="Open navigation"
+                >
                   <Menu size={22} />
                 </button>
-                <h1 className="font-semibold text-lg text-gray-800">Dashboard</h1>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span>Welcome back, {currentUser?.name}</span>
+
+                {/* Desktop collapse toggle (hidden on mobile) */}
                 <button
-                  onClick={() => {
-                    clearAccessToken();
-                    clearUserData();
-                    router.replace('/login');
-                  }}
+                  onClick={() => setCollapsed((c) => !c)}
+                  className="hidden md:inline-flex rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100"
+                  aria-label="Toggle sidebar"
+                >
+                  <Menu size={22} />
+                </button>
+
+                <h1 className="font-semibold text-lg text-gray-800 hidden sm:block">Dashboard</h1>
+              </div>
+
+              <div className="hidden md:flex items-center gap-4 text-sm text-gray-600">
+                <span className="truncate max-w-[40ch]">
+                  Welcome back, {currentUser?.name || 'User'}
+                </span>
+                <button
+                  onClick={handleLogout}
                   className="flex items-center gap-1 text-red-500 hover:underline"
                 >
                   <LogOut size={18} /> Logout
                 </button>
               </div>
+
+              {/* Compact topbar actions for mobile */}
+              <div className="md:hidden flex items-center gap-2">
+                <span className="text-sm text-gray-600">Hi, {currentUser?.name?.split(' ')[0] || 'User'}</span>
+              </div>
             </header>
 
-            <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">{children}</main>
+            <main className="flex-1 p-4 sm:p-6 bg-gray-50 overflow-y-auto">{children}</main>
           </div>
         </div>
       </body>

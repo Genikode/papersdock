@@ -23,7 +23,7 @@ export default function LoginPage() {
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-white">
       {/* Left: Login Form */}
       <div className="flex flex-col justify-center px-8 sm:px-20">
-        <button className="text-sm text-gray-600 mb-8">&larr; Back to home</button>
+        <button className="text-sm text-gray-600 mb-8" onClick={() => router.push('/')}>&larr; Back to home</button>
 
         <div className="flex flex-col items-center mb-6">
             <div className="bg-gradient-to-tr from-indigo-500 from-10% to-blue-900 to-55% border p-3 shadow-md mb-4">
