@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { Save, UploadCloud, Link as LinkIcon } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { useParams, useRouter } from 'next/navigation';
+import { BiArrowBack } from 'react-icons/bi';
 
 interface CourseItem {
   id: string;
@@ -16,10 +17,15 @@ interface CoursesResponse {
   message: string;
   data: CourseItem[];
 }
-
+interface AssignmentsListResponse {
+  status: number;
+  success: boolean;
+  message: string;
+  data: AssignmentDetail[];
+}
 interface AssignmentDetail {
   id: string;
-  title: string;
+  assignmentTitle: string;
   description?: string;
   courseId?: string;
   firstDeadline?: string;    // YYYY-MM-DD or datetime
@@ -66,7 +72,7 @@ export default function UpdateAssignment() {
   const [description, setDescription] = useState('');
   const [firstDeadline, setFirstDeadline] = useState('');
   const [lastDeadline, setLastDeadline] = useState('');
-  const [totalMarks, setTotalMarks] = useState<number | ''>('');
+  // const [totalMarks, setTotalMarks] = useState<number | ''>('');
 
   // current file
   const [currentFileUrl, setCurrentFileUrl] = useState<string>('');
@@ -95,63 +101,33 @@ export default function UpdateAssignment() {
   }, []);
 
   /* Load assignment detail (try a direct endpoint first; if not available, fall back) */
-  useEffect(() => {
+async function loadAssignmentDetail() {
     if (!id) return;
-    async function loadDetail() {
-      setLoadingDetail(true);
-      setError(null);
-      try {
-        // If you have a specific endpoint, use it (replace with your actual endpoint)
-        // Fallback: fetch all and find by id
-        let detail: AssignmentDetail | null = null;
-
-        try {
-          const resAny = await api.get<any>(`/assignments/get-assignment/${id}`);
-          const d = resAny?.data ?? resAny;
-          detail = {
-            id: d?.id ?? id,
-            title: d?.title ?? d?.assignmentTitle ?? '',
-            description: d?.description ?? '',
-            courseId: d?.courseId ?? '',
-            firstDeadline: toYMD(d?.firstDeadline),
-            lastDeadline: toYMD(d?.lastDeadline),
-            assignmentFile: d?.assignmentFile ?? '',
-            totalMarks: d?.totalMarks ?? '',
-          };
-        } catch {
-          const resList = await api.get<any>('/assignments/get-all-assignments', { page: 1, limit: 500, search: '' });
-          const found = (resList?.data ?? []).find((x: any) => x.id === id);
-          if (found) {
-            detail = {
-              id: found.id,
-              title: found.title ?? found.assignmentTitle ?? '',
-              description: found.description ?? '',
-              courseId: found.courseId ?? '',
-              firstDeadline: toYMD(found.firstDeadline),
-              lastDeadline: toYMD(found.lastDeadline),
-              assignmentFile: found.assignmentFile ?? '',
-              totalMarks: found.totalMarks ?? '',
-            };
-          }
+    setLoadingDetail(true);
+    try {
+                const resAny = await api.get<AssignmentsListResponse>(`/assignments/get-assignment/${id}`);
+          console.log('Fetched assignment detail:', resAny);
+          const d = resAny?.data[0] ?? resAny;
+          if (!d) throw new Error('Assignment not found');
+          setTitle(d.assignmentTitle
+ || '');
+          setCourseId(d.courseId || '');
+          setCurrentFileUrl(d.assignmentFile || '');
+          setDescription(d.description || '');
+          setFirstDeadline(toYMD(d.firstDeadline));
+          setLastDeadline(toYMD(d.lastDeadline));
+          // setTotalMarks(d.totalMarks);
+        } catch (e: any) {
+          setError(e?.message || 'Failed to load assignment');
+        } finally {
+          setLoadingDetail(false);
         }
-
-        if (!detail) throw new Error('Assignment not found');
-
-        setTitle(detail.title || '');
-        setDescription(detail.description || '');
-        setCourseId(detail.courseId || '');
-        setFirstDeadline(detail.firstDeadline || '');
-        setLastDeadline(detail.lastDeadline || '');
-        setCurrentFileUrl(detail.assignmentFile || '');
-        setTotalMarks(detail.totalMarks === '' ? '' : Number(detail.totalMarks));
-      } catch (e: any) {
-        setError(e?.message || 'Failed to load assignment');
-      } finally {
-        setLoadingDetail(false);
       }
-    }
-    loadDetail();
+  useEffect(() => {
+    loadAssignmentDetail();
   }, [id]);
+
+  /* Get signed URL and upload file */
 
   async function getSignedUrl(key: string, contentType: string) {
     const res = await api.post<SignedUrlResponse>('/get-signed-url', { key, contentType });
@@ -191,7 +167,7 @@ export default function UpdateAssignment() {
         firstDeadline, // YYYY-MM-DD
         lastDeadline,  // YYYY-MM-DD
         assignmentFile: fileUrl,
-        totalMarks: totalMarks === '' ? undefined : Number(totalMarks),
+        // totalMarks: totalMarks === '' ? undefined : Number(totalMarks),
       });
 
       router.replace('/view-assignments');
@@ -204,6 +180,11 @@ export default function UpdateAssignment() {
 
   return (
     <main className="min-h-screen bg-[#F9FAFB] text-gray-800">
+      <div className="mb-4" />
+      <button onClick={() => window.history.back()} >
+        <BiArrowBack size={18} /> 
+      </button>
+      {/* Header */}
       <PageHeader title="Update Assignment" description="Modify assignment details and attachment" />
 
       <form onSubmit={handleSubmit} className="px-6 pb-10">
@@ -212,7 +193,7 @@ export default function UpdateAssignment() {
           <div className="lg:col-span-2 bg-white p-6 rounded-md shadow border">
             <h2 className="text-lg font-semibold mb-4">Assignment Details</h2>
 
-            {loadingDetail && <p className="text-sm text-gray-500 mb-4">Loading assignment…</p>}
+        
 
             <div className="mb-4">
               <label className="block font-medium text-sm mb-1">Title</label>
@@ -224,7 +205,6 @@ export default function UpdateAssignment() {
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
-
             <div className="mb-4">
               <label className="block font-medium text-sm mb-1">Course</label>
               <select
@@ -239,7 +219,7 @@ export default function UpdateAssignment() {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
               <div>
                 <label className="block font-medium text-sm mb-1">Deadline (YYYY-MM-DD)</label>
                 <input
@@ -250,16 +230,7 @@ export default function UpdateAssignment() {
                 />
               </div>
              
-              <div>
-                <label className="block font-medium text-sm mb-1">Total Marks</label>
-                <input
-                  type="number"
-                  min={0}
-                  className="w-full border rounded px-3 py-2"
-                  value={totalMarks}
-                  onChange={(e) => setTotalMarks(e.target.value === '' ? '' : Number(e.target.value))}
-                />
-              </div>
+           
             </div>
 
             <div className="mb-6">

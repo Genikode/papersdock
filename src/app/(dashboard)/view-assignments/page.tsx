@@ -47,6 +47,8 @@ export default function ViewAssignments() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [totalItems, setTotalItems] = useState<number>(0);
+  const [courseId, setCourseId] = useState<string | null>(null);
+  const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
 
   // delete
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -60,7 +62,9 @@ export default function ViewAssignments() {
       // Replaced "Assignment ID" with "S.No"
       { header: 'S.No', accessor: 'sno' },
       { header: 'Title', accessor: 'assignmentTitle' },
-      { header: 'Description', accessor: 'description' },
+      { header: 'Description', accessor: 'description'
+        , render: (value: string) => <span>{shortText(value, 30)}</span>
+       },
       {
         header: 'Course',
         accessor: 'courseTitle',
@@ -116,6 +120,8 @@ export default function ViewAssignments() {
               const qs = row.courseId ? `?courseId=${encodeURIComponent(row.courseId)}` : '';
               router.push(`/submission/${encodeURIComponent(row.id)}${qs}`);
             }}
+
+
           >
             View
           </button>
@@ -157,6 +163,7 @@ export default function ViewAssignments() {
         page: currentPage,
         limit: itemsPerPage,
         search: searchTerm || '',
+        courseId: courseId || '',
       });
 
       const list = Array.isArray(res.data) ? res.data : [];
@@ -174,11 +181,25 @@ export default function ViewAssignments() {
       setLoading(false);
     }
   }
-
+  async function fetchCourses() {
+    try {
+      const res: any = await api.get('/courses/get-all-courses', { page: 1, limit: 100 });
+      const list = res.data ?? [];
+      if (list.length > 0) {
+        setCourses(list);
+        // setCourseId(list[0].id); // default to first course
+      }
+    } catch {
+      setCourseId(null);
+    }
+  }
+  useEffect(() => {
+    fetchCourses();
+  }, []);
   useEffect(() => {
     fetchAssignments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage, searchTerm]);
+  }, [currentPage, itemsPerPage, searchTerm, courseId]);
 
   async function handleDelete() {
     if (!pendingDeleteId) return;
@@ -214,6 +235,26 @@ export default function ViewAssignments() {
             setCurrentPage(1);
             setSearchTerm(v);
           }}
+          toolbarLeft={
+            courses.length > 0 ? (
+              <select
+                value={courseId || ''}
+                onChange={(e) => {
+                  setCurrentPage(1);
+                  setCourseId(e.target.value || null);
+                }}
+                className="p-2 border rounded"
+              >
+                <option value="">All Courses</option>
+                {courses.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.title}
+                  </option>
+                ))}
+              </select> 
+            ) : null
+          }
+          
           currentPage={currentPage}
           onPageChange={setCurrentPage}
           itemsPerPage={itemsPerPage}

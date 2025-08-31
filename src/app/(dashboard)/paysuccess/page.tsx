@@ -178,12 +178,12 @@ function PaymentSuccessInner() {
                 <tr>
                   <td>Monthly Tuition Fee — {monthName(monthNum)} {yearNum}</td>
                   <td className="right">1</td>
-                  <td className="right">{amount ? `$${amount}` : '-'}</td>
-                  <td className="right">{amount ? `$${amount}` : '-'}</td>
+                  <td className="right">{amount ? `PKR${amount}` : '-'}</td>
+                  <td className="right">{amount ? `PKR${amount}` : '-'}</td>
                 </tr>
                 <tr>
                   <td colSpan={3} className="right total">Total</td>
-                  <td className="right total">{amount ? `$${amount}` : '-'}</td>
+                  <td className="right total">{amount ? `PKR${amount}` : '-'}</td>
                 </tr>
               </tbody>
             </table>

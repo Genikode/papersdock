@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import PageHeader from '@/components/PageHeader';
 import TableComponent, { TableColumn } from '@/components/TableComponent';
 import Modal from '@/components/Modal';
-import { Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit2, Link, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
 
@@ -28,7 +28,26 @@ interface GetLecturesByChapterResponse {
   message: string;
   data: LectureByChapterApiItem[];
 }
+interface ChapterDetail {
+  staus: number;
+  success: boolean;
+  message: string;
+  data: [
+  {
+    id: string;
+    title: string;
+    chapterImageUrl?: string;
+    atachmentExtension?: string;
+    courseId: string;
+    description?: string;
+    createdAt: string;
+    updatedAt?: string;
+    createdBy: string;
+    updatedBy?: string | null;
+  }
+  ]
 
+}
 interface GetLectureByIdResponse {
   status: number;
   success: boolean;
@@ -57,14 +76,17 @@ type LectureRow = {
 
 
 
+
 export default function ViewLecturePage() {
   const router = useRouter();
   const params = useParams<{ chapterId: string }>();
+  
   const chapterId = typeof params?.chapterId === 'string' ? params.chapterId : '';
+ 
 
   const [rows, setRows] = useState<LectureRow[]>([]);
   const [loading, setLoading] = useState(false);
-
+  const [chapterTitle, setChapterTitle] = useState<string | null>(null);
   /* Video Modal */
   const [videoLoading, setVideoLoading] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
@@ -163,7 +185,28 @@ export default function ViewLecturePage() {
       setLoading(false);
     }
   }
+async function fetchChapterByChapterId() {
+    if (!chapterId) return;
+    setLoading(true);
+    try {
+      const res = await api.get<ChapterDetail>(
+        `/chapters/get-chapter/${chapterId}`
+      );
+      const list = res.data;
+      console.log('Chapter details:', list);
+      if (list && list.length > 0) {
+        setChapterTitle(list[0].title);
+      }
+    } catch {
+      console.error('Failed to fetch chapter details');
+    } finally {
+      setLoading(false);
+    }
+  }
 
+  useEffect(() => {
+    fetchChapterByChapterId();
+  }, [chapterId]);
   useEffect(() => {
     fetchLecturesByChapter();
     
@@ -206,10 +249,19 @@ export default function ViewLecturePage() {
 
   return (
     <Suspense fallback={<div>Loading lectures...</div>}>
-      <main className="bg-[#F9FAFB] min-h-screen p-4">
+      <main className="bg-[rgb(249,250,251)] min-h-screen p-4">
+  {/* Back button */}
+<div className="mb-4">
+  <ArrowLeft
+    size={20}
+    className="cursor-pointer text-gray-600 hover:text-gray-900"
+    onClick={() => router.back()}
+  />
+</div>
+
         <PageHeader
           title="View Lectures"
-          description={`Lectures for Chapter ID: ${chapterId}`}
+          description={`Lectures for ${chapterTitle || 'the selected chapter'}`}
           buttonText="Add Lecture"
           path="/add-lectures"
         />

@@ -5,26 +5,43 @@ import { useParams } from 'next/navigation';
 import PageHeader from '@/components/PageHeader';
 import { api } from '@/lib/api';
 import {
-  Search,
   Eye,
   CheckSquare,
   X,
   ChevronLeft,
   ChevronRight,
   Download,
+  Calendar,
+  Clock,
+  UserRound
 } from 'lucide-react';
+import { BiArrowBack } from 'react-icons/bi';
 
 /* =========================
    API Types
 ========================= */
-type SubmissionItem = {
+type Assignment = {
   id: string;
-  studentName: string;
-  submissionFile: string; // may be empty string
-  deadlineStatus: string; // e.g. "Active"
-  status: string;         // e.g. "Pending"
-  createdAt: string;      // ISO
+  assignmentTitle: string;
+  description?: string;
+  firstDeadline?: string; // "YYYY-MM-DD HH:mm:ss"
+  courseTitle?: string;
+  createdByName?: string;
+  createdAt?: string;
 };
+
+type SubmissionItem = {
+  id: string;                // submission id
+  studentId?: string;        // <-- optional, if backend returns it (used for per-student update)
+  studentName: string;
+  submissionFile: string;    // may be empty string
+  deadlineStatus: string; 
+  contact: string;          
+ assignmentDeadline: string;   // e.g. "Active" / "Late" / "Missed"
+  status: string;            // e.g. "Pending" / "Checked" / "Submitted"
+  createdAt: string;         // ISO
+};
+
 type SubmissionsResponse = {
   status: number;
   success: boolean;
@@ -44,16 +61,30 @@ function formatDate(d: string | undefined) {
     return d;
   }
 }
+function toDateInputValue(dateLike?: string) {
+  if (!dateLike) return '';
+  try {
+    const d = new Date(dateLike);
+    // date input wants YYYY-MM-DD
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  } catch {
+    return '';
+  }
+}
 function badgeColor(v?: string) {
   const val = (v || '').toLowerCase();
-  if (val.includes('active')) return 'bg-green-100 text-green-700';
+  if (val.includes('active') || val.includes('on-time')) return 'bg-green-100 text-green-700';
   if (val.includes('pending')) return 'bg-amber-100 text-amber-800';
-  if (val.includes('late')) return 'bg-red-100 text-red-700';
+  if (val.includes('late') || val.includes('missed')) return 'bg-red-100 text-red-700';
   if (val.includes('checked') || val.includes('graded')) return 'bg-indigo-100 text-indigo-700';
+  if (val.includes('submitted')) return 'bg-blue-100 text-blue-700';
   return 'bg-gray-100 text-gray-700';
 }
 function getFileKind(url: string) {
-  const u = url.toLowerCase();
+  const u = (url || '').toLowerCase();
   if (u.endsWith('.pdf')) return 'pdf';
   if (u.match(/\.(png|jpg|jpeg|gif|webp)$/)) return 'image';
   if (u.match(/\.(mp4|webm|ogg|mov)$/)) return 'video';
@@ -81,7 +112,7 @@ function Modal({
       <div className={`w-full ${widthClass} bg-white rounded-lg shadow-lg overflow-hidden`}>
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <h3 className="text-sm font-semibold">{title || 'Details'}</h3>
-          <button onClick={onClose} className="p-1 text-gray-500 hover:text-red-500">
+          <button onClick={onClose} className="p-1 text-gray-500 hover:text-red-500" aria-label="Close">
             <X size={18} />
           </button>
         </div>
@@ -99,6 +130,10 @@ export default function AssignmentSubmissionsPage() {
   const params = useParams<{ id: string }>();
   const assignmentId = typeof params?.id === 'string' ? params.id : '';
 
+  // assignment meta
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [metaLoading, setMetaLoading] = useState(false);
+
   // table state
   const [rows, setRows] = useState<SubmissionItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -107,15 +142,25 @@ export default function AssignmentSubmissionsPage() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<'' | 'pending' | 'checked' | 'submitted' | 'missed'>('');
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / limit)), [total, limit]);
 
   // modals
   const [viewUrl, setViewUrl] = useState<string | null>(null);
+
+  // check/grade modal
   const [checkId, setCheckId] = useState<string | null>(null);
   const [marks, setMarks] = useState<number | ''>('');
   const [remarks, setRemarks] = useState<string>('');
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState<'' | 'pending' | 'checked' | 'submitted'>('');
+
+  // deadlines modals
+  const [showAllDeadlineModal, setShowAllDeadlineModal] = useState(false);
+  const [showStudentDeadlineModal, setShowStudentDeadlineModal] = useState(false);
+  const [newDeadline, setNewDeadline] = useState(''); // YYYY-MM-DD
+  const [studentId, setStudentId] = useState('');
+  const [studentName, setStudentName] = useState<string | undefined>(undefined);
+  const [savingDeadline, setSavingDeadline] = useState(false);
 
   // debounce search
   useEffect(() => {
@@ -123,14 +168,36 @@ export default function AssignmentSubmissionsPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // fetch list
+  // fetch assignment details
+  async function fetchAssignmentMeta() {
+    if (!assignmentId) return;
+    setMetaLoading(true);
+    try {
+      // API returns { data: [ { ...assignment } ] }
+      const res = await api.get<{ status: number; success: boolean; data: Assignment[] }>(
+        `/assignments/get-assignment/${assignmentId}`
+      );
+      const a = Array.isArray(res.data) ? res.data[0] : (res.data as any)?.[0];
+      setAssignment(a || null);
+      // Pre-fill "all" deadline modal with current deadline if available
+      if (a?.firstDeadline && !newDeadline) {
+        setNewDeadline(toDateInputValue(a.firstDeadline));
+      }
+    } catch {
+      setAssignment(null);
+    } finally {
+      setMetaLoading(false);
+    }
+  }
+
+  // fetch submissions
   async function fetchSubmissions() {
     if (!assignmentId) return;
     setLoading(true);
     try {
       const res = await api.get<SubmissionsResponse>(
         `/assignments/get-assignments-submissions/${assignmentId}`,
-        { page, limit, search: debouncedSearch, status: status || ''  }
+        { page, limit, search: debouncedSearch, status: status || '' }
       );
       setRows(res.data || []);
       setTotal(res.pagination?.total ?? 0);
@@ -141,11 +208,18 @@ export default function AssignmentSubmissionsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchAssignmentMeta();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignmentId]);
+
   useEffect(() => {
     fetchSubmissions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assignmentId, page, limit, debouncedSearch , status]);
+  }, [assignmentId, page, limit, debouncedSearch, status]);
 
+  /* ---------- Check / Grade ---------- */
   async function handleCheckSubmit() {
     if (!checkId) return;
     if (marks === '' || Number.isNaN(Number(marks))) return;
@@ -169,55 +243,140 @@ export default function AssignmentSubmissionsPage() {
     }
   }
 
+  /* ---------- Deadlines: All ---------- */
+  async function updateDeadlineForAll() {
+    if (!assignmentId || !newDeadline) return;
+    setSavingDeadline(true);
+    try {
+      await api.patch('/assignments/update-deadline-for-all', {
+        assignmentId,
+        newDeadline, // YYYY-MM-DD
+      });
+      setShowAllDeadlineModal(false);
+      fetchAssignmentMeta();
+      fetchSubmissions();
+    } catch {
+      // optionally toast
+    } finally {
+      setSavingDeadline(false);
+    }
+  }
+
+  /* ---------- Deadlines: Per Student ---------- */
+  function openStudentDeadlineModal(prefill?: { studentId?: string; studentName?: string }) {
+    setShowStudentDeadlineModal(true);
+    setStudentId(prefill?.studentId || '');
+    setStudentName(prefill?.studentName);
+    // default date = assignment's firstDeadline (if exists)
+    if (assignment?.firstDeadline) {
+      setNewDeadline(toDateInputValue(assignment.firstDeadline));
+    }
+  }
+
+  async function updateDeadlineForStudent() {
+    if (!assignmentId || !studentId || !newDeadline) return;
+    setSavingDeadline(true);
+    try {
+      await api.patch('/assignments/update-deadline-for-student', {
+        assignmentId,
+        studentId,
+        newDeadline, // YYYY-MM-DD
+      });
+      setShowStudentDeadlineModal(false);
+      fetchSubmissions();
+    } catch {
+      // optionally toast
+    } finally {
+      setSavingDeadline(false);
+    }
+  }
+
   const startIndex = total === 0 ? 0 : (page - 1) * limit + 1;
   const endIndex = Math.min(page * limit, total);
 
   return (
     <main className="bg-[#F9FAFB] min-h-screen p-4">
+      {/* Header */}
+      <div className="mb-4" />
+     
+      <button onClick={() => window.history.back()} className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-2">
+        <BiArrowBack size={18} /> 
+      </button>
       <PageHeader
         title="Assignment Submissions"
-        description={`Manage submissions for assignment ID: ${assignmentId}`}
+        description={
+          metaLoading
+            ?  'Loading assignment…'
+            : assignment?.assignmentTitle
+              ? 'Managing submissions for ' + assignment.assignmentTitle
+              : `Assignment: ${assignmentId}`
+        }
+        
+
       />
-<div className="flex items-center justify-between mb-4">
-  <div className="flex gap-2">
-    <input
-      type="text"
-      placeholder="Search..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="px-2 py-1 border rounded-md"
-    />
-    <select
-      value={status}
-      onChange={(e) => setStatus(e.target.value as any)}
-      className="px-2 py-1 border rounded-md"
-    >
-      <option value="">All Statuses</option>
-      <option value="pending">Pending</option>
-      <option value="checked">Checked</option>
-      <option value="submitted">Submitted</option>
-    </select>
-  </div>
-</div>
+
+      {/* Actions row */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+        {/* Left: search + status */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="px-2 py-1 border rounded-md placeholder:text-gray-400 text-black"
+          />
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as any)}
+            className="px-2 py-1 border rounded-md text-black"
+          >
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="checked">Checked</option>
+            <option value="submitted">Submitted</option>
+            <option value="missed">Missed</option>
+          </select>
+        </div>
+
+        {/* Right: deadline actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              // prefill with current assignment deadline if present
+              if (assignment?.firstDeadline) {
+                setNewDeadline(toDateInputValue(assignment.firstDeadline));
+              }
+              setShowAllDeadlineModal(true);
+            }}
+            className="px-3 py-2 bg-indigo-600 text-white rounded flex items-center gap-1 text-sm"
+          >
+            <Calendar size={16} /> Update Deadline (All)
+          </button>
+    
+        </div>
+      </div>
+
       {/* Table */}
       <div className="bg-white border rounded-md shadow-sm overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b">
-              {/* CHANGED: "Submission ID" -> "S.No" */}
               <th className="text-left font-medium px-4 py-3 text-gray-600">S.No</th>
               <th className="text-left font-medium px-4 py-3 text-gray-600">Student</th>
-              <th className="text-left font-medium px-4 py-3 text-gray-600">Submitted At</th>
+              <th className="text-left font-medium px-4 py-3 text-gray-600">Contact</th>
+              <th className="text-left font-medium px-4 py-3 text-gray-600">Created At</th>
               <th className="text-left font-medium px-4 py-3 text-gray-600">Deadline</th>
               <th className="text-left font-medium px-4 py-3 text-gray-600">Status</th>
               <th className="text-left font-medium px-4 py-3 text-gray-600">File</th>
               <th className="text-left font-medium px-4 py-3 text-gray-600">Actions</th>
+              <th className="text-left font-medium px-4 py-3 text-gray-600">Deadline Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">
+                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
                   Loading submissions…
                 </td>
               </tr>
@@ -225,7 +384,7 @@ export default function AssignmentSubmissionsPage() {
 
             {!loading && rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">
+                <td colSpan={8} className="px-4 py-6 text-center text-gray-500">
                   No submissions found.
                 </td>
               </tr>
@@ -234,16 +393,24 @@ export default function AssignmentSubmissionsPage() {
             {!loading &&
               rows.map((r, idx) => {
                 const hasFile = Boolean(r.submissionFile);
-                const sno = (page - 1) * limit + idx + 1; // <-- S.No computed per page
+                const sno = (page - 1) * limit + idx + 1;
                 return (
                   <tr key={r.id} className="border-b hover:bg-gray-50 text-black">
-                    {/* CHANGED: show S.No, not the submission id */}
                     <td className="px-4 py-2">{sno}</td>
-                    <td className="px-4 py-2">{r.studentName || '-'}</td>
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <UserRound size={16} className="text-gray-500" />
+                        <div className="flex flex-col">
+                          <span>{r.studentName || '-'}</span>
+                         
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">{r.contact || '-'}</td>
                     <td className="px-4 py-2">{formatDate(r.createdAt)}</td>
                     <td className="px-4 py-2">
-                      <span className={`px-2 py-0.5 rounded-full text-xs ${badgeColor(r.deadlineStatus)}`}>
-                        {r.deadlineStatus || '-'}
+                      <span className={`px-2 py-0.5 rounded-full `}>
+                        {r.assignmentDeadline ? new Date(r.assignmentDeadline).toLocaleDateString('en-GB') : '-'}
                       </span>
                     </td>
                     <td className="px-4 py-2">
@@ -275,6 +442,20 @@ export default function AssignmentSubmissionsPage() {
                         <CheckSquare size={14} /> Check
                       </button>
                     </td>
+                    <td className="px-4 py-2">
+                      <button
+                        onClick={() =>
+                          openStudentDeadlineModal({
+                            studentId: r.studentId,
+                            studentName: r.studentName,
+                          })
+                        }
+                        className="inline-flex items-center gap-1 border rounded px-3 py-1 text-xs"
+                        title="Update deadline for this student"
+                      >
+                        <Clock size={14} /> Update Deadline
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -300,9 +481,7 @@ export default function AssignmentSubmissionsPage() {
                 key={i}
                 onClick={() => setPage(i + 1)}
                 disabled={loading}
-                className={`border rounded px-2 py-1 ${
-                  page === i + 1 ? 'bg-gray-200 font-semibold' : ''
-                }`}
+                className={`border rounded px-2 py-1 ${page === i + 1 ? 'bg-gray-200 font-semibold' : ''}`}
               >
                 {i + 1}
               </button>
@@ -370,7 +549,7 @@ export default function AssignmentSubmissionsPage() {
               <input
                 type="number"
                 min={0}
-                className="w-full border rounded px-3 py-2 text-sm text-black placeholder:text-grey-900"
+                className="w-full border rounded px-3 py-2 text-sm text-black"
                 value={marks}
                 onChange={(e) => setMarks(e.target.value === '' ? '' : Number(e.target.value))}
                 placeholder="e.g. 95"
@@ -380,7 +559,7 @@ export default function AssignmentSubmissionsPage() {
               <label className="block text-sm font-medium mb-1 text-black">Remarks</label>
               <textarea
                 rows={3}
-                className="w-full border rounded px-3 py-2 text-sm text-black placeholder:text-grey-900"
+                className="w-full border rounded px-3 py-2 text-sm text-black"
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
                 placeholder="Short feedback for the student"
@@ -399,6 +578,90 @@ export default function AssignmentSubmissionsPage() {
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Update Deadline for ALL Modal */}
+      {showAllDeadlineModal && (
+        <Modal
+          title="Update Deadline for All Students"
+          onClose={() => setShowAllDeadlineModal(false)}
+          widthClass="max-w-md text-black"
+          footer={
+            <div className="flex justify-end gap-2">
+              <button className="px-4 py-1 border rounded" onClick={() => setShowAllDeadlineModal(false)}>
+                Cancel
+              </button>
+              <button
+                disabled={savingDeadline || !newDeadline}
+                onClick={updateDeadlineForAll}
+                className="px-4 py-1 rounded text-white bg-indigo-600 disabled:opacity-60"
+              >
+                {savingDeadline ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3">
+            <div className="text-sm text-gray-600">
+              {assignment?.assignmentTitle && <div className="font-medium">{assignment.assignmentTitle}</div>}
+              {assignment?.firstDeadline && (
+                <div className="font-medium">
+                  Current deadline: <strong>{formatDate(assignment.firstDeadline)}</strong>
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-black">New Deadline</label>
+              <input
+                type="date"
+                className="w-full border rounded px-3 py-2 text-sm text-black"
+                value={newDeadline}
+                onChange={(e) => setNewDeadline(e.target.value)}
+              />
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Update Deadline for ONE Student Modal */}
+      {showStudentDeadlineModal && (
+        <Modal
+          title="Update Deadline for a Student"
+          onClose={() => setShowStudentDeadlineModal(false)}
+          widthClass="max-w-md text-black"
+          footer={
+            <div className="flex justify-end gap-2">
+              <button className="px-4 py-1 border rounded" onClick={() => setShowStudentDeadlineModal(false)}>
+                Cancel
+              </button>
+              <button
+                disabled={savingDeadline || !studentId || !newDeadline}
+                onClick={updateDeadlineForStudent}
+                className="px-4 py-1 rounded text-white bg-green-600 disabled:opacity-60"
+              >
+                {savingDeadline ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3">
+            {studentName && (
+              <div className="text-sm">
+                <span className="text-gray-600">Student:</span> <strong>{studentName}</strong>
+              </div>
+            )}
+        
+            <div>
+              <label className="block text-sm font-medium mb-1 text-black">New Deadline</label>
+              <input
+                type="date"
+                className="w-full border rounded px-3 py-2 text-sm text-black"
+                value={newDeadline}
+                onChange={(e) => setNewDeadline(e.target.value)}
+              />
+            </div>
           </div>
         </Modal>
       )}

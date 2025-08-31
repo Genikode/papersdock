@@ -97,7 +97,7 @@ export default function CoursesPage() {
       {
         header: 'Fees',
         accessor: 'fees',
-        render: (v?: string) => (v ? `₹${v}` : '—'),
+        render: (v?: string) => (v ? `PKR${v}` : '—'),
       },
       {
         header: 'Actions',
@@ -254,7 +254,7 @@ export default function CoursesPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Fees (optional)</label>
+              <label className="block text-sm font-medium mb-1">Fees</label>
               <input
                 type="text"
                 value={addFees}

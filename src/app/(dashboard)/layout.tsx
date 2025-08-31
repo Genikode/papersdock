@@ -65,7 +65,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     () => [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { label: 'View Chapter', href: '/view-chapter', icon: Code },
-      { label: 'View Lectures', href: '/view-lectures', icon: BookOpen },
+      // { label: 'View Lectures', href: '/view-lectures', icon: BookOpen },
+      { label: 'Student Queries', href: '/student-query', icon: BookOpen },
       { label: 'View Assignments', href: '/view-assignments', icon: FileText },
       { label: 'View Notes', href: '/view-notes', icon: StickyNote },
       { label: 'Fee Approval', href: '/fee-approval', icon: BadgeCheck },
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       { label: 'Authentication', href: '/authentication', icon: Lock },
       { label: 'View Courses', href: '/view-course', icon: BookOpen },
       { label: 'Zoom Meeting', href: '/create-link', icon: Edit },
+      { label: 'My Query', href: '/my-query', icon: BookOpen },
     ],
     []
   );

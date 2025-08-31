@@ -24,6 +24,7 @@ type FeeApiItem = {
   year: string;
   invoiceUrl: string;
   feeExpiryDate: string;
+  
   status: 'Paid' | 'Pending' | 'Rejected' | string;
   feesAmount: string;
   approvedBy?: string | null;
@@ -69,12 +70,7 @@ function fmtDate(d?: string | null) {
   return dt.toLocaleDateString();
 }
 
-function isOverdue(item: FeeApiItem) {
-  if (!item.feeExpiryDate) return false;
-  const today = new Date();
-  const exp = new Date(item.feeExpiryDate);
-  return exp.getTime() < today.getTime() && item.status !== 'Paid' && item.status !== 'Rejected';
-}
+
 
 /* =========================
            Page
@@ -142,11 +138,14 @@ export default function FeeApprovalPage() {
   const [searchTerm, setSearchTerm] = useState<string>(''); // <-- student-name search
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
-
+  const [dueDate, setDueDate] = useState<Date>(new Date());
+  const [feeamount , setFeeAmount] = useState<string>('');
   // Modals
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [approveId, setApproveId] = useState<string | null>(null);
+  const [updateId, setUpateId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
+  
 
   /* Fetch fee list */
   async function fetchFees() {
@@ -180,18 +179,18 @@ export default function FeeApprovalPage() {
   /* Stats */
   const stats = useMemo(() => {
     const total = totalItems;
-    let approved = 0, rejected = 0, pending = 0, overdue = 0;
+    let approved = 0, rejected = 0, pending = 0;
     rows.forEach((r) => {
-      if (r.status === 'Paid') approved += 1;
+      if (r.status === 'Paid' || String(r.status).toLowerCase() === 'approved') approved += 1;
       else if (String(r.status).toLowerCase() === 'rejected') rejected += 1;
       else pending += 1;
-      if (isOverdue(r)) overdue += 1;
+    
     });
     return [
       { label: 'Total Submissions', value: total, icon: <DollarSign size={16} /> },
       { label: 'Pending Review', value: pending, icon: <Clock size={16} /> },
       { label: 'Approved', value: approved, icon: <CheckCircle size={16} /> },
-      { label: 'Rejected/Overdue', value: rejected + overdue, icon: <XCircle size={16} /> },
+      { label: 'Rejected', value: rejected , icon: <XCircle size={16} /> },
     ];
   }, [rows, totalItems]);
 
@@ -203,6 +202,15 @@ export default function FeeApprovalPage() {
       fetchFees();
     } catch {
       setApproveId(null);
+    }
+  }
+  async function updatefee(id: string) {
+    try {
+      await api.patch(`/fees/update-fee-data/${id}`, { dueDate: dueDate, feesAmount: feeamount });
+      setUpateId(null);
+      fetchFees();
+    } catch {
+ setUpateId(null);
     }
   }
   async function rejectFee(id: string) {
@@ -242,12 +250,12 @@ export default function FeeApprovalPage() {
         header: 'Fee Status',
         accessor: 'status',
         render: (_: any, row: FeeApiItem) => {
-          const overdue = isOverdue(row);
-          const statusText = overdue ? 'Overdue' : row.status;
+         
+          const statusText = row.status;
           const map: Record<string, string> = {
             Paid: 'bg-green-100 text-green-800',
             Pending: 'bg-yellow-100 text-yellow-800',
-            Overdue: 'bg-red-100 text-red-800',
+            Missed: 'bg-red-100 text-red-800',
             Rejected: 'bg-gray-100 text-gray-800',
             Unpaid: 'bg-red-100 text-red-800',
           };
@@ -258,8 +266,18 @@ export default function FeeApprovalPage() {
       {
         header: 'Approved At',
         accessor: 'approvedAt',
-        render: (v: string) => (v ? fmtDate(v) : '—'),
+           render: (_: any, row: FeeApiItem) => {
+         
+          const date = fmtDate(row.approvedAt);
+          const dueDate = fmtDate(row.feeExpiryDate);
+          return <span className={`text-xs px-2 py-1 rounded`}>{date!=null? date: dueDate}</span>;
       },
+    },
+    {
+        header: 'Fees Amount',
+        accessor: 'feesAmount',
+        render: (value: string) => (value ? `${value}` : '-'),
+    },
       {
         header: 'Action',
         accessor: 'actions',
@@ -277,6 +295,17 @@ export default function FeeApprovalPage() {
               </button>
               {canAct ? (
                 <>
+                     <button
+                    className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50"
+                    title="Edit"
+                    onClick={() =>{
+                      setFeeAmount(row.feesAmount);
+                      setDueDate(row.feeExpiryDate ? new Date(row.feeExpiryDate) : new Date());
+                      setUpateId(row.feeId)  }
+                    } 
+                  >
+                    <CheckCircle size={14} /> Edit
+                  </button>
                   <button
                     className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50"
                     title="Approve"
@@ -380,6 +409,7 @@ export default function FeeApprovalPage() {
           <option value="Pending">Pending</option>
           <option value="Unpaid">Unpaid</option>
           <option value="Rejected">Rejected</option>
+         
         </select>
       </div>
     </div>
@@ -441,6 +471,49 @@ export default function FeeApprovalPage() {
       )}
 
       {/* Approve */}
+      {
+        updateId && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-md shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-4">Update Due Date</h2>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">New Due Date</label>
+              <input
+                type="date"
+                value={dueDate.toISOString().split('T')[0]}
+                onChange={(e) => setDueDate(new Date(e.target.value))}
+                className="border rounded-md px-3 py-2 w-full"
+              />
+
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fees Amount</label>
+              <input
+                type="number"
+                value={feeamount}
+                onChange={(e) => setFeeAmount(e.target.value)}
+                className="border rounded-md px-3 py-2 w-full"
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setUpateId(null)}
+                className="px-4 py-2 border rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => updatefee(updateId)}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md"
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )
+      }
       {approveId && (
         <ConfirmationModal
           title="Approve Fee"

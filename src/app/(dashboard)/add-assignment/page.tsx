@@ -40,7 +40,7 @@ export default function AddAssignment() {
   const [description, setDescription] = useState('');
   const [firstDeadline, setFirstDeadline] = useState(''); // YYYY-MM-DD
   const [lastDeadline, setLastDeadline] = useState('');   // YYYY-MM-DD
-  const [totalMarks, setTotalMarks] = useState<number | ''>('');
+
   const [assignmentFile, setAssignmentFile] = useState<File | null>(null);
 
   const [courses, setCourses] = useState<CourseItem[]>([]);
@@ -100,7 +100,7 @@ export default function AddAssignment() {
         firstDeadline,  // YYYY-MM-DD
         lastDeadline,   // YYYY-MM-DD
         assignmentFile: fileUrl,       // empty string allowed if optional
-        totalMarks: totalMarks === '' ? undefined : Number(totalMarks),
+      
       });
 
       router.replace('/view-assignments');
@@ -146,7 +146,7 @@ export default function AddAssignment() {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
               <div>
                 <label className="block font-medium text-sm mb-1">Deadline (YYYY-MM-DD)</label>
                 <input
@@ -157,16 +157,7 @@ export default function AddAssignment() {
                 />
               </div>
             
-              <div>
-                <label className="block font-medium text-sm mb-1">Total Marks (optional)</label>
-                <input
-                  type="number"
-                  min={0}
-                  className="w-full border rounded px-3 py-2"
-                  value={totalMarks}
-                  onChange={(e) => setTotalMarks(e.target.value === '' ? '' : Number(e.target.value))}
-                />
-              </div>
+       
             </div>
 
             <div className="mb-6">

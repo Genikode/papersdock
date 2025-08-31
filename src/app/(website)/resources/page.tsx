@@ -19,7 +19,7 @@ type NoteItem = {
   courseName?: string;
   backgroundImageUrl?: string;   // card image
   attachmentUrl?: string;        // open this in a new tab
-  attachmentType?: 'dark' | 'light' | string;
+  attachmentType?: 'dark' | 'light' | '' | string;
   attachmentExtension?: string;
   createdAt?: string;
 };
@@ -48,7 +48,7 @@ const FALLBACK_IMG = '/background-trial.jpeg';
 export default function ResourcesPage() {
   // Filters / state
   const [selectedPaper, setSelectedPaper] = useState<string | null>(null);
-  const [mode, setMode] = useState<'dark' | 'light'>('dark');
+  const [mode, setMode] = useState<''|'dark' | 'light'>('');
 
   // Server pagination
   const [page, setPage] = useState(1);
@@ -72,6 +72,7 @@ export default function ResourcesPage() {
         page,
         limit,
         paper: selectedPaper || undefined, // omit when "All"
+        attachmentType: mode, // dark or light
       });
 
       const list = Array.isArray(res.data) ? res.data : [];
@@ -89,7 +90,7 @@ export default function ResourcesPage() {
   useEffect(() => {
     fetchNotes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit, selectedPaper]);
+  }, [page, limit, selectedPaper, mode]);
 
   const headingRight = (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -100,6 +101,7 @@ export default function ResourcesPage() {
           onChange={(e) => setMode(e.target.value as 'dark' | 'light')}
           className="border border-gray-300 rounded-md text-sm px-3 py-2"
         >
+          <option value="">All</option>
           <option value="light">Light Mode</option>
           <option value="dark">Dark Mode</option>
         </select>
@@ -210,7 +212,7 @@ export default function ResourcesPage() {
         )}
 
         {/* Pagination */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-10">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
           <span className="text-sm text-gray-600">
             Showing {(page - 1) * limit + (rows.length ? 1 : 0)} – {Math.min(page * limit, total)} of {total}
           </span>

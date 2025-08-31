@@ -41,6 +41,8 @@ export default function ViewChapter() {
   const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
   const [deleteRowTitle, setDeleteRowTitle] = useState<string | null>(null); // <-- NEW
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [courseId, setCourseId] = useState<string | null>(null); // filter by course
+  const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
 
   // Server-driven table state
   const [searchTerm, setSearchTerm] = useState('');
@@ -126,7 +128,7 @@ export default function ViewChapter() {
     try {
       const res = await api.get<GetAllChaptersResponse>(
         '/chapters/get-all-chapters',
-        { page: currentPage, limit: itemsPerPage, search: searchTerm }
+        { page: currentPage, limit: itemsPerPage, search: searchTerm, courseId:courseId }
       );
 
       const list = res.data ?? [];
@@ -148,11 +150,26 @@ export default function ViewChapter() {
       setLoading(false);
     }
   }
+async function fetchCourses() {
+    try {
+      const res: any = await api.get('/courses/get-all-courses', { page: 1, limit: 100 });
+      const list = res.data ?? [];
+      if (list.length > 0) {
+        setCourses(list);
+        // setCourseId(list[0].id); // default to first course
+      }
+    } catch {
+      setCourseId(null);
+    }
+  }
 
+  useEffect(() => {
+    fetchCourses();
+  }, []);
   useEffect(() => {
     fetchChapters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage, searchTerm]);
+  }, [currentPage, itemsPerPage, searchTerm, courseId]);
 
   async function handleConfirmDelete() {
     if (!deleteRowId) return;
@@ -166,7 +183,7 @@ export default function ViewChapter() {
       setShowDeleteModal(false);
     }
   }
-
+  
   return (
     <main className="bg-[#F9FAFB] text-gray-800">
       <PageHeader
@@ -185,6 +202,21 @@ export default function ViewChapter() {
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
           currentPage={currentPage}
+          toolbarLeft={
+            <select
+              value={courseId ?? ''}
+              onChange={(e) => setCourseId(e.target.value)}
+              className="border px-3 py-1 rounded text-sm"
+            >
+              <option value="">All Courses</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+          }
+
           onPageChange={setCurrentPage}
           itemsPerPage={itemsPerPage}
           onItemsPerPageChange={setItemsPerPage}

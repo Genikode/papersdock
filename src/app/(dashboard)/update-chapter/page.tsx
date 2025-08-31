@@ -16,7 +16,7 @@ export default function UpdatesChapter() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle save logic
-    console.log({ chapterName, course, image });
+    // console.log({ chapterName, course, image });
   };
 
   return (

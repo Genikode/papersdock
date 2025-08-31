@@ -154,6 +154,7 @@ export default function AddLecture() {
       try {
         const res = await api.get<ChaptersListResponse>('/chapters/get-all-chapters', { page: 1, limit: 500 });
         const list = Array.isArray(res?.data) ? res.data : [];
+        console.log('Loaded chapters:', list);
         setChaptersAll(list);
       } catch {
         setChaptersAll([]);

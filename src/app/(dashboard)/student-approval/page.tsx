@@ -15,6 +15,7 @@ type UserApiItem = {
   name: string;
   email: string;
   contact?: string;
+  parentsContact?: string;
   isApproved: 'Y' | 'N';
   isFeesPaid: 'Y' | 'N';
   isSecurityBypassed?: 'Y' | 'N';
@@ -274,31 +275,11 @@ export default function StudentApprovalPage() {
       { header: 'Email', accessor: 'email' },
       { header: 'Contact', accessor: 'contact' },
       {
-        header: 'Approved',
-        accessor: 'isApproved',
-        render: (v: 'Y' | 'N') => (
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full ${
-              v === 'Y' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-            }`}
-          >
-            {v === 'Y' ? 'Yes' : 'No'}
-          </span>
-        ),
+        header: 'Parents Contact',
+        accessor: 'parentsContact',
+        render: (v: string) => (v ? v : <span className="text-xs text-gray-400">—</span>),
       },
-      {
-        header: 'Fees Paid',
-        accessor: 'isFeesPaid',
-        render: (v: 'Y' | 'N') => (
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full ${
-              v === 'Y' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-            }`}
-          >
-            {v === 'Y' ? 'Paid' : 'Unpaid'}
-          </span>
-        ),
-      },
+    
       {
         header: 'Courses',
         accessor: 'allowedCourses',
@@ -333,14 +314,14 @@ export default function StudentApprovalPage() {
               onClick={() => openEditModal(row)}
               title="Edit User"
             >
-              Edit User
+              Edit
             </button>
             <button
               className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50"
               onClick={() => setMakeFreeId(row.id)}
               title="Make student free"
             >
-              Make Free
+             Free
             </button>
           </div>
         ),
@@ -352,33 +333,8 @@ export default function StudentApprovalPage() {
   /* Toolbar with filters + search */
   const toolbarLeft = (
     <div className="flex flex-wrap items-center gap-2">
-      <label className="text-sm text-gray-600">Approved</label>
-      <select
-        value={approvedFilter}
-        onChange={(e) => {
-          setApprovedFilter(e.target.value as '' | 'Y' | 'N');
-          setCurrentPage(1);
-        }}
-        className="border rounded px-2 py-1 text-sm"
-      >
-        <option value="">All</option>
-        <option value="Y">Yes</option>
-        <option value="N">No</option>
-      </select>
-
-      <label className="text-sm text-gray-600 ml-1">Fees</label>
-      <select
-        value={feesFilter}
-        onChange={(e) => {
-          setFeesFilter(e.target.value as '' | 'Y' | 'N');
-          setCurrentPage(1);
-        }}
-        className="border rounded px-2 py-1 text-sm"
-      >
-        <option value="">All</option>
-        <option value="Y">Paid</option>
-        <option value="N">Unpaid</option>
-      </select>
+   
+     
 
       <label className="text-sm text-gray-600 ml-1">Course</label>
       <select

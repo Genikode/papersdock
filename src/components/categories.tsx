@@ -44,9 +44,7 @@ export default function CategoryTabs({
              <div className="text-[12px] font-medium text-gray-900">
             {cat.title}
           </div>
-          <div className="text-sm text-gray-500">
-            {cat.count} topics
-          </div>
+        
             </div>
            
           </div>

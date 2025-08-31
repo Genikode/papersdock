@@ -335,7 +335,7 @@ export default function StudentFeesPage() {
                       {r.status}
                     </span>
                   </td>
-                  <td className="py-3 px-4">{r.amount}</td>
+                  <td className="py-3 px-4">PKR{r.amount}</td>
                   <td className="py-3 px-4">
                     {r.invoiceUrl ? (
                       <button
