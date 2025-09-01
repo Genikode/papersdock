@@ -91,6 +91,7 @@ export default function StudentApprovalPage() {
   const [editEmail, setEditEmail] = useState('');
   const [editPassword, setEditPassword] = useState(''); // optional; send only if non-empty
   const [editContact, setEditContact] = useState('');
+  const [editParentsContact, setEditParentsContact] = useState('');
   const [editRoleId, setEditRoleId] = useState('');     // text input; replace with roles dropdown if available
   const [editCourseIds, setEditCourseIds] = useState<string[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -146,7 +147,9 @@ export default function StudentApprovalPage() {
       });
 
       const list = res.data || [];
-      setServerRows(list);
+      // set master list of role od students 
+      const students = list.filter((u) => u.roleName.toLowerCase() === 'student');
+      setServerRows(students);
 
       // total from server (before our local course filter)
       setTotalItems(res.pagination?.total ?? list.length);
@@ -231,6 +234,7 @@ export default function StudentApprovalPage() {
     setEditEmail(user.email || '');
     setEditPassword(''); // blank by default; send only if changed
     setEditContact(user.contact || '');
+    setEditParentsContact( user.parentsContact || '');
     setEditRoleId('');   // no roleId available in list; keep editable text
     setEditCourseIds(parseAllowedCourses(user.allowedCourses));
   }
@@ -252,6 +256,7 @@ export default function StudentApprovalPage() {
         contact: editContact.trim(),
         roleId: "72820b17-a80f-4707-9ed8-e15d92902a2b",     // keep as free text unless you have a roles API
         courseIds: editCourseIds,
+        parentsContact: editParentsContact.trim(),
       };
       if (editPassword.trim()) {
         body.password = editPassword.trim();
@@ -485,6 +490,15 @@ export default function StudentApprovalPage() {
                 onChange={(e) => setEditContact(e.target.value)}
                 placeholder="9876543210"
               />
+            </div>
+            <div >
+                    <label className="block text-sm mb-1">Parent Contact</label>
+                  <input
+                className="w-full border rounded px-3 py-2 text-sm"
+                value={editParentsContact}
+                onChange={(e) => setEditParentsContact(e.target.value)}
+                placeholder="9876543210"
+              />  
             </div>
           
             <div className="md:col-span-2">

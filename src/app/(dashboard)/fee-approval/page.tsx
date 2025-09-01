@@ -19,6 +19,7 @@ type FeeApiItem = {
   isBlocked: 'Y' | 'N';
   isFeesPaid: 'Y' | 'N';
   allowedCourses: string;
+  dueDate: string;
   feeId: string;
   month: number;
   year: string;
@@ -238,7 +239,7 @@ export default function FeeApprovalPage() {
     () => [
       { header: 'S.No', accessor: 'sNo' },
       { header: 'Student', accessor: 'name' },
-      { header: 'Email', accessor: 'email' },
+    
       { header: 'Contact', accessor: 'contact' },
       {
         header: 'Month',
@@ -246,6 +247,9 @@ export default function FeeApprovalPage() {
         render: (value: number) => monthName(Number(value)),
       },
       { header: 'Year', accessor: 'year' },
+      { header: 'DueDate', accessor: 'dueDate'
+        , render: (value: string) => <span>{fmtDate(value)}</span>
+       },
       {
         header: 'Fee Status',
         accessor: 'status',
@@ -300,7 +304,7 @@ export default function FeeApprovalPage() {
                     title="Edit"
                     onClick={() =>{
                       setFeeAmount(row.feesAmount);
-                      setDueDate(row.feeExpiryDate ? new Date(row.feeExpiryDate) : new Date());
+                      setDueDate(row.dueDate  ? new Date(row.dueDate) : new Date());
                       setUpateId(row.feeId)  }
                     } 
                   >

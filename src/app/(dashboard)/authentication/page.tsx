@@ -13,14 +13,14 @@ export default function AuthPage() {
   const router = useRouter();
 
   /* ------- tabs ------- */
-  const [tab, setTab] = useState< 'login' | 'register'>('register'); // default to register since you asked for create-user flow
+  const [tab, setTab] = useState<'login' | 'register'>('register');
 
   /* ------- shared UI ------- */
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  /* ------- login state (placeholder: route to /login) ------- */
+  /* ------- login state ------- */
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -29,6 +29,7 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [contact, setContact] = useState('');
+  const [parentsContact, setParentsContact] = useState('');
   const [password, setPassword] = useState('');
 
   const [roles, setRoles] = useState<Role[]>([]);
@@ -38,7 +39,7 @@ export default function AuthPage() {
 
   const [roleId, setRoleId] = useState('');
   const selectedRole = useMemo(() => roles.find(r => r.id === roleId) || null, [roles, roleId]);
-  const isStudent = true;
+  const isStudent = (selectedRole?.roleName || '').toLowerCase() === 'student';
 
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
 
@@ -48,7 +49,6 @@ export default function AuthPage() {
       setLoadingRoles(true);
       setErrorMsg(null);
       try {
-        // NOTE: this endpoint returns roles INSIDE "message" array in your sample
         const res: any = await api.get<any>('/roles/get-roles');
         const list: Role[] =
           Array.isArray(res?.data) ? res.data :
@@ -93,7 +93,7 @@ export default function AuthPage() {
     if (!name.trim()) return setErrorMsg('Please enter a name.');
     if (!email.trim()) return setErrorMsg('Please enter an email.');
     if (!password.trim()) return setErrorMsg('Please enter a password.');
-    // if (!roleId) return setErrorMsg('Please select a role.');
+    if (!roleId) return setErrorMsg('Please select a role.');
     if (isStudent && selectedCourseIds.length === 0) {
       return setErrorMsg('Students must be assigned at least one course.');
     }
@@ -104,24 +104,24 @@ export default function AuthPage() {
         name,
         email,
         password,
-        contact: contact || '000000000', // fallback if you want
-        roleId: '72820b17-a80f-4707-9ed8-e15d92902a2b',
+        contact: contact || '000000000',
+        roleId,
       };
       if (isStudent) {
         body.courseIds = selectedCourseIds;
+        body.parentsContact = parentsContact || '000000000';
       }
 
       await api.post('/users/create-user', body);
 
       setSuccessMsg('User created successfully!');
-      // Optionally reset or route to login
       setName('');
       setEmail('');
       setContact('');
       setPassword('');
       setRoleId('');
+      setParentsContact('');
       setSelectedCourseIds([]);
-      // router.replace('/login'); // if you want
     } catch (e: any) {
       setErrorMsg(e?.message || 'Failed to create user');
     } finally {
@@ -129,11 +129,9 @@ export default function AuthPage() {
     }
   }
 
-  /* ------- login submit (routes to your existing login page) ------- */
+  /* ------- login submit ------- */
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    // You already have a dedicated /login screen with eye toggle etc.
-    // If you prefer real login here, wire your actual login endpoint.
     router.push('/login');
   }
 
@@ -145,72 +143,35 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-[#111827] via-[#1f2937] to-[#111827] text-white">
+    <div className="min-h-screen relative bg-white text-black">
       {/* Background art */}
-      <div className="pointer-events-none absolute inset-0 opacity-20">
-        <Image
-          src="/login-bg.png"
-          alt="bg"
-          fill
-          className="object-cover"
-          priority
-        />
-      </div>
+     
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-12 md:py-20">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-white backdrop-blur flex items-center justify-center">
               <Image src="/logo.webp" alt="logo" width={28} height={28} />
             </div>
             <div>
               <h1 className="text-xl font-semibold">PapersDock</h1>
-              <p className="text-xs text-white/60">A-Level Computer Science LMS</p>
+              {/* <p className="text-xs text-black/60">A-Level Computer Science LMS</p> */}
             </div>
-          </div>
-
-          <div className="hidden md:flex gap-2 rounded-full bg-white/10 p-1">
-         
-            <button
-              onClick={() => setTab('register')}
-              className={`px-4 py-1.5 text-sm rounded-full transition ${
-                tab === 'register' ? 'bg-white text-gray-900' : 'text-white/80'
-              }`}
-            >
-              Create user
-            </button>
           </div>
         </div>
 
         {/* Shell */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           {/* Left card */}
-          <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shadow-2xl p-6 md:p-8">
+          <div className="rounded-2xl bg-white backdrop-blur-md border border-black/10 shadow-2xl p-6 md:p-8">
             {/* Mobile tabs */}
-            <div className="md:hidden mb-6 flex gap-2 rounded-full bg-white/10 p-1">
-              <button
-                onClick={() => setTab('login')}
-                className={`flex-1 px-4 py-1.5 text-sm rounded-full transition ${
-                  tab === 'login' ? 'bg-white text-gray-900' : 'text-white/80'
-                }`}
-              >
-                Sign in
-              </button>
-              <button
-                onClick={() => setTab('register')}
-                className={`flex-1 px-4 py-1.5 text-sm rounded-full transition ${
-                  tab === 'register' ? 'bg-white text-gray-900' : 'text-white/80'
-                }`}
-              >
-                Create user
-              </button>
-            </div>
+        
 
             {tab === 'login' ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <h2 className="text-2xl font-bold">Welcome back</h2>
-                <p className="text-sm text-white/70 mb-4">
+                <p className="text-sm text-black/70 mb-4">
                   Sign in to manage your LMS dashboard.
                 </p>
 
@@ -245,7 +206,7 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setShowPw(s => !s)}
-                      className="text-white/70 hover:text-white"
+                      className="text-black/70 hover:text-black"
                       aria-label={showPw ? 'Hide password' : 'Show password'}
                     >
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -254,30 +215,30 @@ export default function AuthPage() {
                 />
 
                 <button
-                    type="submit"
-                    className="w-full py-2.5 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100"
+                  type="submit"
+                  className="w-full py-2.5 rounded-lg bg-black text-white font-semibold hover:opacity-90"
                 >
                   Continue
                 </button>
 
-                <p className="text-xs text-white/60 text-center">
-                  Need an account? Use the <span className="text-white">Create user</span> tab.
+                <p className="text-xs text-black/60 text-center">
+                  Need an account? Use the <span className="text-black font-medium">Create user</span> tab.
                 </p>
               </form>
             ) : (
               <form onSubmit={handleRegister} className="space-y-4">
                 <h2 className="text-2xl font-bold">Create user</h2>
-                <p className="text-sm text-white/70 mb-4">
+                <p className="text-sm text-black/70 mb-4">
                   Add an account and assign role/courses.
                 </p>
 
                 {errorMsg && (
-                  <p className="text-sm bg-red-500/20 border border-red-400/30 text-red-200 px-3 py-2 rounded-lg">
+                  <p className="text-sm bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg">
                     {errorMsg}
                   </p>
                 )}
                 {successMsg && (
-                  <p className="text-sm bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 px-3 py-2 rounded-lg flex items-center gap-2">
+                  <p className="text-sm bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 rounded-lg flex items-center gap-2">
                     <CheckCircle2 size={16} /> {successMsg}
                   </p>
                 )}
@@ -340,48 +301,91 @@ export default function AuthPage() {
                 />
 
                 {/* Role */}
-             
+                <div>
+                  <Label>Role</Label>
+                  <div className="rounded-xl bg-black/5 border border-black/10 px-3 py-2">
+                    <select
+                      className="bg-transparent w-full outline-none"
+                      value={roleId}
+                      onChange={(e) => {
+                        setRoleId(e.target.value);
+                        setSelectedCourseIds([]); // reset courses when role changes
+                      }}
+                      required
+                    >
+                      <option value="" className="bg-white">
+                        {loadingRoles ? 'Loading…' : 'Select a role'}
+                      </option>
+                      {roles.map(r => (
+                        <option key={r.id} value={r.id} className="bg-white">
+                          {r.roleName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {selectedRole?.description && (
+                    <p className="text-xs text-black/60 mt-1">{selectedRole.description}</p>
+                  )}
+                </div>
 
                 {/* Courses (only for students) */}
                 {isStudent && (
+                  <div className="mt-4">
+
                   <div>
                     <Label>Assign Courses (required)</Label>
-                    <div className="rounded-xl bg-white/5 border border-white/10 p-3 max-h-48 overflow-auto space-y-2">
-                      {loadingCourses && <p className="text-sm text-white/70">Loading courses…</p>}
+                    <div className="rounded-xl bg-black/5 border border-black/10 p-3 max-h-48 overflow-auto space-y-2">
+                      {loadingCourses && <p className="text-sm text-black/70">Loading courses…</p>}
                       {!loadingCourses && courses.length === 0 && (
-                        <p className="text-sm text-white/60">No courses available.</p>
+                        <p className="text-sm text-black/60">No courses available.</p>
                       )}
                       {courses.map(c => {
                         const checked = selectedCourseIds.includes(c.id);
                         return (
                           <label
                             key={c.id}
-                            className="flex items-center justify-between gap-3 bg-white/5 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/10"
+                            className="flex items-center justify-between gap-3 bg-black/5 rounded-lg px-3 py-2 cursor-pointer hover:bg-black/10"
                           >
                             <div className="flex items-center gap-2">
                               <input
                                 type="checkbox"
-                                className="accent-white"
+                                className="accent-black"
                                 checked={checked}
                                 onChange={() => toggleCourse(c.id)}
                               />
                               <span className="text-sm">{c.title}</span>
                             </div>
-                            {c.fees && <span className="text-xs text-white/60">${c.fees}</span>}
+                            {c.fees && <span className="text-xs text-black/60">${c.fees}</span>}
                           </label>
                         );
                       })}
                     </div>
-                    <p className="text-xs text-white/60 mt-1">
+                    <p className="text-xs text-black/60 mt-1">
                       Tip: You can assign multiple courses.
                     </p>
+                  </div>
+                  <div className="mt-2">
+                    <Field
+                      label="Parents/Guardian Contact"
+                      icon={<Phone size={16} />}
+                      input={
+                        <input
+                          className="bg-transparent outline-none w-full"
+                          placeholder="090078601"
+                          value={parentsContact}
+                          onChange={(e) => setParentsContact(e.target.value)}
+                        />
+                      }
+                    />
+                  </div>
+                    
                   </div>
                 )}
 
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-2.5 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100 disabled:opacity-60"
+                  className="w-full py-2.5 rounded-lg bg-black text-white font-semibold hover:opacity-90 disabled:opacity-60"
                 >
                   {submitting ? 'Creating…' : 'Create user'}
                 </button>
@@ -389,20 +393,8 @@ export default function AuthPage() {
             )}
           </div>
 
-          {/* Right side highlight */}
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-8 flex flex-col justify-center">
-            <h3 className="text-3xl font-semibold mb-3">Modern, minimal, fast.</h3>
-            <p className="text-white/70 mb-6">
-              Manage users, courses and content from one elegant place. Secure by default with API key + bearer token support.
-            </p>
-
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <Badge title="Secure" desc="x-api-key & Bearer token" />
-              <Badge title="Scalable" desc="Server-driven lists" />
-              <Badge title="S3 Uploads" desc="Presign + PUT flow" />
-              <Badge title="TypeScript" desc="Strict & robust" />
-            </div>
-          </div>
+          {/* Right side highlight (optional content area) */}
+          {/* Add any marketing/feature highlights here if needed */}
         </div>
       </div>
     </div>
@@ -424,8 +416,8 @@ function Field({
   return (
     <div>
       <Label>{label}</Label>
-      <div className="flex items-center gap-3 rounded-xl bg-white/5 border border-white/10 px-3 py-2">
-        {icon && <span className="shrink-0 text-white/80">{icon}</span>}
+      <div className="flex items-center gap-3 rounded-xl bg-black/5 border border-black/10 px-3 py-2">
+        {icon && <span className="shrink-0 text-black/70">{icon}</span>}
         <div className="flex-1">{input}</div>
         {trailing}
       </div>
@@ -434,14 +426,14 @@ function Field({
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <label className="block text-xs mb-1 text-white/70">{children}</label>;
+  return <label className="block text-xs mb-1 text-black/70">{children}</label>;
 }
 
 function Badge({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="rounded-lg bg-white/5 border border-white/10 p-3">
+    <div className="rounded-lg bg-black/5 border border-black/10 p-3">
       <p className="font-medium">{title}</p>
-      <p className="text-white/60 text-xs mt-1">{desc}</p>
+      <p className="text-black/60 text-xs mt-1">{desc}</p>
     </div>
   );
 }
