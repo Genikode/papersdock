@@ -1,8 +1,17 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useParams } from 'next/navigation';
 import clsx from 'clsx';
-import { CalendarDays, BookOpen, BadgeInfo, Paperclip, Mic, Send, Image as ImageIcon } from 'lucide-react';
+import {
+  CalendarDays,
+  BookOpen,
+  BadgeInfo,
+  Paperclip,
+  Mic,
+  Send,
+  Image as ImageIcon,
+} from 'lucide-react';
 
 /* ----------------------------- Types & Mock Data ---------------------------- */
 type MsgKind = 'text' | 'image' | 'audio';
@@ -57,7 +66,7 @@ const QUERIES: Record<string, QueryInfo> = {
         authorName: 'John Doe',
         createdAt: '2024-01-20T15:45:00Z',
         imageUrl:
-          'https://images.unsplash.com/photo-1511485977113-f34c92461ad9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80', // placeholder
+          'https://images.unsplash.com/photo-1511485977113-f34c92461ad9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
         text: "Here's my algorithm implementation screenshot",
       },
       {
@@ -67,7 +76,7 @@ const QUERIES: Record<string, QueryInfo> = {
         authorName: 'Dr. Smith',
         createdAt: '2024-01-20T16:15:00Z',
         text:
-          "Great question! Binary search has O(log n) time complexity because we eliminate half of the remaining elements in each step. Let me break it down for you.",
+          'Great question! Binary search has O(log n) time complexity because we eliminate half of the remaining elements in each step. Let me break it down for you.',
       },
       {
         id: 'm4',
@@ -145,35 +154,21 @@ function MessageBubble({ m }: { m: Message }) {
 
       <div className="space-y-1">
         <div className={clsx('px-3 py-2', base)}>
-          <div
-            className={clsx(
-              'mb-1 text-[11px]',
-              mine ? 'text-slate-600' : 'text-slate-300'
-            )}
-          >
+          <div className={clsx('mb-1 text-[11px]', mine ? 'text-slate-600' : 'text-slate-300')}>
             <span className="font-medium">{m.authorName}</span>
             <span className="mx-1">•</span>
             <span>{ts}</span>
           </div>
 
-          {/* Content */}
           {m.kind === 'text' && <div>{m.text}</div>}
 
           {m.kind === 'image' && (
             <div className="space-y-2">
               <div className="overflow-hidden rounded-md border border-slate-800/30 bg-slate-950/40 sm:bg-slate-950/30">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={m.imageUrl}
-                  alt="attachment"
-                  className="block max-h-72 w-full object-contain"
-                />
+                <img src={m.imageUrl} alt="attachment" className="block max-h-72 w-full object-contain" />
               </div>
-              {m.text && (
-                <div className={clsx('text-xs', mine ? 'text-slate-700' : 'text-slate-300')}>
-                  {m.text}
-                </div>
-              )}
+              {m.text && <div className={clsx('text-xs', mine ? 'text-slate-700' : 'text-slate-300')}>{m.text}</div>}
             </div>
           )}
 
@@ -192,10 +187,7 @@ function MessageBubble({ m }: { m: Message }) {
           )}
         </div>
 
-        {/* little note under bubble for the audio example */}
-        {m.kind !== 'text' && m.text && mine && (
-          <div className="pl-2 text-xs text-slate-500">{m.text}</div>
-        )}
+        {m.kind !== 'text' && m.text && mine && <div className="pl-2 text-xs text-slate-500">{m.text}</div>}
       </div>
 
       {mine && (
@@ -208,23 +200,23 @@ function MessageBubble({ m }: { m: Message }) {
 }
 
 /* --------------------------------- Page ----------------------------------- */
-export default function ViewQueryPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const { id } = params;
-  const data = useMemo<QueryInfo | null>(() => QUERIES[id] ?? null, [id]);
+export default function ViewQueryPage() {
+  // In Client Components, read dynamic route params with useParams()
+  const params = useParams<{ id: string }>();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
-  // local reply state (demo only)
+  const data = useMemo<QueryInfo | null>(() => (id ? QUERIES[id] ?? null : null), [id]);
+
   const [draft, setDraft] = useState('');
 
-  if (!data) {
+  if (!id || !data) {
     return (
       <main className="mx-auto max-w-6xl p-4 sm:p-6">
         <h1 className="text-lg font-semibold text-slate-900">Query Details</h1>
         <div className="mt-4 rounded-lg border bg-white p-6">
-          <p className="text-slate-600">No query found for id: <span className="font-mono">{id}</span></p>
+          <p className="text-slate-600">
+            No query found for id: <span className="font-mono">{id ?? '(missing)'}</span>
+          </p>
         </div>
       </main>
     );
@@ -235,7 +227,6 @@ export default function ViewQueryPage({
       <h1 className="text-lg font-semibold text-slate-900">Query Details</h1>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
-        {/* Conversation panel */}
         <section className="rounded-lg border bg-white">
           <div className="border-b px-4 py-3">
             <h2 className="text-base font-semibold text-slate-900">Conversation</h2>
@@ -247,7 +238,6 @@ export default function ViewQueryPage({
             ))}
           </div>
 
-          {/* Composer */}
           <div className="border-t p-3 sm:p-4">
             <div className="flex items-center gap-2">
               <input
@@ -256,18 +246,10 @@ export default function ViewQueryPage({
                 placeholder="Type your message..."
                 className="min-w-0 flex-1 rounded-md border bg-white px-3 py-2 text-sm outline-none ring-indigo-300 focus:ring-2"
               />
-              <button
-                type="button"
-                className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50"
-                title="Attach"
-              >
+              <button type="button" className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50" title="Attach">
                 <Paperclip size={16} />
               </button>
-              <button
-                type="button"
-                className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50"
-                title="Voice"
-              >
+              <button type="button" className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50" title="Voice">
                 <Mic size={16} />
               </button>
               <button
@@ -286,7 +268,6 @@ export default function ViewQueryPage({
           </div>
         </section>
 
-        {/* Right info card */}
         <aside className="rounded-lg border bg-white">
           <div className="border-b px-4 py-3">
             <h2 className="text-base font-semibold text-slate-900">Query Information</h2>
@@ -309,11 +290,7 @@ export default function ViewQueryPage({
               <StatusPill status={data.status} />
             </div>
 
-            <MetaRow
-              icon={<CalendarDays size={16} />}
-              label="Created"
-              value={new Date(data.createdAt).toLocaleDateString()}
-            />
+            <MetaRow icon={<CalendarDays size={16} />} label="Created" value={new Date(data.createdAt).toLocaleDateString()} />
           </div>
         </aside>
       </div>
