@@ -2,15 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import clsx from 'clsx';
-import {
-  CalendarDays,
-  BookOpen,
-  BadgeInfo,
-  Paperclip,
-  Mic,
-  Send,
-  Image as ImageIcon,
-} from 'lucide-react';
+import { CalendarDays, BookOpen, BadgeInfo, Paperclip, Mic, Send, Image as ImageIcon } from 'lucide-react';
 
 /* ----------------------------- Types & Mock Data ---------------------------- */
 type MsgKind = 'text' | 'image' | 'audio';
