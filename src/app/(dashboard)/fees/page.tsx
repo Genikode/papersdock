@@ -149,7 +149,7 @@ export default function StudentFeesPage() {
           year,
           monthLabel: MONTH_LABEL[month],
           status: it.status || '-',
-          amount: it.feesAmount ? `$ ${it.feesAmount}` : '-',
+          amount: it.feesAmount ? ` ${it.feesAmount}` : '-',
           invoiceUrl: it.invoiceUrl,
           id: it.id,
         };
