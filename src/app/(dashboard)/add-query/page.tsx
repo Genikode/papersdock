@@ -8,7 +8,9 @@ import {
   StopCircle,
   PlayCircle,
   X,
+  ArrowLeft,
 } from 'lucide-react';
+import { useRouter } from 'next/router';
 
 type PaperKey = 'AS' | 'BS' | 'CS';
 
@@ -139,10 +141,16 @@ export default function AddQueryPage() {
 
     alert('Submitted! (Wire this up to your API)');
   };
-
+const router = useRouter();
   return (
     <div className="min-h-screen bg-slate-50">
       <main className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+             <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
+        >
+          <ArrowLeft size={16} /> Back
+        </button>
         <h1 className="text-2xl font-semibold text-slate-900">Add Queries</h1>
         <p className="mt-1 text-sm text-slate-500">Add your query</p>
 

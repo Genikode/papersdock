@@ -98,7 +98,6 @@ export default function AddAssignment() {
         description,
         courseId,
         firstDeadline,  // YYYY-MM-DD
-        lastDeadline,   // YYYY-MM-DD
         assignmentFile: fileUrl,       // empty string allowed if optional
       
       });

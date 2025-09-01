@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
-import { Save, UploadCloud } from 'lucide-react';
+import { ArrowLeft, Save, UploadCloud } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
@@ -159,6 +159,12 @@ export default function AddNotes() {
 
   return (
     <main className="bg-[#F9FAFB] text-gray-800 min-h-screen">
+           <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
+        >
+          <ArrowLeft size={16} /> Back
+        </button>
       <PageHeader title="Add Notes" description="Create comprehensive study notes and resources" />
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-md shadow border max-w-4xl mx-auto">
         <h2 className="text-lg font-semibold mb-4">Notes Details</h2>
