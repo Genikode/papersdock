@@ -355,7 +355,7 @@ export default function AuthPage() {
                               />
                               <span className="text-sm">{c.title}</span>
                             </div>
-                            {c.fees && <span className="text-xs text-black/60">${c.fees}</span>}
+                            {c.fees && <span className="text-xs text-black/60">PKR{c.fees}</span>}
                           </label>
                         );
                       })}
