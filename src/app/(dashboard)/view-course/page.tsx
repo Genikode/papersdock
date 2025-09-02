@@ -52,6 +52,7 @@ export default function CoursesPage() {
 
   // edit form
   const [editTitle, setEditTitle] = useState('');
+  const [editFees, setEditFees] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -110,6 +111,7 @@ export default function CoursesPage() {
               onClick={() => {
                 setShowEdit(row as CourseItem);
                 setEditTitle((row as CourseItem).title || '');
+                setEditFees((row as CourseItem).fees || '');
                 setEditError(null);
               }}
             >
@@ -169,6 +171,7 @@ export default function CoursesPage() {
     try {
       await api.patch(`/courses/update-course/${showEdit.id}`, {
         title: editTitle.trim(),
+        fees: (editFees || '').trim() || undefined,
       });
       setShowEdit(null);
       fetchCourses();
@@ -292,6 +295,16 @@ export default function CoursesPage() {
                 />
               </div>
               {/* Intentionally not editing fees here to match your PATCH body spec */}
+                     <div>
+              <label className="block text-sm font-medium mb-1">Fees</label>
+              <input
+                type="text"
+                value={editFees}
+                onChange={(e) => setEditFees(e.target.value)}
+                placeholder="e.g. 99"
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+            </div>
             </div>
             {editError && <p className="text-sm text-red-600">{editError}</p>}
             <button
