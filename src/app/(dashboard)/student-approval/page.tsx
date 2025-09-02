@@ -308,12 +308,7 @@ export default function StudentApprovalPage() {
         accessor: 'actions',
         render: (_: any, row: UserApiItem) => (
           <div className="flex items-center gap-2">
-            <button
-              className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-gray-50"
-              onClick={() => openAccessModal(row)}
-            >
-              Access
-            </button>
+          
             <button
               className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-indigo-50"
               onClick={() => openEditModal(row)}

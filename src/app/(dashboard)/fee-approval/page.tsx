@@ -83,7 +83,7 @@ export default function FeeApprovalPage() {
   const [courseId, setCourseId] = useState<string>('');
   const [status, setStatus] = useState<string>('');
 
-  const COURSE_LIMIT = 2;
+  const COURSE_LIMIT = 1000;
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [coursePage, setCoursePage] = useState(1);
   const [courseHasMore, setCourseHasMore] = useState(false);
@@ -98,6 +98,7 @@ export default function FeeApprovalPage() {
       const items: CourseItem[] = Array.isArray(body?.data)
         ? body.data
         : Array.isArray(body?.data?.data)
+
         ? body.data.data
         : [];
 
