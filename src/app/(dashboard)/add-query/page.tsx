@@ -10,7 +10,7 @@ import {
   X,
   ArrowLeft,
 } from 'lucide-react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 type PaperKey = 'AS' | 'BS' | 'CS';
 
