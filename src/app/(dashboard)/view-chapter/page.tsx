@@ -3,15 +3,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import TableComponent, { TableColumn } from '@/components/TableComponent';
-import { Edit, Trash2, PlusCircle } from 'lucide-react';
+import { Edit, Trash2, PlusCircle, Copy } from 'lucide-react';
 import ImageModal from '@/components/ImageModal';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import Modal from '@/components/Modal';
 import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
 interface ChapterRow {
-  sno: number;         // <-- NEW: serial number for table
-  id: string;          // kept internally, not shown in table
+  sno: number;         // serial number for table
+  id: string;          // internal id
   title: string;
   courseName?: string;
   chapterImageUrl?: string;
@@ -32,6 +33,10 @@ interface GetAllChaptersResponse {
   pagination: { total: number; page: number; limit: number; totalPages: number };
 }
 
+type CourseItem = { id: string; title: string };
+
+const COPY_ENDPOINT = '/chapters/copy-chapter'; // <-- change if your backend path differs
+
 export default function ViewChapter() {
   const router = useRouter();
 
@@ -39,10 +44,12 @@ export default function ViewChapter() {
   const [showImageModal, setShowImageModal] = useState(false);
 
   const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
-  const [deleteRowTitle, setDeleteRowTitle] = useState<string | null>(null); // <-- NEW
+  const [deleteRowTitle, setDeleteRowTitle] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [courseId, setCourseId] = useState<string | null>(null); // filter by course
-  const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
+
+  // Filter by course
+  const [courseId, setCourseId] = useState<string | null>(null);
+  const [courses, setCourses] = useState<CourseItem[]>([]);
 
   // Server-driven table state
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,13 +59,22 @@ export default function ViewChapter() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ChapterRow[]>([]);
 
+  // Copy modal state
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [copySource, setCopySource] = useState<{ id: string; title: string; courseId?: string } | null>(null);
+  const [copyTargetCourseId, setCopyTargetCourseId] = useState<string>('');
+  const [copying, setCopying] = useState(false);
+
+  // messages
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   // helper to shorten title for delete dialog
   const shortTitle = (t?: string) =>
     (t ?? '').length > 30 ? (t ?? '').slice(0, 30) + '…' : (t ?? '');
 
   const columns: TableColumn[] = useMemo(
     () => [
-      // REPLACED: Chapter ID -> S.No
       { header: 'S.No', accessor: 'sno' },
       { header: 'Chapter Name', accessor: 'title' },
       { header: 'Course', accessor: 'courseName' },
@@ -105,11 +121,21 @@ export default function ViewChapter() {
             >
               <Edit size={18} />
             </button>
+
+            {/* NEW: Copy Chapter */}
+            <button
+              className="text-gray-700 hover:text-gray-900"
+              onClick={() => openCopyModal(row)}
+              title="Copy chapter to another course"
+            >
+              <Copy size={18} />
+            </button>
+
             <button
               className="text-red-600 hover:text-red-800"
               onClick={() => {
                 setDeleteRowId(row.id);
-                setDeleteRowTitle(row.title); // <-- capture title for dialog
+                setDeleteRowTitle(row.title);
                 setShowDeleteModal(true);
               }}
               title="Delete"
@@ -128,44 +154,44 @@ export default function ViewChapter() {
     try {
       const res = await api.get<GetAllChaptersResponse>(
         '/chapters/get-all-chapters',
-        { page: currentPage, limit: itemsPerPage, search: searchTerm, courseId:courseId }
+        { page: currentPage, limit: itemsPerPage, search: searchTerm, courseId: courseId || undefined }
       );
 
       const list = res.data ?? [];
       const mapped: ChapterRow[] = list.map((c, idx) => ({
-        sno: (currentPage - 1) * itemsPerPage + idx + 1, // <-- serial number
+        sno: (currentPage - 1) * itemsPerPage + idx + 1,
         id: c.id,
         title: c.title,
         courseName: c.courseName,
         chapterImageUrl: c.chapterImageUrl,
-        courseId: (c as any).courseId,
+        courseId: c.courseId,
       }));
 
       setRows(mapped);
       setTotalItems(res.pagination?.total ?? mapped.length);
-    } catch {
+    } catch (e: any) {
       setRows([]);
       setTotalItems(0);
+      setErrorMsg(e?.message || 'Failed to load chapters');
     } finally {
       setLoading(false);
     }
   }
-async function fetchCourses() {
+
+  async function fetchCourses() {
     try {
       const res: any = await api.get('/courses/get-all-courses', { page: 1, limit: 100 });
-      const list = res.data ?? [];
-      if (list.length > 0) {
-        setCourses(list);
-        // setCourseId(list[0].id); // default to first course
-      }
+      const list: CourseItem[] = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : [];
+      setCourses(list);
     } catch {
-      setCourseId(null);
+      setCourses([]);
     }
   }
 
   useEffect(() => {
     fetchCourses();
   }, []);
+
   useEffect(() => {
     fetchChapters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -178,12 +204,53 @@ async function fetchCourses() {
       setShowDeleteModal(false);
       setDeleteRowId(null);
       setDeleteRowTitle(null);
-      fetchChapters(); // refresh
-    } catch {
+      setInfoMsg('Chapter deleted.');
+      fetchChapters();
+    } catch (e: any) {
       setShowDeleteModal(false);
+      setErrorMsg(e?.message || 'Failed to delete');
     }
   }
-  
+
+  /* ---------------- Copy chapter ---------------- */
+  function openCopyModal(row: ChapterRow) {
+    setCopySource({ id: row.id, title: row.title, courseId: row.courseId });
+    // default target: first course that isn't the source's course
+    const defaultTarget =
+      courses.find((c) => c.id !== row.courseId)?.id || (courses[0]?.id ?? '');
+    setCopyTargetCourseId(defaultTarget);
+    setCopyOpen(true);
+    setInfoMsg(null);
+    setErrorMsg(null);
+  }
+
+  async function handleCopySubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!copySource?.id || !copyTargetCourseId) return;
+    if (copyTargetCourseId === copySource.courseId) {
+      setErrorMsg('Please choose a different course as the target.');
+      return;
+    }
+    setCopying(true);
+    setErrorMsg(null);
+    setInfoMsg(null);
+    try {
+      await api.post(COPY_ENDPOINT, {
+        chapterId: copySource.id,
+        courseId: copyTargetCourseId,
+      });
+      setCopyOpen(false);
+      setCopySource(null);
+      setInfoMsg('Chapter copied successfully.');
+      // refresh if your list should reflect the new chapter
+      fetchChapters();
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Failed to copy chapter');
+    } finally {
+      setCopying(false);
+    }
+  }
+
   return (
     <main className="bg-[#F9FAFB] text-gray-800">
       <PageHeader
@@ -194,18 +261,44 @@ async function fetchCourses() {
       />
 
       <div className="px-4 py-6">
+        {(infoMsg || errorMsg) && (
+          <div
+            className={`mb-3 text-sm px-3 py-2 rounded border ${
+              errorMsg
+                ? 'bg-red-50 border-red-200 text-red-700'
+                : 'bg-green-50 border-green-200 text-green-700'
+            }`}
+          >
+            {errorMsg || infoMsg}
+          </div>
+        )}
+
         <div className="mb-3 text-sm text-gray-600">{loading ? 'Loading chapters…' : null}</div>
+
         <TableComponent
           columns={columns}
           data={rows}
           serverMode
           searchTerm={searchTerm}
-          onSearchTermChange={setSearchTerm}
+          onSearchTermChange={(v) => {
+            setSearchTerm(v);
+            setCurrentPage(1);
+          }}
           currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(n) => {
+            setItemsPerPage(n);
+            setCurrentPage(1);
+          }}
+          totalItems={totalItems}
           toolbarLeft={
             <select
               value={courseId ?? ''}
-              onChange={(e) => setCourseId(e.target.value)}
+              onChange={(e) => {
+                setCourseId(e.target.value || null);
+                setCurrentPage(1);
+              }}
               className="border px-3 py-1 rounded text-sm"
             >
               <option value="">All Courses</option>
@@ -216,14 +309,10 @@ async function fetchCourses() {
               ))}
             </select>
           }
-
-          onPageChange={setCurrentPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={setItemsPerPage}
-          totalItems={totalItems}
         />
       </div>
 
+      {/* Image viewer */}
       {showImageModal && imageSrc && (
         <ImageModal
           src={imageSrc}
@@ -234,14 +323,60 @@ async function fetchCourses() {
         />
       )}
 
+      {/* Delete confirmation */}
       {showDeleteModal && (
         <ConfirmationModal
           title="Confirm Deletion"
-          // Show short chapter name instead of ID
           description={`Are you sure you want to delete chapter: "${shortTitle(deleteRowTitle ?? '')}"?`}
           onCancel={() => setShowDeleteModal(false)}
           onConfirm={handleConfirmDelete}
         />
+      )}
+
+      {/* Copy chapter modal */}
+      {copyOpen && copySource && (
+        <Modal title="Copy Chapter" onClose={() => setCopyOpen(false)}>
+          <form onSubmit={handleCopySubmit} className="space-y-4">
+            <div className="text-sm">
+              <p className="text-gray-700">
+                <span className="font-medium">Chapter:</span> {copySource.title}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Copy to Course</label>
+              <select
+                value={copyTargetCourseId}
+                onChange={(e) => setCopyTargetCourseId(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm"
+              >
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id} disabled={c.id === copySource.courseId}>
+                    {c.title}{c.id === copySource.courseId ? ' (current)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCopyOpen(false)}
+                className="px-4 py-1.5 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                // disabled={  copyTargetCourseId === copySource.courseId}
+                className="px-4 py-1.5 rounded text-white bg-[#0B1537] disabled:opacity-50"
+              >
+                {copying ? 'Copying…' : 'Copy Chapter'}
+              </button>
+            </div>
+          </form>
+          
+        </Modal>
       )}
     </main>
   );

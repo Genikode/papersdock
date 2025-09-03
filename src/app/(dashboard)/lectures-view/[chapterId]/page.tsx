@@ -84,6 +84,12 @@ export default function LecturesByChapterPage() {
     <Suspense fallback={<div className="p-6 text-sm text-gray-500">Loading lectures…</div>}>
       <main className="min-h-screen bg-gray-50">
         <div className="p-6 max-w-7xl mx-auto">
+          <button
+            onClick={() => router.back()}
+            className="mb-4 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+          >
+            &larr; Back
+          </button>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
             <div>
@@ -183,7 +189,7 @@ export default function LecturesByChapterPage() {
                       <button
                         onClick={() => router.push(`/lectures/${lec.id}?tab=video`)}
                         disabled={!lec.videoUrl}
-                        className="w-full inline-flex items-center justify-center gap-2 text-xs font-medium px-3 py-2 rounded border hover:bg-gray-50 disabled:opacity-50"
+                        className="w-full inline-flex items-center justify-center gap-2 text-xs font-medium px-3 py-2 rounded border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
                         title={lec.videoUrl ? 'Play video' : 'No video available'}
                       >
                         <Play size={14} /> Video

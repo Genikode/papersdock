@@ -12,7 +12,13 @@ type Chapter = {
   courseName?: string;
   createdAt?: string;
 };
-
+type CoursesResponse = {
+  status: number;
+  success: boolean;
+  message: string;
+  data: { id: string; title: string; fees: number;  }[];
+  pagination?: any;
+};
 type GetAllChaptersResponse = {
   status: number;
   success: boolean;
@@ -34,7 +40,9 @@ export default function StudentChaptersPage() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+    const [courses, setCourses] = useState<{ id: string; title: string; fees: number }[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+    const [courseId, setCourseId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
@@ -46,8 +54,8 @@ export default function StudentChaptersPage() {
     setError(null);
     try {
       const res = await api.get<GetAllChaptersResponse>(
-        '/chapters/student/get-all-chapters?courseId=',
-        { page: currentPage, limit: itemsPerPage, search: searchTerm || '' }
+        '/chapters/student/get-all-chapters?',
+        { page: currentPage, limit: itemsPerPage, search: searchTerm, courseId: courseId || '' }
       );
 
       const list = normalizeListPayload(res.data);
@@ -71,8 +79,23 @@ export default function StudentChaptersPage() {
   useEffect(() => {
     fetchChapters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage, searchTerm]);
-
+  }, [currentPage, itemsPerPage, searchTerm, courseId]);
+ useEffect(() => {
+    (async () => {
+      setLoadingCourses(true);
+      try {
+        const res = await api.get<CoursesResponse>('/courses/get-allowed-courses', {
+          page: 1,
+          limit: 100,
+        });
+        setCourses(res.data || []);
+      } catch {
+        setCourses([]);
+      } finally {
+        setLoadingCourses(false);
+      }
+    })();
+  }, []);
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(totalItems / itemsPerPage)),
     [totalItems, itemsPerPage]
@@ -84,19 +107,21 @@ export default function StudentChaptersPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-2 text-sm">
-          <span>Items:</span>
-          <select
-            className="border px-2 py-1 rounded"
-            value={itemsPerPage}
-            onChange={(e) => {
-              setCurrentPage(1);
-              setItemsPerPage(Number(e.target.value));
-            }}
-          >
-            {[6, 12, 24].map(n => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
+        <select
+                value={courseId}
+                onChange={(e) => {
+                  setCourseId(e.target.value);
+               
+                }}
+                className="border rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-60 md:w-56"
+              >
+                <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
         </div>
 
         <input
@@ -146,7 +171,7 @@ export default function StudentChaptersPage() {
                   onClick={() =>
                     router.push(`/lectures-view/${c.id}`)
                   }
-                  className="bg-gray-800 text-white px-3 py-1 text-xs rounded flex items-center gap-1"
+                  className="bg-gray-800 text-white px-3 py-1 text-xs rounded flex items-center gap-1 cursor-pointer "
                 >
                   <Play size={14} />
                   Show Lectures

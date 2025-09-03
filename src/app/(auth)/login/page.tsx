@@ -3,19 +3,23 @@ import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { isLoggedIn, setAccessToken, setUserData, UserData } from '@/lib/auth';
+import { getUserData, isLoggedIn, setAccessToken, setUserData, UserData } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
+     const currentUser = getUserData();
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
-      if (isLoggedIn()) {
+      if (isLoggedIn()  && currentUser?.roleName == 'student') {
+        router.replace('/recorded-lectures');
+      }
+      else if (isLoggedIn()  && currentUser?.roleName == 'admin') {
         router.replace('/dashboard');
       }
     }, [router]);
@@ -56,7 +60,12 @@ export default function LoginPage() {
               if (result.userData) {
                 setUserData(result.userData);
               }
-              router.replace('/dashboard');
+              if(result.userData.roleName === 'student') {
+                router.replace('/recorded-lectures');
+              }else  {
+                router.replace('/dashboard');
+              }
+              // router.replace('/dashboard');
             } catch (err: any) {
               const message = err?.message || 'Login failed';
               setError(message);

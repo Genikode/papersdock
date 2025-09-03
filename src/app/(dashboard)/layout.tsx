@@ -74,11 +74,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       { label: 'Authentication', href: '/authentication', icon: Lock },
       { label: 'View Courses', href: '/view-course', icon: BookOpen },
       { label: 'Zoom Meeting', href: '/create-link', icon: Edit },
-      { label: 'My Query', href: '/my-query', icon: BookOpen },
     ],
     []
   );
-
+  
   const studentNavItems = useMemo(
     () => [
       { label: 'Recorded Lectures', href: '/recorded-lectures', icon: Video },
@@ -86,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       { label: 'Notes', href: '/notes', icon: StickyNote },
       { label: 'Fees', href: '/fees', icon: BadgeCheck },
       { label: 'Zoom Meeting', href: '/student-link', icon: Edit },
+      { label: 'My Query', href: '/my-query', icon: BookOpen },
     ],
     []
   );

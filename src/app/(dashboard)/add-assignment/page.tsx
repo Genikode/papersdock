@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { Save, UploadCloud } from 'lucide-react';
+import { ArrowLeft, Save, UploadCloud } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
 import { useRouter } from 'next/navigation';
 
@@ -112,6 +112,12 @@ export default function AddAssignment() {
 
   return (
     <main className="min-h-screen bg-[#F9FAFB] text-gray-800">
+           <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
+        >
+          <ArrowLeft size={16} /> Back
+        </button>
       <PageHeader title="Create Assignment" description="Design assignments and quizzes for students" />
 
       <form onSubmit={handleSubmit} className="px-6 pb-10">

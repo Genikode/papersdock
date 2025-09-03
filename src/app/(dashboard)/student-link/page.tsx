@@ -27,7 +27,13 @@ type ExternalLinkItem = {
   createdAt?: string;
   updatedAt?: string;
 };
-
+type CoursesResponse = {
+  status: number;
+  success: boolean;
+  message: string;
+  data: { id: string; title: string; fees: number;  }[];
+  pagination?: any;
+};
 type ExternalLinksResponse = {
   status: number;
   success: boolean;
@@ -63,8 +69,9 @@ export default function StudentZoomLinksPage() {
   // Filters
   const [search, setSearch] = useState('');
   const [onlyZoom, setOnlyZoom] = useState(true); // default to just Zoom-like links
-  const [courseId, setCourseId] = useState('');
-
+    const [courses, setCourses] = useState<{ id: string; title: string; fees: number }[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+    const [courseId, setCourseId] = useState('');
   // Pagination (client-side)
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(12);
@@ -72,7 +79,7 @@ export default function StudentZoomLinksPage() {
   // UI
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Fetch links (student view)
+  // Fetch links (student 
   async function fetchLinks() {
     setLoading(true);
     setError(null);
@@ -90,8 +97,23 @@ export default function StudentZoomLinksPage() {
 
   useEffect(() => {
     fetchLinks();
+  }, [courseId]);
+ useEffect(() => {
+    (async () => {
+      setLoadingCourses(true);
+      try {
+        const res = await api.get<CoursesResponse>('/courses/get-allowed-courses', {
+          page: 1,
+          limit: 100,
+        });
+        setCourses(res.data || []);
+      } catch {
+        setCourses([]);
+      } finally {
+        setLoadingCourses(false);
+      }
+    })();
   }, []);
-
   // Build course list from data (for filter dropdown)
   const courseOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -167,49 +189,31 @@ export default function StudentZoomLinksPage() {
         <div className="bg-white border rounded-md p-3 sm:p-4 mb-4">
           <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
             {/* Only Zoom toggle */}
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="accent-indigo-600"
-                checked={onlyZoom}
-                onChange={(e) => setOnlyZoom(e.target.checked)}
-              />
-              Show Zoom/Meet links only
-            </label>
+           
 
             {/* Course filter */}
             <div className="flex items-center gap-2">
               <Filter size={16} className="text-gray-500" />
               <span className="text-sm text-gray-600">Course</span>
-              <select
+               <select
                 value={courseId}
-                onChange={(e) => setCourseId(e.target.value)}
-                className="border rounded px-2 py-2 sm:py-1.5 text-sm min-w-[12rem]"
+                onChange={(e) => {
+                  setCourseId(e.target.value);
+               
+                }}
+                className="border rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-60 md:w-56"
               >
-                <option value="">All courses</option>
-                {courseOptions.map((c) => (
+                <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
+                {courses.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name}
+                    {c.title}
                   </option>
                 ))}
               </select>
             </div>
 
             {/* Per page */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Per page</span>
-              <select
-                value={limit}
-                onChange={(e) => setLimit(Number(e.target.value))}
-                className="border rounded px-2 py-2 sm:py-1.5 text-sm"
-              >
-                {[6, 12, 24, 48].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
+           
 
             {/* Search box (push to end on md+) */}
             <div className="relative w-full md:ml-auto md:w-72">

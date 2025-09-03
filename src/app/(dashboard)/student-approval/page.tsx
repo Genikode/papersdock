@@ -317,11 +317,13 @@ export default function StudentApprovalPage() {
               Edit
             </button>
             <button
-              className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50"
+              className={`inline-flex items-center gap-1 border px-2 py-1 rounded text-xs  ${
+              row.isSecurityBypassed === 'Y' ? 'border-green-500 bg-green-500 text-white' : ''
+              }`}
               onClick={() => setMakeFreeId(row.id)}
-              title="Make student free"
+              
             >
-             Free
+              Free
             </button>
           </div>
         ),

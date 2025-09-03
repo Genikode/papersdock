@@ -1,142 +1,54 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  LogOut,
-  Search,
-} from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Search, Globe, Lock } from 'lucide-react';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+
+/* ===================== API Types ===================== */
+
+type Yn = 'Y' | 'N';
+
+type QueryApiItem = {
+  id: string;
+  title: string;
+  text: string;
+  attachmentUrl?: string | null;
+  voiceAttachment?: string | null;
+  isPublic: Yn;
+  isClosed: Yn;
+  replyCount: number;
+};
+
+type ListResponse = {
+  status: number;
+  success: boolean;
+  message: string;
+  data: QueryApiItem[];
+  pagination: { total: number; page: number; limit: number; totalPages: number };
+};
+
+/* ===================== UI Types ====================== */
+
 type Status = 'pending' | 'resolved';
+
 type QueryItem = {
   id: string;
   title: string;
-  paper: string;
-  chapter: string;
   body: string;
-  due: string; // MM/DD/YYYY
   status: Status;
+  isPublic: Yn;
+  replyCount: number;
 };
 
-const MOCK: QueryItem[] = [
-  {
-    id: '1',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '2',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'resolved',
-  },
-  {
-    id: '3',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '4',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '5',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '6',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '7',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '8',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '9',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '10',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '11',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-  {
-    id: '12',
-    title: 'Help with Binary Search Algorithm',
-    paper: 'AS',
-    chapter: 'AD',
-    body: 'Can you explain the time complexity?',
-    due: '1/25/2024',
-    status: 'pending',
-  },
-];
+/* ===================== Small bits ==================== */
 
 function StatusBadge({ status }: { status: Status }) {
-  const map = {
-    pending: { text: 'Pending', cls: 'bg-amber-50 text-amber-700 ring-amber-200' },
-    resolved: { text: 'Resolved', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
-  }[status];
+  const map =
+    status === 'resolved'
+      ? { text: 'Resolved', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200' }
+      : { text: 'Pending', cls: 'bg-amber-50 text-amber-700 ring-amber-200' };
 
   return (
     <span
@@ -152,7 +64,6 @@ function StatusBadge({ status }: { status: Status }) {
 
 function Card({ item }: { item: QueryItem }) {
   const router = useRouter();
-
   return (
     <article className="rounded-lg border bg-white p-4 sm:p-5 shadow-[0_1px_0_#eceef1]">
       <div className="flex items-start justify-between gap-2">
@@ -160,15 +71,27 @@ function Card({ item }: { item: QueryItem }) {
         <StatusBadge status={item.status} />
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-x-4 text-xs text-slate-600 max-[420px]:grid-cols-1">
-        <div>Paper: <span className="font-medium">{item.paper}</span></div>
-        <div>Chapter: <span className="font-medium">{item.chapter}</span></div>
-      </div>
-
       <p className="mt-3 text-sm text-slate-700">{item.body}</p>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="text-xs text-slate-500">Due: {item.due}</div>
+      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-slate-600">
+        <div className="inline-flex items-center gap-2">
+          <span className="inline-flex items-center gap-1">
+            {item.isPublic === 'Y' ? (
+              <>
+                <Globe size={14} className="text-emerald-600" /> Public
+              </>
+            ) : (
+              <>
+                <Lock size={14} className="text-slate-500" /> Private
+              </>
+            )}
+          </span>
+          <span className="text-slate-400">•</span>
+          <span>
+            {item.replyCount} {item.replyCount === 1 ? 'reply' : 'replies'}
+          </span>
+        </div>
+
         <button
           className="rounded-md border px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           onClick={() => router.push(`/view-query/${item.id}`)}
@@ -180,64 +103,128 @@ function Card({ item }: { item: QueryItem }) {
   );
 }
 
+/* ===================== Debounce hook ===================== */
+
+function useDebounced<T>(value: T, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+  const timeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(() => setDebounced(value), delay);
+    return () => {
+      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    };
+  }, [value, delay]);
+
+  return debounced;
+}
+
+/* ======================= Page ========================= */
+
 export default function MyQueriesPage() {
-  const [statusFilter, setStatusFilter] = useState<'all' | Status>('all');
-  const [query, setQuery] = useState('');
+  const router = useRouter();
+
+  // server params
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [searchInput, setSearchInput] = useState('');
+  const search = useDebounced(searchInput, 400);
 
-  const filtered = useMemo(() => {
-    const base =
-      statusFilter === 'all'
-        ? MOCK
-        : MOCK.filter((x) => x.status === statusFilter);
+  // client status filter (API doesn’t provide status filter on student endpoint)
+  const [statusFilter, setStatusFilter] = useState<'all' | Status>('all');
 
-    if (!query.trim()) return base;
-    const q = query.toLowerCase();
-    return base.filter(
-      (x) =>
-        x.title.toLowerCase().includes(q) ||
-        x.body.toLowerCase().includes(q) ||
-        x.paper.toLowerCase().includes(q) ||
-        x.chapter.toLowerCase().includes(q)
-    );
-  }, [statusFilter, query]);
+  // data
+  const [itemsRaw, setItemsRaw] = useState<QueryItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
-  const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / limit));
-  const clampedPage = Math.min(page, totalPages);
-  const startIndex = (clampedPage - 1) * limit;
-  const pageItems = filtered.slice(startIndex, startIndex + limit);
-    const router = useRouter();
+  async function fetchList() {
+    setLoading(true);
+    setErr(null);
+    try {
+      const res = await api.get<ListResponse>('/query/student/my-queries', {
+        search: search || '',
+        page,
+        limit,
+      });
+
+      const data = res.data ?? [];
+      const mapped: QueryItem[] = data.map((q) => ({
+        id: q.id,
+        title: q.title,
+        body: q.text,
+        status: q.isClosed === 'Y' ? 'resolved' : 'pending',
+        isPublic: q.isPublic,
+        replyCount: q.replyCount ?? 0,
+      }));
+
+      setItemsRaw(mapped);
+      const p = res.pagination ?? { total: mapped.length, page, limit, totalPages: 1 };
+      setTotal(p.total);
+      setTotalPages(Math.max(1, p.totalPages));
+    } catch (e: any) {
+      setErr(e?.message || 'Failed to load queries');
+      setItemsRaw([]);
+      setTotal(0);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // reset page on search change
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  // fetch on params change
+  useEffect(() => {
+    fetchList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, search]);
+
+  // client-side filter for status
+  const items = useMemo(() => {
+    if (statusFilter === 'all') return itemsRaw;
+    return itemsRaw.filter((x) => x.status === statusFilter);
+  }, [itemsRaw, statusFilter]);
+
+  // page “showing” counts (server totals stay accurate; status filter is per-page)
+  const startIndex = total === 0 ? 0 : (page - 1) * limit + 1;
+  const endIndex = total === 0 ? 0 : Math.min(total, (page - 1) * limit + items.length);
+
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Top bar (content area header) */}
-    
-
-      {/* Page body */}
       <main className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-        <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">My Queries</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">My Queries</h1>
+
+          {/* Add Query */}
+          <button
+            type="button"
+            onClick={() => router.push('/add-query')}
+            className="ml-auto rounded-md bg-slate-900 text-white px-3 py-2 text-sm font-medium hover:opacity-95"
+          >
+            Add Query
+          </button>
+        </div>
 
         {/* Filters row */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-           className='rounded-md bg-slate-900 text-white px-3 py-2 text-sm font-medium hover:opacity-95'
-          onClick={()=>router.push('/add-query')}
-          >
-           Add Query
-          </button>
-
+          {/* Status filter (client-side) */}
           <div className="flex overflow-hidden rounded-md border bg-white">
             {(['all', 'pending', 'resolved'] as const).map((s) => (
               <button
                 key={s}
-                onClick={() => { setStatusFilter(s); setPage(1); }}
+                onClick={() => {
+                  setStatusFilter(s);
+                }}
                 className={clsx(
                   'px-4 py-2 text-sm capitalize',
-                  statusFilter === s
-                    ? 'bg-slate-900 text-white'
-                    : 'text-slate-700 hover:bg-slate-50'
+                  statusFilter === s ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'
                 )}
               >
                 {s}
@@ -245,25 +232,38 @@ export default function MyQueriesPage() {
             ))}
           </div>
 
+          {/* Search */}
           <div className="relative ml-auto w-full min-w-[200px] max-w-sm flex-1 sm:w-auto">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+            />
             <input
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search queries..."
               className="w-full rounded-md border bg-white pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 ring-indigo-300"
             />
           </div>
         </div>
 
-        {/* Card grid */}
+        {/* Grid */}
         <section className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {pageItems.map((item) => (
-            <Card key={item.id} item={item} />
-          ))}
-          {pageItems.length === 0 && (
+          {loading &&
+            Array.from({ length: Math.min(limit, 6) }).map((_, i) => (
+              <div key={i} className="rounded-lg border bg-white p-4 sm:p-5 animate-pulse">
+                <div className="h-4 w-2/3 rounded bg-slate-200" />
+                <div className="mt-3 h-3 w-full rounded bg-slate-200" />
+                <div className="mt-2 h-3 w-5/6 rounded bg-slate-200" />
+                <div className="mt-4 h-8 w-28 rounded bg-slate-200" />
+              </div>
+            ))}
+
+          {!loading && items.map((item) => <Card key={item.id} item={item} />)}
+
+          {!loading && items.length === 0 && (
             <div className="rounded-md border bg-white p-6 text-center text-sm text-slate-500">
-              No queries match your filters.
+              {err ? err : 'No queries found.'}
             </div>
           )}
         </section>
@@ -275,23 +275,28 @@ export default function MyQueriesPage() {
             <select
               className="rounded border bg-white px-2 py-1"
               value={limit}
-              onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
             >
               {[10, 20, 30].map((n) => (
-                <option key={n} value={n}>{n}</option>
+                <option key={n} value={n}>
+                  {n}
+                </option>
               ))}
             </select>
             <span>items</span>
             <span className="hidden sm:inline mx-3 text-slate-300">|</span>
             <span className="hidden sm:inline">
-              Showing {Math.min(total, startIndex + 1)} - {Math.min(total, startIndex + pageItems.length)} out of {total} queries
+              Showing {startIndex} - {endIndex} of {total}
             </span>
           </div>
 
           <nav className="flex items-center gap-1">
             <button
               className="inline-flex items-center gap-1 rounded-md border bg-white px-3 py-2 disabled:opacity-50"
-              disabled={clampedPage === 1}
+              disabled={page === 1 || loading}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
               <ChevronLeft size={16} /> Previous
@@ -303,9 +308,10 @@ export default function MyQueriesPage() {
                 <button
                   key={n}
                   onClick={() => setPage(n)}
+                  disabled={loading}
                   className={clsx(
                     'rounded-md px-3 py-2',
-                    clampedPage === n ? 'bg-slate-900 text-white' : 'bg-white border'
+                    page === n ? 'bg-slate-900 text-white' : 'bg-white border'
                   )}
                 >
                   {n}
@@ -315,7 +321,7 @@ export default function MyQueriesPage() {
 
             <button
               className="inline-flex items-center gap-1 rounded-md border bg-white px-3 py-2 disabled:opacity-50"
-              disabled={clampedPage === totalPages}
+              disabled={page === totalPages || loading}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
               Next <ChevronRight size={16} />

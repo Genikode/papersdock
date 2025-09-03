@@ -52,7 +52,7 @@ type CoursesResponse = {
   status: number;
   success: boolean;
   message: string;
-  data: { id: string; title: string }[];
+  data: { id: string; title: string; fees: number;  }[];
   pagination?: any;
 };
 
@@ -118,7 +118,7 @@ function statusBadgeClass(status: string) {
   if (v === 'checked') return 'bg-green-100 text-green-800';
   if (v === 'submitted') return 'bg-blue-100 text-blue-800';
   if (v === 'active') return 'bg-yellow-100 text-yellow-800';
-  if (v === 'pending') return 'bg-amber-100 text-amber-800';
+  if (v === 'Time Exceeded') return 'bg-amber-100 text-amber-800';
   return 'bg-gray-100 text-gray-700';
 }
 
@@ -472,7 +472,7 @@ export default function AssignmentsPage() {
   const [status, setStatus] = useState(''); // filters on assignmentSubmissionStatus
 
   // Courses
-  const [courses, setCourses] = useState<{ id: string; title: string }[]>([]);
+  const [courses, setCourses] = useState<{ id: string; title: string; fees: number }[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
 
   // Data
@@ -493,7 +493,7 @@ export default function AssignmentsPage() {
     (async () => {
       setLoadingCourses(true);
       try {
-        const res = await api.get<CoursesResponse>('/courses/get-all-courses', {
+        const res = await api.get<CoursesResponse>('/courses/get-allowed-courses', {
           page: 1,
           limit: 100,
         });
@@ -608,6 +608,7 @@ export default function AssignmentsPage() {
                 <option value="Submitted">Submitted</option>
                 <option value="Checked">Checked</option>
                 <option value="Pending">Pending</option>
+                <option value="Time Exceeded">Time Exceeded</option>
               </select>
             </div>
 

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { Save, UploadCloud, Link as LinkIcon } from 'lucide-react';
+import { Save, UploadCloud, Link as LinkIcon, ArrowLeft } from 'lucide-react';
 
 /* ========= Types (match your API) ========= */
 
@@ -340,6 +340,12 @@ export default function UpdateLecturePage() {
   /* ===== UI ===== */
   return (
     <main className="bg-[#F9FAFB] min-h-screen px-6 py-6">
+           <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
+        >
+          <ArrowLeft size={16} /> Back
+        </button>
       <h1 className="text-2xl font-bold text-black">Update Lecture</h1>
       <p className="text-sm text-gray-600 mb-6">Modify lecture details and assets</p>
 
