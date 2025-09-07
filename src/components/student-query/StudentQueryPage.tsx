@@ -24,7 +24,9 @@ import {
   UserRound,
   ChevronLeft,
   ChevronRight,
-  Pencil,
+  Download,
+  FileAudio,
+  StopCircle,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { getUserData } from '@/lib/auth';
@@ -71,6 +73,7 @@ type ReplyApiItem = {
   userId: number;
   text: string;
   attachmentUrl?: string | null;
+  attachmentExtension?: string | null; // <-- used for pdf/image decision
   voiceAttachment?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -106,6 +109,7 @@ type Message = {
   text: string;
   createdAt: string;
   attachmentUrl?: string | null;
+  attachmentExtension?: string | null;
   voiceAttachment?: string | null;
   editable?: boolean;
 };
@@ -141,6 +145,33 @@ function sanitizeKeyPart(input: string) {
 }
 function objUrlFromSigned(signedUrl: string) {
   return signedUrl.split('?')[0];
+}
+function extFromUrl(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url, typeof window !== 'undefined' ? window.location.href : 'http://local');
+    const path = u.pathname || '';
+    const hinted = (u.searchParams.get('filename') || '').toLowerCase();
+    const name = (hinted || path.split('/').pop() || '').toLowerCase();
+    const i = name.lastIndexOf('.');
+    return i > -1 ? name.slice(i + 1) : null;
+  } catch {
+    const i = url.lastIndexOf('.');
+    return i > -1 ? url.slice(i + 1).toLowerCase() : null;
+  }
+}
+/* derive extension from File */
+function guessExtFromFile(f?: File | null): string | null {
+  if (!f) return null;
+  const mt = (f.type || '').toLowerCase();
+  if (mt === 'application/pdf') return 'pdf';
+  if (mt === 'image/jpeg') return 'jpg';
+  if (mt === 'image/jpg') return 'jpg';
+  if (mt === 'image/png') return 'png';
+  if (mt === 'image/webp') return 'webp';
+  const n = (f.name || '').toLowerCase();
+  const i = n.lastIndexOf('.');
+  return i > -1 ? n.slice(i + 1) : null;
 }
 
 /* ============================== Badges & Bits =========================== */
@@ -338,7 +369,7 @@ function QueryList({
         {!loading &&
           items.map((item, index) => (
             <QueryListItem
-              key={`${item.id}-${index}`} // keep list keys unique
+              key={`${item.id}-${index}`}
               q={item}
               active={activeId === item.id}
               onClick={() => onSelect(item.id)}
@@ -349,7 +380,6 @@ function QueryList({
         )}
       </div>
 
-      {/* pagination */}
       <div className="mt-auto border-t p-2 flex items-center justify-between text-xs">
         <span className="text-slate-600 px-2">
           Page {page} / {totalPages} • {total} total
@@ -445,6 +475,7 @@ function useVoiceRecorder() {
           if (u) URL.revokeObjectURL(u);
           return URL.createObjectURL(b);
         });
+        stream.getTracks().forEach((t) => t.stop());
       };
       rec.start(250);
 
@@ -506,51 +537,90 @@ function useVoiceRecorder() {
   return { supported, recording, paused, blob, url, duration, error, canvasRef, start, pause, stop, reset };
 }
 
-/* =============================== Messages =============================== */
+/* ============================ WhatsApp-style bubbles ============================ */
 
-function MessageBubble({ m, onEdit }: { m: Message; onEdit?: (m: Message) => void }) {
-  const mine = m.author === 'instructor';
+function PdfCard({ url, filename }: { url: string; filename?: string }) {
   return (
-    <div className={clsx('flex items-start gap-2', mine ? 'justify-end' : 'justify-start')}>
-      {!mine && <AvatarInitials name={m.name} />}
-      <div
-        className={clsx(
-          'max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm',
-          mine ? 'rounded-br-md bg-slate-900 text-white' : 'rounded-bl-md border bg-white text-slate-900'
-        )}
-      >
-        <div className={clsx('mb-1 text-[11px]', mine ? 'text-slate-300' : 'text-slate-500')}>
-          <span className="font-medium">{m.name}</span> &nbsp; {timeFull(m.createdAt)}
-        </div>
-        <div className="whitespace-pre-wrap">{m.text}</div>
-
-        {(m.attachmentUrl || m.voiceAttachment) && (
-          <div className={clsx('mt-2 space-y-1', mine ? 'text-slate-200' : 'text-slate-700')}>
-            {m.attachmentUrl && (
-              <a href={m.attachmentUrl} target="_blank" rel="noreferrer" className="underline text-xs">
-                View attachment
-              </a>
-            )}
-            {m.voiceAttachment && (
-              <audio controls className="w-full">
-                <source src={m.voiceAttachment} />
-                Your browser does not support the audio element.
-              </audio>
-            )}
-          </div>
-        )}
-
-        {mine && onEdit && (
-          <button
-            onClick={() => onEdit(m)}
-            className="mt-2 inline-flex items-center gap-1 text-[11px] underline"
-            title="Edit my reply"
-          >
-            <Pencil size={12} /> Edit
-          </button>
-        )}
+    <div className="flex items-center gap-3 rounded-xl bg-[#dcf8c6] p-3 ring-1 ring-emerald-200">
+      <div className="flex h-[70px] w-[88px] items-center justify-center rounded-md bg-white ring-1 ring-emerald-200">
+        <FileText className="h-6 w-6 text-emerald-700" />
       </div>
-      {mine && <AvatarInitials name={m.name} />}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold text-slate-800">
+          {filename || url.split('/').pop() || 'document.pdf'}
+        </div>
+        <div className="mt-0.5 text-xs text-slate-700">PDF • tap to open</div>
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline"
+        >
+          <Download className="h-4 w-4" /> Open
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function ImageBubble({ url }: { url: string }) {
+  return (
+    <div className="overflow-hidden rounded-xl ring-1 ring-slate-200">
+      <img
+        src={url}
+        alt="attachment"
+        className="block max-h-[300px] w-full max-w-[360px] object-cover"
+      />
+    </div>
+  );
+}
+
+function VoiceBubble({ url }: { url: string }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const a = audioRef.current; if (!a) return;
+    const onTime = () => setProgress(a.currentTime / Math.max(1, a.duration || 1));
+    const onEnd = () => setPlaying(false);
+    a.addEventListener('timeupdate', onTime);
+    a.addEventListener('ended', onEnd);
+    return () => { a.removeEventListener('timeupdate', onTime); a.removeEventListener('ended', onEnd); };
+  }, []);
+
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-[#dcf8c6] p-3">
+      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-emerald-200">
+        <FileAudio className="h-5 w-5 text-emerald-700" />
+      </div>
+      <button
+        onClick={() => {
+          const a = audioRef.current;
+          if (!a) return;
+          if (playing) { a.pause(); setPlaying(false); }
+          else { a.play(); setPlaying(true); }
+        }}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white"
+      >
+        {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+      </button>
+      <div className="relative mx-1 h-8 min-w-[150px] max-w-[320px] flex-1">
+        <div className="absolute inset-0 flex items-end gap-[3px] opacity-80">
+          {Array.from({ length: 36 }).map((_, i) => (
+            <div
+              key={i}
+              className="w-[4px] rounded-t bg-emerald-500"
+              style={{ height: `${(Math.sin(i / 2) * 0.5 + 0.5) * 16 + 3}px` }}
+            />
+          ))}
+        </div>
+        <div
+          className="pointer-events-none absolute inset-y-0 left-0 bg-emerald-200"
+          style={{ width: `${Math.round(progress * 100)}%` }}
+        />
+      </div>
+      <audio ref={audioRef} src={url} preload="metadata" />
     </div>
   );
 }
@@ -582,8 +652,8 @@ export default function AdminQueryPage() {
   const [loadingReplies, setLoadingReplies] = useState(false);
 
   // composer attachments
-  const [fileInput, setFileInput] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const [fileInput, setFileInput] = useState<File | null>(null);
 
   // voice recorder (composer)
   const rec = useVoiceRecorder();
@@ -656,12 +726,13 @@ export default function AdminQueryPage() {
         const mine = String(r.createdBy) === String(currentUser?.id);
         return {
           id: String(r.id),
-          key: `${r.id}-${r.createdAt ?? ''}-${i}`, // unique & stable
+          key: `${r.id}-${r.createdAt ?? ''}-${i}`,
           author: mine ? 'instructor' : 'student',
           name: r.replierName || 'User',
           text: r.text || '',
           createdAt: r.createdAt,
           attachmentUrl: r.attachmentUrl,
+          attachmentExtension: r.attachmentExtension || extFromUrl(r.attachmentUrl || ''),
           voiceAttachment: r.voiceAttachment,
           editable: mine,
         };
@@ -709,19 +780,24 @@ export default function AdminQueryPage() {
     try {
       let attachmentUrl: string | undefined;
       let voiceAttachment: string | undefined;
+      let attachmentExtension: string | undefined;
 
       if (fileInput) {
         attachmentUrl = await uploadViaPresign(fileInput, 'query/attachments');
+        // include attachmentExtension in body
+        attachmentExtension =
+          guessExtFromFile(fileInput) || extFromUrl(attachmentUrl || '') || undefined;
       }
       if (rec.blob) {
         voiceAttachment = await uploadViaPresign(rec.blob, 'query/voices');
       }
 
       await api.post(ENDPOINTS.REPLY_CREATE, {
-        text,
+        text:text || '',
         queryId: activeId,
         attachmentUrl: attachmentUrl || '',
         voiceAttachment: voiceAttachment || '',
+        attachmentExtension: attachmentExtension || '', // <— important bit
       });
 
       // reset composer
@@ -750,11 +826,9 @@ export default function AdminQueryPage() {
     let nextAttachment = editing.attachmentUrl || '';
     let nextVoice = editing.voiceAttachment || '';
 
-    // If user selected new file, upload and replace
     if (editFile) {
       nextAttachment = await uploadViaPresign(editFile, 'query/attachments');
     }
-    // If user recorded a new voice, upload and replace
     if (editRec.blob) {
       nextVoice = await uploadViaPresign(editRec.blob, 'query/voices');
     }
@@ -764,6 +838,7 @@ export default function AdminQueryPage() {
       text: editingText,
       attachmentUrl: nextAttachment,
       voiceAttachment: nextVoice,
+      // If your update API also accepts attachmentExtension, you can add it here too.
     });
 
     setEditing(null);
@@ -870,15 +945,56 @@ export default function AdminQueryPage() {
           <div className="flex-1 overflow-y-auto space-y-3 px-5 py-4">
             {loadingReplies && <div className="text-sm text-slate-500">Loading replies…</div>}
             {!loadingReplies &&
-              activeReplies.map((m) => (
-                <MessageBubble key={m.key} m={m} onEdit={(mm) => mm.editable && startEdit(mm)} />
-              ))}
+              activeReplies.map((m) => {
+                const isMine = m.author === 'instructor';
+                const ext = (m.attachmentExtension || extFromUrl(m.attachmentUrl) || '').toLowerCase();
+                const isPdf = ext === 'pdf';
+                const isImage = ['png', 'jpg', 'jpeg', 'webp'].includes(ext);
+
+                return (
+                  <div key={m.key} className={clsx('flex gap-2', isMine ? 'justify-end' : 'justify-start')}>
+                    {!isMine && <AvatarInitials name={m.name} />}
+                    <div
+                      className={clsx(
+                        'max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm',
+                        isMine ? 'bg-slate-900 text-white rounded-br-md' : 'bg-white text-slate-900 border rounded-bl-md'
+                      )}
+                    >
+                      <div className={clsx('mb-1 text-[11px]', isMine ? 'text-slate-300' : 'text-slate-500')}>
+                        <span className="font-medium">{m.name}</span> &nbsp; {timeFull(m.createdAt)}
+                      </div>
+
+                      {m.text && <div className="mb-2 whitespace-pre-wrap">{m.text}</div>}
+
+                      {/* WhatsApp-style attachments */}
+                      {m.attachmentUrl && isPdf && <PdfCard url={m.attachmentUrl} />}
+                      {m.attachmentUrl && isImage && <div className="mt-1"><ImageBubble url={m.attachmentUrl} /></div>}
+                      {m.voiceAttachment && <div className="mt-1"><VoiceBubble url={m.voiceAttachment} /></div>}
+
+                      {!m.attachmentUrl && !m.voiceAttachment && !m.text && (
+                        <div className="italic text-slate-500">Attachment unavailable</div>
+                      )}
+
+                      {isMine && m.editable && (
+                        <button
+                          onClick={() => startEdit(m)}
+                          className="mt-2 inline-flex items-center gap-1 text-[11px] underline"
+                          title="Edit my reply"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                    {isMine && <AvatarInitials name={m.name} />}
+                  </div>
+                );
+              })}
             {!loadingReplies && activeReplies.length === 0 && active && (
               <div className="text-sm text-slate-500">No replies yet.</div>
             )}
           </div>
 
-          {/* Edit bar (with attach + voice) */}
+          {/* Edit bar */}
           {editing && (
             <div className="border-t bg-yellow-50 px-4 py-3">
               <div className="mb-2 text-xs text-yellow-800">Editing your reply…</div>
@@ -890,7 +1006,6 @@ export default function AdminQueryPage() {
                     onChange={(e) => setEditingText(e.target.value)}
                   />
 
-                  {/* attach replacement */}
                   <input
                     ref={editFileRef}
                     type="file"
@@ -907,7 +1022,6 @@ export default function AdminQueryPage() {
                     <Paperclip size={16} />
                   </button>
 
-                  {/* voice replacement control */}
                   {!editRec.recording && !editRec.blob && (
                     <button
                       type="button"
@@ -1025,137 +1139,120 @@ export default function AdminQueryPage() {
                 if (rec.recording) return; // block while recording
                 const t = messageText.trim();
                 if (!t && !fileInput && !rec.blob) return;
-                handleSend(t || '(voice/attachment)');
+                handleSend(t || '');
                 setMessageText('');
               }}
               className="border-t bg-white px-4 py-3"
             >
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 rounded-md border bg-white px-3 py-2">
-                    <input
-                      name="msg"
-                      className="w-full border-none outline-none text-sm"
-                      placeholder="Type your message..."
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                    />
-                  </div>
-
-                  {/* File attach */}
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="application/pdf,image/*"
-                    className="hidden"
-                    onChange={(e) => setFileInput(e.target.files?.[0] || null)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50"
-                    title={fileInput ? `Attached: ${fileInput.name}` : 'Attach file'}
-                  >
-                    <Paperclip size={16} />
-                  </button>
-
-                  {/* Voice control trigger */}
-                  {!rec.recording && !rec.blob && (
+              {/* Voice bar ABOVE input */}
+              {(rec.recording || rec.blob) && (
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                  <div className="flex items-center gap-2 text-rose-600">
                     <button
                       type="button"
-                      onClick={() => rec.start()}
-                      className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50"
-                      title="Record voice"
-                      disabled={!rec.supported}
+                      onClick={() => {
+                        rec.stop();
+                       
+                      }}
+                      title="Delete"
+                      className="text-slate-700 hover:text-red-600"
                     >
-                      <Mic size={16} />
+                  <StopCircle />
                     </button>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={sending || rec.recording}
-                    className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:opacity-95 disabled:opacity-60"
-                    title={rec.recording ? 'Finish recording to send' : 'Send'}
-                  >
-                    <Send size={16} />
-                    {sending ? 'Sending…' : 'Send'}
-                  </button>
-                </div>
-
-                {(fileInput || rec.recording || rec.blob) && (
-                  <div className="flex items-center gap-3 text-sm">
-                    {fileInput && (
-                      <span className="text-slate-600 inline-flex items-center gap-1">
-                        📎 {fileInput.name}
-                        <button
-                          type="button"
-                          className="ml-1 text-slate-500 hover:text-red-600"
-                          onClick={() => {
-                            setFileInput(null);
-                            if (fileRef.current) fileRef.current.value = '';
-                          }}
-                          title="Remove file"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </span>
-                    )}
-
+                    <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-rose-600" />
+                    <span className="text-sm font-medium tabular-nums">
+                      {String(Math.floor(rec.duration / 60)).padStart(1,'0')}:{String(rec.duration % 60).padStart(2,'0')}
+                    </span>
+                    <canvas ref={rec.canvasRef} width={280} height={22} className="ml-2 hidden h-[22px] w-[320px] sm:block" />
+                  </div>
+                  <div className="flex items-center gap-2">
                     {rec.recording && (
-                      <div className="flex-1 flex items-center gap-3 rounded-full border px-3 py-1.5 bg-white">
-                        <button
-                          type="button"
-                          onClick={() => rec.stop()}
-                          title="Stop recording"
-                          className="text-slate-600 hover:text-red-600"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        <span className="inline-flex items-center gap-2 text-[13px] text-slate-700">
-                          <span className="inline-block h-2 w-2 rounded-full bg-red-600" />
-                          {String(Math.floor(rec.duration / 60)).padStart(1, '0')}:
-                          {String(rec.duration % 60).padStart(2, '0')}
-                        </span>
-                        <canvas ref={rec.canvasRef} width={280} height={26} className="h-[26px] w-full max-w-[320px]" />
-                        <button
-                          type="button"
-                          onClick={() => rec.pause()}
-                          className="text-slate-700 hover:text-slate-900"
-                          title={rec.paused ? 'Resume' : 'Pause'}
-                        >
-                          {rec.paused ? <Play size={18} /> : <Pause size={18} />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            rec.stop();
-                            rec.reset();
-                          }}
-                          className="text-slate-700 hover:text-slate-900"
-                          title="Discard"
-                        >
-                          <RotateCcw size={18} />
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => rec.pause()}
+                        className="rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
+                        title={rec.paused ? 'Resume' : 'Pause'}
+                      >
+                        {rec.paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                      </button>
                     )}
-
-                    {!rec.recording && rec.blob && rec.url && (
-                      <div className="flex-1 flex items-center gap-3 rounded-full border px-3 py-1.5 bg-white">
-                        <button
-                          type="button"
-                          onClick={() => rec.reset()}
-                          className="text-slate-600 hover:text-red-600"
-                          title="Delete voice"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        <audio controls src={rec.url} className="w-full" />
-                      </div>
+                    {rec.blob && (
+                      <button
+                        type="button"
+                        onClick={() => rec.reset()}
+                        className="rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
+                        title="Discard"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </button>
                     )}
                   </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="application/pdf,image/*"
+                  className="hidden"
+                  onChange={(e) => setFileInput(e.target.files?.[0] || null)}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
+                  title={fileInput ? `Attached: ${fileInput.name}` : 'Attach file'}
+                >
+                  <Paperclip className="h-5 w-5" />
+                </button>
+
+                <input
+                  name="msg"
+                  className="flex-1 rounded-md bg-transparent px-2 py-2 text-sm outline-none placeholder:text-slate-400"
+                  placeholder="Type your message…"
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                />
+
+                {!rec.recording && !rec.blob && (
+                  <button
+                    type="button"
+                    onClick={() => rec.start()}
+                    className="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
+                    title="Record voice"
+                    disabled={!rec.supported}
+                  >
+                    <Mic className="h-5 w-5" />
+                  </button>
                 )}
+
+                <button
+                  type="submit"
+                  disabled={sending || rec.recording}
+                  className="inline-flex items-center justify-center rounded-md bg-slate-900 p-2 text-white hover:opacity-95 disabled:opacity-60"
+                  title={rec.recording ? 'Finish recording to send' : 'Send'}
+                >
+                  <Send className="h-5 w-5" />
+                </button>
               </div>
+
+              {fileInput && (
+                <div className="mt-2 inline-flex items-center gap-2 rounded border bg-white px-2 py-1 text-xs text-slate-600">
+                  📎 {fileInput.name}
+                  <button
+                    type="button"
+                    className="text-slate-500 hover:text-red-600"
+                    onClick={() => {
+                      setFileInput(null);
+                      if (fileRef.current) fileRef.current.value = '';
+                    }}
+                    title="Remove file"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
             </form>
           )}
         </section>

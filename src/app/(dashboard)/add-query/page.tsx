@@ -16,7 +16,7 @@ import { api } from '@/lib/api';
 /* ========================== API endpoints ========================== */
 const ENDPOINTS = {
   SIGNED: '/get-signed-url',
-  COURSES: '/courses/get-all-courses',
+  COURSES: '/courses/get-allowed-courses',
   CHAPTERS: '/chapters/student/get-all-chapters?page=1&limit=10',
   CREATE: '/query/student/create-query',
 };
@@ -76,6 +76,7 @@ export default function AddQueryPage() {
   // voice
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [attachmentExtension, setAttachmentExtension] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
@@ -151,12 +152,15 @@ export default function AddQueryPage() {
     const url = URL.createObjectURL(f);
     if (filePreview) URL.revokeObjectURL(filePreview);
     setFilePreview(url);
+      const extension = f.name.split('.').pop()?.toLowerCase() || null;
+  setAttachmentExtension(extension);
   }
   function removeFile() {
     setFile(null);
     if (filePreview) URL.revokeObjectURL(filePreview);
     setFilePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    setAttachmentExtension(null);
   }
 
   /* --------------------- Audio choose/record -------------------- */
@@ -254,6 +258,7 @@ export default function AddQueryPage() {
         attachmentUrl,
         voiceAttachment,
         courseId,
+        attachmentExtension,
         chapterId,
       });
 
@@ -264,6 +269,7 @@ export default function AddQueryPage() {
       setDetails('');
       setCourseId('');
       setChapterId('');
+     
       removeFile();
       removeAudio();
 
