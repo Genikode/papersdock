@@ -80,33 +80,40 @@ export default function LecturesByChapterPage() {
     return isNaN(dt.getTime()) ? '' : dt.toLocaleDateString();
   };
 
+  // for desktop numeric pagination (show up to 7 around current)
+  const desktopPages = useMemo(() => {
+    const windowSize = 7;
+    const half = Math.floor(windowSize / 2);
+    let start = Math.max(1, currentPage - half);
+    let end = Math.min(totalPages, start + windowSize - 1);
+    start = Math.max(1, end - windowSize + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }, [currentPage, totalPages]);
+
   return (
     <Suspense fallback={<div className="p-6 text-sm text-gray-500">Loading lectures…</div>}>
       <main className="min-h-screen bg-gray-50">
-        <div className="p-6 max-w-7xl mx-auto">
+        <div className="px-4 py-6 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <button
             onClick={() => router.back()}
             className="mb-4 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
           >
             &larr; Back
           </button>
+
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
-                Lectures in Chapter
-              </h1>
-              <p className="text-sm text-gray-500">
-                Browse and play lecture videos for this chapter.
-              </p>
+              <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl">Lectures in Chapter</h1>
+              <p className="text-sm text-gray-500">Browse and play lecture videos for this chapter.</p>
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-gray-600">Items:</span>
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="border rounded px-2 py-1 text-sm bg-white"
                   value={itemsPerPage}
                   onChange={(e) => {
                     setCurrentPage(1);
@@ -128,18 +135,16 @@ export default function LecturesByChapterPage() {
                   setSearchTerm(e.target.value);
                 }}
                 placeholder="Search lectures…"
-                className="border rounded px-3 py-2 text-sm w-64"
+                className="border rounded px-3 py-2 text-sm w-full sm:w-64 bg-white"
               />
             </div>
           </div>
 
           {/* Error */}
-          {error && (
-            <div className="mb-4 text-sm text-red-600">{error}</div>
-          )}
+          {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* Skeletons */}
             {loading &&
               Array.from({ length: Math.min(itemsPerPage, 6) }).map((_, i) => (
@@ -166,7 +171,7 @@ export default function LecturesByChapterPage() {
                           {lec.title || 'Untitled lecture'}
                         </h3>
                         <span
-                          className="inline-flex items-center gap-1 text-[11px] text-gray-500"
+                          className="inline-flex shrink-0 items-center gap-1 text-[11px] text-gray-500"
                           title={updated ? 'Updated' : 'Created'}
                         >
                           <Clock size={12} />
@@ -189,13 +194,11 @@ export default function LecturesByChapterPage() {
                       <button
                         onClick={() => router.push(`/lectures/${lec.id}?tab=video`)}
                         disabled={!lec.videoUrl}
-                        className="w-full inline-flex items-center justify-center gap-2 text-xs font-medium px-3 py-2 rounded border hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+                        className="w-full inline-flex items-center justify-center gap-2 text-xs font-medium px-3 py-2 rounded border hover:bg-gray-50 disabled:opacity-50"
                         title={lec.videoUrl ? 'Play video' : 'No video available'}
                       >
                         <Play size={14} /> Video
                       </button>
-
-                      {/* Presentation button intentionally not rendered per requirement */}
                     </div>
                   </div>
                 );
@@ -204,40 +207,64 @@ export default function LecturesByChapterPage() {
 
           {/* Empty state */}
           {!loading && filtered.length === 0 && !error && (
-            <div className="text-center text-sm text-gray-500 py-10">
-              No lectures found.
-            </div>
+            <div className="text-center text-sm text-gray-500 py-10">No lectures found.</div>
           )}
 
           {/* Pagination */}
           {filtered.length > 0 && (
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1 || loading}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Previous
-              </button>
-              {Array.from({ length: totalPages }).map((_, i) => (
+            <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-center sm:gap-3">
+              {/* Mobile: compact */}
+              <div className="flex w-full items-center justify-between sm:hidden">
                 <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  disabled={loading}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === i + 1 ? 'bg-gray-200 font-semibold' : ''
-                  }`}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loading}
+                  className="px-3 py-1 border rounded bg-white disabled:opacity-50"
                 >
-                  {i + 1}
+                  Previous
                 </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages || loading}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Next
-              </button>
+                <span className="text-xs text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || loading}
+                  className="px-3 py-1 border rounded bg-white disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+
+              {/* Desktop: numbered */}
+              <div className="hidden items-center gap-2 sm:flex">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1 || loading}
+                  className="px-3 py-1 border rounded bg-white disabled:opacity-50"
+                >
+                  Previous
+                </button>
+
+                {desktopPages.map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setCurrentPage(n)}
+                    disabled={loading}
+                    className={`px-3 py-1 border rounded bg-white ${
+                      currentPage === n ? 'bg-gray-200 font-semibold' : ''
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || loading}
+                  className="px-3 py-1 border rounded bg-white disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>
