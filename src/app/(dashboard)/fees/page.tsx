@@ -396,9 +396,9 @@ export default function StudentFeesPage() {
               </div>
 
               {/* Actions */}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-3 grid grid-cols-2 gap-2 items-center sm:flex sm:flex-wrap">
                 <button
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white disabled:opacity-50 w-full sm:w-auto"
                   onClick={() => handlePay(r)}
                   disabled={!canPayOnline || payingKey === rowKey}
                   title={canPayOnline ? 'Pay online' : 'Already paid'}
@@ -408,7 +408,7 @@ export default function StudentFeesPage() {
                 </button>
 
                 <button
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-50 w-full sm:w-auto"
                   onClick={() => openUpload(r)}
                   disabled={!canSubmit}
                   title={canSubmit ? (r.invoiceUrl ? 'Replace invoice' : 'Submit invoice') : 'Already paid'}
@@ -419,7 +419,7 @@ export default function StudentFeesPage() {
 
                 {r.invoiceUrl && (
                   <button
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-700"
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-50 w-full sm:w-auto"
                     onClick={() => setInvoiceUrl(r.invoiceUrl!)}
                   >
                     <Download size={16} /> View
@@ -428,7 +428,7 @@ export default function StudentFeesPage() {
 
                 {canDelete && (
                   <button
-                    className="ml-auto inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50"
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-50 w-full sm:w-auto"
                     onClick={() => setDeleteId(r.id!)}
                     title="Delete invoice"
                   >
@@ -438,7 +438,7 @@ export default function StudentFeesPage() {
               </div>
 
               {/* Learn more / chevron for visual affordance on mobile */}
-
+         
             </div>
           );
         })}
