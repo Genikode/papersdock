@@ -16,7 +16,7 @@ type CoursesResponse = {
   status: number;
   success: boolean;
   message: string;
-  data: { id: string; title: string; fees: number;  }[];
+  data: { id: string; title: string; fees: number }[];
   pagination?: any;
 };
 type GetAllChaptersResponse = {
@@ -36,19 +36,18 @@ function normalizeListPayload(payload: GetAllChaptersResponse['data']) {
 export default function StudentChaptersPage() {
   const router = useRouter();
 
-  // server-driven table/grid state
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-    const [courses, setCourses] = useState<{ id: string; title: string; fees: number }[]>([]);
+
+  const [courses, setCourses] = useState<{ id: string; title: string; fees: number }[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
-    const [courseId, setCourseId] = useState('');
+  const [courseId, setCourseId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(6);
   const [totalItems, setTotalItems] = useState(0);
 
-  // fetch chapters
   async function fetchChapters() {
     setLoading(true);
     setError(null);
@@ -63,7 +62,6 @@ export default function StudentChaptersPage() {
 
       const total =
         res.pagination?.total ??
-        // fallback if pagination not returned
         (Array.isArray(list) ? list.length : 0);
 
       setTotalItems(total);
@@ -80,7 +78,8 @@ export default function StudentChaptersPage() {
     fetchChapters();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, itemsPerPage, searchTerm, courseId]);
- useEffect(() => {
+
+  useEffect(() => {
     (async () => {
       setLoadingCourses(true);
       try {
@@ -96,6 +95,7 @@ export default function StudentChaptersPage() {
       }
     })();
   }, []);
+
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(totalItems / itemsPerPage)),
     [totalItems, itemsPerPage]
@@ -107,21 +107,20 @@ export default function StudentChaptersPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-2 text-sm">
-        <select
-                value={courseId}
-                onChange={(e) => {
-                  setCourseId(e.target.value);
-               
-                }}
-                className="border rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-60 md:w-56"
-              >
-                <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
+          <select
+            value={courseId}
+            onChange={(e) => {
+              setCourseId(e.target.value);
+            }}
+            className="border rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-60 md:w-56"
+          >
+            <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
         </div>
 
         <input
@@ -140,7 +139,7 @@ export default function StudentChaptersPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {loading && Array.from({ length: Math.min(itemsPerPage, 6) }).map((_, i) => (
           <div key={i} className="bg-white shadow rounded overflow-hidden animate-pulse">
-            <div className="w-full h-32 bg-gray-200" />
+            <div className="w-full h-40 bg-gray-200" />
             <div className="p-4 space-y-2">
               <div className="h-4 bg-gray-200 rounded w-3/4" />
               <div className="h-3 bg-gray-200 rounded w-1/2" />
@@ -151,12 +150,16 @@ export default function StudentChaptersPage() {
 
         {!loading && chapters.map((c) => (
           <div key={c.id} className="bg-white shadow rounded overflow-hidden">
-            <img
-              src={c.chapterImageUrl || '/placeholder.png'}
-              alt={c.title}
-              className="w-full h-32 object-cover"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
-            />
+            {/* ✅ Full image visible (no crop) */}
+            <div className="w-full h-48 sm:h-56 bg-gray-50 flex items-center justify-center overflow-hidden">
+              <img
+                src={c.chapterImageUrl || '/placeholder.png'}
+                alt={c.title}
+                className="max-h-full max-w-full object-contain"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
+              />
+            </div>
+
             <div className="p-4">
               <h2 className="text-sm font-semibold text-gray-800">{c.title}</h2>
               <p className="text-xs text-gray-500">{c.courseName || '—'}</p>
@@ -168,10 +171,8 @@ export default function StudentChaptersPage() {
               <div className="flex justify-between items-center mt-3">
                 <span className="text-xs text-gray-400">Chapter</span>
                 <button
-                  onClick={() =>
-                    router.push(`/lectures-view/${c.id}`)
-                  }
-                  className="bg-gray-800 text-white px-3 py-1 text-xs rounded flex items-center gap-1 cursor-pointer "
+                  onClick={() => router.push(`/lectures-view/${c.id}`)}
+                  className="bg-gray-800 text-white px-3 py-1 text-xs rounded flex items-center gap-1 cursor-pointer"
                 >
                   <Play size={14} />
                   Show Lectures
