@@ -52,7 +52,7 @@ export default function Hero() {
             </Link>
             <Link
               href="#"
-              className="px-5 py-3 border border-gray-300 bg-white rounded-md shadow text-sm font-semibold flex items-center gap-2"
+              className="px-5 py-3 border border-gray-300 text-black bg-white rounded-md shadow text-sm font-semibold flex items-center gap-2"
             >
               <Image src="/icons/youtube.png" alt="YouTube" width={20} height={20} />
               YouTube Channel

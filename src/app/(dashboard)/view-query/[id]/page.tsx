@@ -55,6 +55,7 @@ type QueryById = {
   courseId?: string | null;
   chapterId?: string | null;
   voiceAttachment?: string | null;
+  attachmentExtension?: string | null;
 };
 
 type QueryByIdResp = {
@@ -197,11 +198,14 @@ function PdfCard({ url, filename }: { url: string; filename?: string }) {
 function ImageBubble({ url }: { url: string }) {
   return (
     <div className="overflow-hidden rounded-lg ring-1 ring-slate-200">
+      <a href={url} target="_blank" rel="noreferrer">
+
       <img
         src={url}
         alt="attachment"
         className="block max-h-[180px] sm:max-h-[260px] w-full max-w-[240px] sm:max-w-[360px] object-cover"
       />
+      </a>
     </div>
   );
 }
@@ -351,7 +355,7 @@ export default function ViewQueryPage() {
 
   /* ================================ UI ================================ */
   const infoCard = (
-    <aside className="sticky top-0 h-full rounded-lg border bg-white p-4 shadow-[0_1px_0_#eceef1]">
+    <aside className=" top-0 h-full  border bg-white p-6 shadow-[0_1px_0_#eceef1]">
       <h2 className="text-base font-semibold text-slate-900">Query Information</h2>
       <div className="mt-4 rounded-md border p-3">
         <div className="text-[15px] font-semibold text-slate-900">{loadingQuery ? 'Loading…' : q?.title || '—'}</div>
@@ -386,7 +390,7 @@ export default function ViewQueryPage() {
   );
 
   const headerBar = (
-    <header className="sticky top-0 z-10 border-b bg-white">
+    <header className=" top-0 z-10 border-b ">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           <button onClick={() => router.back()} className="rounded-md border px-2.5 py-2 text-slate-700 hover:bg-slate-50"><ArrowLeft className="h-4 w-4" /></button>
@@ -417,11 +421,51 @@ export default function ViewQueryPage() {
       {/* Responsive grid: 1 column on mobile, 2 columns on lg+; conversation first */}
       <main className="mx-auto grid max-w-7xl gap-3 sm:gap-4 px-3 py-4 sm:px-6 lg:grid-cols-[1fr_340px] lg:gap-5 lg:px-8">
         {/* Conversation (left on desktop, first on mobile) */}
-        <section className="order-1 relative flex min-h-[60vh] flex-col rounded-lg border bg-white p-2.5 sm:p-4 shadow-[0_1px_0_#eceef1]">
+        <section className="order-2 lg:order-1 relative flex min-h-[60vh] flex-col rounded-lg border bg-white p-2.5 sm:p-4 shadow-[0_1px_0_#eceef1]">
           <h2 className="text-sm sm:text-base font-semibold text-slate-900">Conversation</h2>
 
           {/* scroll area: no horizontal overflow, extra bottom pad so last message isn't hidden by sticky composer */}
           <div className="mt-2 sm:mt-3 flex-1 space-y-3 sm:space-y-4 overflow-y-auto overflow-x-hidden overscroll-contain pr-1 pb-28 sm:pb-24">
+                     <div
+                 
+                 className={clsx('flex w-full items-start gap-2 justify-end')}
+                 >
+                          
+
+                             <div
+                    className={clsx(
+                      'min-w-0 max-w-[82%] sm:max-w-[85%] md:max-w-[70%] rounded-xl p-2.5 sm:p-3 shadow-sm ring-1 bg-white ring-slate-200'
+                    )}
+                    >
+                            <div className={clsx('mb-1 text-[10px] sm:text-[11px] break-words text-slate-400' )}>
+   <span className="font-medium">{'You' }</span> • {timeShort(q?.createdAt)}
+                    </div>
+                   
+
+
+                          <div className="mt-4 rounded-md ">
+        {/* <div className="text-[15px] font-semibold text-slate-900">{loadingQuery ? 'Loading…' : q?.title || '—'}</div> */}
+        {q?.text && <p className="mt-2 text-sm text-black">{q.text}</p>}
+         {q?.attachmentUrl && q?.attachmentExtension === 'pdf' && (
+                      <div className="mt-2"><PdfCard url={q?.attachmentUrl} /></div>
+                    )}
+
+                    {q?.attachmentUrl && q?.attachmentExtension !== 'pdf' && (
+                      <div className="mt-2">
+                        <div className="max-w-full">
+                          <ImageBubble url={q.attachmentUrl} />
+                        </div>
+                      </div>
+                    )}
+
+                    {q?.voiceAttachment && (
+                      <div className="mt-2">
+                        <VoiceBubble url={q?.voiceAttachment} />
+                      </div>
+                    )}
+      </div>
+                  </div>
+                    </div> 
             {loadingReplies && <div className="text-xs sm:text-sm text-slate-500">Loading replies…</div>}
             {!loadingReplies && replies.length === 0 && <div className="text-xs sm:text-sm text-slate-500">No replies yet.</div>}
 
@@ -608,7 +652,7 @@ export default function ViewQueryPage() {
         </section>
 
         {/* Info panel (right on desktop, second on mobile) */}
-        <section className="order-2 h-max lg:sticky lg:top-[92px]">{infoCard}</section>
+        <section className="order-1 lg:order-2 h-max lg:sticky lg:top-[52px] ">{infoCard}</section>
       </main>
     </div>
   );
