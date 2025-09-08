@@ -426,15 +426,7 @@ export default function StudentFeesPage() {
                   </button>
                 )}
 
-                {canDelete && (
-                  <button
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-50 w-full sm:w-auto"
-                    onClick={() => setDeleteId(r.id!)}
-                    title="Delete invoice"
-                  >
-                    <Trash2 size={16} /> Delete
-                  </button>
-                )}
+              
               </div>
 
               {/* Learn more / chevron for visual affordance on mobile */}
