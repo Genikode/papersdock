@@ -42,10 +42,10 @@ const features = [
 
 export default function WhyChoose() {
   return (
-    <section className="py-20 px-4 text-center">
+    <section className="py-20 px-4 text-center bg-white dark:bg-gray-900 transition-colors">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-gray-900 mb-3">Why Choose PapersDock?</h2>
-        <p className="text-gray-500 mb-12 max-w-2xl mx-auto">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Why Choose PapersDock?</h2>
+        <p className="text-gray-500 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
           Our cutting-edge platform combines the best of technology and education to deliver unmatched results
         </p>
 
@@ -53,18 +53,19 @@ export default function WhyChoose() {
           {features.map((feature, idx) => (
             <div
               key={idx}
-              className="bg-white rounded-2xl p-6 text-left shadow-sm hover:shadow-md transition border border-gray-100"
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 text-left shadow-sm hover:shadow-md dark:hover:shadow-black/40 transition-colors border border-gray-100 dark:border-gray-700"
             >
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-gradient-to-br ${feature.color}`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-gradient-to-br ${feature.color} ring-1 ring-black/10 dark:ring-white/10`}
               >
                 {feature.icon}
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">{feature.title}</h3>
-              <p className="text-sm text-gray-500 mb-3">{feature.description}</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{feature.title}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{feature.description}</p>
               <div
-                className={`h-1 w-full rounded-full bg-gradient-to-r ${feature.color}`}
-              ></div>
+                className={`h-1 w-full rounded-full bg-gradient-to-r ${feature.color} opacity-95`}
+                aria-hidden
+              />
             </div>
           ))}
         </div>

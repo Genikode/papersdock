@@ -308,246 +308,336 @@ export default function StudentFeesPage() {
   }
 
   return (
-    <main className="bg-[#F9FAFB] min-h-screen p-6 text-gray-800">
-      <PageHeader title="Fee Records" description="Manage and track your fee payments" />
+<main className="min-h-screen p-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+  <PageHeader title="Fee Records" description="Manage and track your fee payments" />
 
-      {/* Alerts */}
-      {(errorMsg || infoMsg) && (
+  {/* Alerts */}
+  {(errorMsg || infoMsg) && (
+    <div
+      className={`mb-3 text-sm px-3 py-2 rounded border ${
+        errorMsg
+          ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300'
+          : 'bg-green-50 border-green-200 text-green-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300'
+      }`}
+    >
+      {errorMsg || infoMsg}
+    </div>
+  )}
+
+  {/* Search */}
+  <div className="flex justify-end mb-3">
+    <input
+      placeholder="Search months or status..."
+      className="w-full sm:w-80 text-sm rounded px-3 py-2
+                 border border-slate-300 dark:border-slate-700
+                 bg-white dark:bg-slate-900
+                 text-slate-900 dark:text-slate-100
+                 placeholder:text-slate-400 dark:placeholder:text-slate-500
+                 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+      value={search}
+      onChange={(e) => {
+        setSearch(e.target.value);
+        setPage(1);
+      }}
+    />
+  </div>
+
+  {/* Cards Layout */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    {loading &&
+      Array.from({ length: perPage }).map((_, i) => (
         <div
-          className={`mb-3 text-sm px-3 py-2 rounded border ${errorMsg ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`}
+          key={`sk-${i}`}
+          className="rounded-lg border bg-white dark:bg-slate-900 p-4 animate-pulse
+                     border-slate-200 dark:border-slate-800"
         >
-          {errorMsg || infoMsg}
-        </div>
-      )}
-
-      {/* Search */}
-      <div className="flex justify-end mb-3">
-        <input
-          placeholder="Search months or status..."
-          className="border rounded px-3 py-2 text-sm w-full sm:w-80"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-      </div>
-
-      {/* Cards Layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {loading && (
-          Array.from({ length: perPage }).map((_, i) => (
-            <div key={`sk-${i}`} className="rounded-lg border bg-white p-4 animate-pulse">
-              <div className="h-5 w-36 rounded bg-slate-200" />
-              <div className="mt-2 h-4 w-24 rounded bg-slate-200" />
-              <div className="mt-4 h-24 rounded bg-slate-100" />
-              <div className="mt-3 flex gap-2">
-                <div className="h-9 w-24 rounded bg-slate-200" />
-                <div className="h-9 w-28 rounded bg-slate-200" />
-              </div>
-            </div>
-          ))
-        )}
-
-        {!loading && paginated.map((r) => {
-          const rowKey = `${r.year}-${r.month}`;
-          const canSubmit = r.status !== 'Paid';
-          const canDelete = !!r.id && !!r.invoiceUrl && r.status !== 'Paid';
-          const canPayOnline = r.status !== 'Paid';
-
-          const due = fmtDate(r.dueDate);
-          const exp = fmtDate(r.feeExpiryDate);
-
-          return (
-            <div key={rowKey} className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_0_#eceef1]">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <CalendarDays size={18} />
-                    <h3 className="text-base font-semibold">
-                      {r.monthLabel} <span className="text-slate-500">{r.year}</span>
-                    </h3>
-                  </div>
-                  <div className="mt-1 text-xs text-slate-500 flex items-center gap-2">
-                    {due && (
-                      <span title="Due Date" className="inline-flex items-center gap-1">
-                        <FileText size={14} /> Due {due}
-                      </span>
-                    )}
-                    {exp && <span>• Expires {exp}</span>}
-                  </div>
-                </div>
-                <span className={`px-2 py-1 text-xs rounded-full ${badgeClasses(r.status)}`}>{r.status}</span>
-              </div>
-
-              {/* Content */}
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <div className="text-xs text-slate-500">Amount</div>
-                  <div className="mt-0.5 font-medium">{r.amount === '-' ? '-' : `PKR${r.amount}`}</div>
-                </div>
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <div className="text-xs text-slate-500">Invoice</div>
-                  <div className="mt-0.5 font-medium">
-                    {r.invoiceUrl ? 'Uploaded' : '—'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="mt-3 grid grid-cols-2 gap-2 items-center sm:flex sm:flex-wrap">
-                <button
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white disabled:opacity-50 w-full sm:w-auto"
-                  onClick={() => handlePay(r)}
-                  disabled={!canPayOnline || payingKey === rowKey}
-                  title={canPayOnline ? 'Pay online' : 'Already paid'}
-                >
-                  <CreditCard size={16} />
-                  {payingKey === rowKey ? 'Redirecting…' : 'Pay Now'}
-                </button>
-
-                <button
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-50 w-full sm:w-auto"
-                  onClick={() => openUpload(r)}
-                  disabled={!canSubmit}
-                  title={canSubmit ? (r.invoiceUrl ? 'Replace invoice' : 'Submit invoice') : 'Already paid'}
-                >
-                  <UploadCloud size={16} />
-                  {r.invoiceUrl && canSubmit ? 'Replace Invoice' : 'Submit Invoice'}
-                </button>
-
-                {r.invoiceUrl && (
-                  <button
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 disabled:opacity-50 w-full sm:w-auto"
-                    onClick={() => setInvoiceUrl(r.invoiceUrl!)}
-                  >
-                    <Download size={16} /> View
-                  </button>
-                )}
-
-              
-              </div>
-
-              {/* Learn more / chevron for visual affordance on mobile */}
-         
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Empty state */}
-      {!loading && paginated.length === 0 && (
-        <div className="mt-6 rounded-lg border bg-white p-6 text-center text-sm text-slate-600">
-          No records match your search.
-        </div>
-      )}
-
-      {/* Footer: page size + pager */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mt-4 text-sm">
-        <div className="flex items-center gap-2">
-          <span>Showing</span>
-          <select
-            className="border rounded px-2 py-1"
-            value={perPage}
-            onChange={(e) => {
-              setPerPage(Number(e.target.value));
-              setPage(1);
-            }}
-          >
-            {[5, 10, 15].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          <span>items</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            className="px-3 py-1 border rounded disabled:opacity-50"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            &lt; Previous
-          </button>
-          <span className="px-2 py-1 border rounded bg-white">{page}</span>
-          <button
-            className="px-3 py-1 border rounded disabled:opacity-50"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Next &gt;
-          </button>
-        </div>
-      </div>
-
-      {/* Invoice preview (PDF/image fallback) */}
-      {invoiceUrl && (
-        <Modal title="Invoice" onClose={() => setInvoiceUrl(null)}>
-          <div className="p-3">
-            <div className="h-[70vh]">
-              <object data={invoiceUrl} type="application/pdf" className="w-full h-full">
-                <iframe src={invoiceUrl} className="w-full h-full" title="invoice" />
-              </object>
-            </div>
-            <div className="mt-2 text-right">
-              <a href={invoiceUrl} target="_blank" rel="noreferrer" className="text-indigo-600 underline text-sm">
-                Open in new tab
-              </a>
-            </div>
+          <div className="h-5 w-36 rounded bg-slate-200 dark:bg-slate-700/60" />
+          <div className="mt-2 h-4 w-24 rounded bg-slate-200 dark:bg-slate-700/60" />
+          <div className="mt-4 h-24 rounded bg-slate-100 dark:bg-slate-800/60" />
+          <div className="mt-3 flex gap-2">
+            <div className="h-9 w-24 rounded bg-slate-200 dark:bg-slate-700/60" />
+            <div className="h-9 w-28 rounded bg-slate-200 dark:bg-slate-700/60" />
           </div>
-        </Modal>
-      )}
+        </div>
+      ))}
 
-      {/* Upload modal */}
-      {uploadOpen && (
-        <Modal title={`Submit Invoice — ${MONTH_LABEL[uploadTarget.month]} ${uploadTarget.year}`} onClose={() => setUploadOpen(false)}>
-          <form onSubmit={handleUploadSubmit} className="space-y-4">
-            <div className="border rounded p-4 text-center">
-              <UploadCloud className="mx-auto text-gray-400" size={28} />
-              <p className="text-sm text-gray-600 mt-2 mb-3">Upload a PDF or image (PNG/JPG/WEBP)</p>
-              <label className="cursor-pointer inline-block text-indigo-600 font-medium">
-                <input
-                  type="file"
-                  accept="application/pdf,image/*"
-                  className="hidden"
-                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                />
-                {uploadFile ? uploadFile.name : 'Choose File'}
-              </label>
+    {!loading &&
+      paginated.map((r) => {
+        const rowKey = `${r.year}-${r.month}`;
+        const canSubmit = r.status !== 'Paid';
+        const canDelete = !!r.id && !!r.invoiceUrl && r.status !== 'Paid';
+        const canPayOnline = r.status !== 'Paid';
+
+        const due = fmtDate(r.dueDate);
+        const exp = fmtDate(r.feeExpiryDate);
+
+        return (
+          <div
+            key={rowKey}
+            className="rounded-xl border p-4 shadow-[0_1px_0_#eceef1] dark:shadow-none
+                       border-slate-200 dark:border-slate-800
+                       bg-white dark:bg-slate-900"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+                  <CalendarDays size={18} />
+                  <h3 className="text-base font-semibold">
+                    {r.monthLabel}{' '}
+                    <span className="text-slate-500 dark:text-slate-400">{r.year}</span>
+                  </h3>
+                </div>
+                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                  {due && (
+                    <span title="Due Date" className="inline-flex items-center gap-1">
+                      <FileText size={14} /> Due {due}
+                    </span>
+                  )}
+                  {exp && <span>• Expires {exp}</span>}
+                </div>
+              </div>
+              <span className={`px-2 py-1 text-xs rounded-full ${badgeClasses(r.status)}`}>{r.status}</span>
             </div>
 
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setUploadOpen(false)} className="px-4 py-1.5 border rounded">
-                Cancel
-              </button>
+            {/* Content */}
+            <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <div className="rounded-lg p-3 bg-slate-50 dark:bg-slate-800/60">
+                <div className="text-xs text-slate-500 dark:text-slate-400">Amount</div>
+                <div className="mt-0.5 font-medium">
+                  {r.amount === '-' ? '-' : `PKR${r.amount}`}
+                </div>
+              </div>
+              <div className="rounded-lg p-3 bg-slate-50 dark:bg-slate-800/60">
+                <div className="text-xs text-slate-500 dark:text-slate-400">Invoice</div>
+                <div className="mt-0.5 font-medium">{r.invoiceUrl ? 'Uploaded' : '—'}</div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-3 grid grid-cols-2 gap-2 items-center sm:flex sm:flex-wrap">
               <button
-                type="submit"
-                disabled={!uploadFile || uploading}
-                className="px-4 py-1.5 rounded text-white bg-[#0B1537] disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg w-full sm:w-auto
+                           bg-indigo-600 text-white hover:bg-indigo-700
+                           disabled:opacity-50"
+                onClick={() => handlePay(r)}
+                disabled={!canPayOnline || payingKey === rowKey}
+                title={canPayOnline ? 'Pay online' : 'Already paid'}
               >
-                {uploading ? 'Uploading…' : uploadTarget.existingId ? 'Replace Invoice' : 'Submit Invoice'}
+                <CreditCard size={16} />
+                {payingKey === rowKey ? 'Redirecting…' : 'Pay Now'}
               </button>
-            </div>
-          </form>
-        </Modal>
-      )}
 
-      {/* Delete confirm */}
-      {deleteId && (
-        <Modal title="Delete Invoice" onClose={() => setDeleteId(null)}>
-          <p className="text-sm text-gray-700 mb-4">Are you sure you want to delete this invoice?</p>
-          <div className="flex justify-end gap-2">
-            <button className="px-4 py-1.5 border rounded" onClick={() => setDeleteId(null)}>
-              Cancel
-            </button>
-            <button className="px-4 py-1.5 rounded text-white bg-red-600 disabled:opacity-50" onClick={confirmDelete} disabled={deleting}>
-              {deleting ? 'Deleting…' : 'Delete'}
-            </button>
+              <button
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg w-full sm:w-auto
+                           border border-slate-200 dark:border-slate-700
+                           bg-white dark:bg-slate-900
+                           text-slate-700 dark:text-slate-200
+                           hover:bg-slate-50 dark:hover:bg-slate-800
+                           disabled:opacity-50"
+                onClick={() => openUpload(r)}
+                disabled={!canSubmit}
+                title={
+                  canSubmit ? (r.invoiceUrl ? 'Replace invoice' : 'Submit invoice') : 'Already paid'
+                }
+              >
+                <UploadCloud size={16} />
+                {r.invoiceUrl && canSubmit ? 'Replace Invoice' : 'Submit Invoice'}
+              </button>
+
+              {r.invoiceUrl && (
+                <button
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg w-full sm:w-auto
+                             border border-slate-200 dark:border-slate-700
+                             bg-white dark:bg-slate-900
+                             text-slate-700 dark:text-slate-200
+                             hover:bg-slate-50 dark:hover:bg-slate-800"
+                  onClick={() => setInvoiceUrl(r.invoiceUrl!)}
+                >
+                  <Download size={16} /> View
+                </button>
+              )}
+            </div>
           </div>
-        </Modal>
-      )}
-    </main>
+        );
+      })}
+  </div>
+
+  {/* Empty state */}
+  {!loading && paginated.length === 0 && (
+    <div className="mt-6 rounded-lg border bg-white dark:bg-slate-900 p-6 text-center text-sm
+                    text-slate-600 dark:text-slate-400
+                    border-slate-200 dark:border-slate-800">
+      No records match your search.
+    </div>
+  )}
+
+  {/* Footer: page size + pager */}
+  <div className="flex flex-wrap items-center justify-between gap-3 mt-4 text-sm">
+    <div className="flex items-center gap-2">
+      <span>Showing</span>
+      <select
+        className="border rounded px-2 py-1
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   border-slate-300 dark:border-slate-700"
+        value={perPage}
+        onChange={(e) => {
+          setPerPage(Number(e.target.value));
+          setPage(1);
+        }}
+      >
+        {[5, 10, 15].map((n) => (
+          <option key={n} value={n} className="bg-white dark:bg-slate-900">
+            {n}
+          </option>
+        ))}
+      </select>
+      <span>items</span>
+    </div>
+    <div className="flex items-center gap-2">
+      <button
+        className="px-3 py-1 rounded border
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   border-slate-300 dark:border-slate-700
+                   disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
+        onClick={() => setPage((p) => Math.max(1, p - 1))}
+        disabled={page === 1}
+      >
+        &lt; Previous
+      </button>
+      <span className="px-2 py-1 rounded border
+                      bg-white dark:bg-slate-900
+                      text-slate-900 dark:text-slate-100
+                      border-slate-300 dark:border-slate-700">
+        {page}
+      </span>
+      <button
+        className="px-3 py-1 rounded border
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   border-slate-300 dark:border-slate-700
+                   disabled:opacity-50 hover:bg-slate-50 dark:hover:bg-slate-800"
+        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+        disabled={page === totalPages}
+      >
+        Next &gt;
+      </button>
+    </div>
+  </div>
+
+  {/* Invoice preview (PDF/image fallback) */}
+  {invoiceUrl && (
+    <Modal title="Invoice" onClose={() => setInvoiceUrl(null)}>
+      <div className="p-3">
+        <div className="h-[70vh]">
+          <object
+            data={invoiceUrl}
+            type="application/pdf"
+            className="w-full h-full bg-white dark:bg-slate-900 rounded
+                       ring-1 ring-slate-200 dark:ring-slate-800"
+          >
+            <iframe
+              src={invoiceUrl}
+              className="w-full h-full bg-white dark:bg-slate-900"
+              title="invoice"
+            />
+          </object>
+        </div>
+        <div className="mt-2 text-right">
+          <a
+            href={invoiceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-indigo-600 dark:text-indigo-400 underline text-sm"
+          >
+            Open in new tab
+          </a>
+        </div>
+      </div>
+    </Modal>
+  )}
+
+  {/* Upload modal */}
+  {uploadOpen && (
+    <Modal
+      title={`Submit Invoice — ${MONTH_LABEL[uploadTarget.month]} ${uploadTarget.year}`}
+      onClose={() => setUploadOpen(false)}
+    >
+      <form onSubmit={handleUploadSubmit} className="space-y-4">
+        <div
+          className="border rounded p-4 text-center
+                     border-slate-300 dark:border-slate-700
+                     bg-white dark:bg-slate-900"
+        >
+          <UploadCloud className="mx-auto text-slate-400 dark:text-slate-500" size={28} />
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 mb-3">
+            Upload a PDF or image (PNG/JPG/WEBP)
+          </p>
+          <label className="cursor-pointer inline-block font-medium text-indigo-600 dark:text-indigo-400">
+            <input
+              type="file"
+              accept="application/pdf,image/*"
+              className="hidden"
+              onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+            />
+            {uploadFile ? uploadFile.name : 'Choose File'}
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setUploadOpen(false)}
+            className="px-4 py-1.5 rounded border
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border-slate-300 dark:border-slate-700
+                       hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={!uploadFile || uploading}
+            className="px-4 py-1.5 rounded text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {uploading ? 'Uploading…' : uploadTarget.existingId ? 'Replace Invoice' : 'Submit Invoice'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )}
+
+  {/* Delete confirm */}
+  {deleteId && (
+    <Modal title="Delete Invoice" onClose={() => setDeleteId(null)}>
+      <p className="text-sm text-slate-700 dark:text-slate-300 mb-4">
+        Are you sure you want to delete this invoice?
+      </p>
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-1.5 rounded border
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     border-slate-300 dark:border-slate-700
+                     hover:bg-slate-50 dark:hover:bg-slate-800"
+          onClick={() => setDeleteId(null)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-1.5 rounded text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
+          onClick={confirmDelete}
+          disabled={deleting}
+        >
+          {deleting ? 'Deleting…' : 'Delete'}
+        </button>
+      </div>
+    </Modal>
+  )}
+</main>
+
   );
 }

@@ -102,128 +102,142 @@ export default function StudentChaptersPage() {
   );
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-4">Chapters</h1>
+<div className="p-6 min-h-screen bg-gray-50 dark:bg-slate-950">
+  <h1 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-slate-100">Chapters</h1>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div className="flex items-center gap-2 text-sm">
-          <select
-            value={courseId}
-            onChange={(e) => {
-              setCourseId(e.target.value);
-            }}
-            className="border rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-60 md:w-56"
-          >
-            <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <input
-          type="text"
-          placeholder="Search Chapters..."
-          value={searchTerm}
-          onChange={(e) => {
-            setCurrentPage(1);
-            setSearchTerm(e.target.value);
-          }}
-          className="border px-3 py-2 rounded text-sm w-64"
-        />
-      </div>
-
-      {/* grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {loading && Array.from({ length: Math.min(itemsPerPage, 6) }).map((_, i) => (
-          <div key={i} className="bg-white shadow rounded overflow-hidden animate-pulse">
-            <div className="w-full h-40 bg-gray-200" />
-            <div className="p-4 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-3 bg-gray-200 rounded w-1/2" />
-              <div className="h-3 bg-gray-200 rounded w-2/3" />
-            </div>
-          </div>
+  <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div className="flex items-center gap-2 text-sm">
+      <select
+        value={courseId}
+        onChange={(e) => {
+          setCourseId(e.target.value);
+        }}
+        className="border rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-60 md:w-56
+                   bg-white text-gray-900 border-gray-300
+                   dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700"
+      >
+        <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
+        {courses.map((c) => (
+          <option key={c.id} value={c.id} className="text-inherit">
+            {c.title}
+          </option>
         ))}
-
-        {!loading && chapters.map((c) => (
-          <div key={c.id} className="bg-white shadow rounded overflow-hidden">
-            {/* ✅ Full image visible (no crop) */}
-            <div className="w-full h-48 sm:h-56 bg-gray-50 flex items-center justify-center overflow-hidden">
-              <img
-                src={c.chapterImageUrl || '/placeholder.png'}
-                alt={c.title}
-                className="max-h-full max-w-full object-contain"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
-              />
-            </div>
-
-            <div className="p-4">
-              <h2 className="text-sm font-semibold text-gray-800">{c.title}</h2>
-              <p className="text-xs text-gray-500">{c.courseName || '—'}</p>
-              {c.createdAt && (
-                <p className="text-xs text-gray-400">
-                  {new Date(c.createdAt).toLocaleDateString()}
-                </p>
-              )}
-              <div className="flex justify-between items-center mt-3">
-                <span className="text-xs text-gray-400">Chapter</span>
-                <button
-                  onClick={() => router.push(`/lectures-view/${c.id}`)}
-                  className="bg-gray-800 text-white px-3 py-1 text-xs rounded flex items-center gap-1 cursor-pointer"
-                >
-                  <Play size={14} />
-                  Show Lectures
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* empty state */}
-      {!loading && chapters.length === 0 && !error && (
-        <div className="text-center text-sm text-gray-500 py-10">
-          No chapters found.
-        </div>
-      )}
-
-      {/* error */}
-      {error && (
-        <div className="text-center text-sm text-red-600 py-6">
-          {error}
-        </div>
-      )}
-
-      {/* Pagination */}
-      <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <button
-          disabled={currentPage === 1 || loading}
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        {Array.from({ length: totalPages }).map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => setCurrentPage(idx + 1)}
-            disabled={loading}
-            className={`px-3 py-1 border rounded ${currentPage === idx + 1 ? 'bg-gray-200 font-semibold' : ''}`}
-          >
-            {idx + 1}
-          </button>
-        ))}
-        <button
-          disabled={currentPage === totalPages || loading}
-          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          className="px-3 py-1 border rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+      </select>
     </div>
+
+    <input
+      type="text"
+      placeholder="Search Chapters..."
+      value={searchTerm}
+      onChange={(e) => {
+        setCurrentPage(1);
+        setSearchTerm(e.target.value);
+      }}
+      className="border px-3 py-2 rounded text-sm w-64
+                 bg-white text-gray-900 placeholder:text-gray-400 border-gray-300
+                 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:border-slate-700"
+    />
+  </div>
+
+  {/* grid */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {loading && Array.from({ length: Math.min(itemsPerPage, 6) }).map((_, i) => (
+      <div key={i} className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow rounded overflow-hidden animate-pulse">
+        <div className="w-full h-40 bg-gray-200 dark:bg-slate-800/60" />
+        <div className="p-4 space-y-2">
+          <div className="h-4 bg-gray-200 dark:bg-slate-800/60 rounded w-3/4" />
+          <div className="h-3 bg-gray-200 dark:bg-slate-800/60 rounded w-1/2" />
+          <div className="h-3 bg-gray-200 dark:bg-slate-800/60 rounded w-2/3" />
+        </div>
+      </div>
+    ))}
+
+    {!loading && chapters.map((c) => (
+      <div key={c.id} className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow rounded overflow-hidden">
+        {/* ✅ Full image visible (no crop) */}
+        <div className="w-full h-48 sm:h-56 bg-gray-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+          <img
+            src={c.chapterImageUrl || '/placeholder.png'}
+            alt={c.title}
+            className="max-h-full max-w-full object-contain"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/placeholder.png'; }}
+          />
+        </div>
+
+        <div className="p-4">
+          <h2 className="text-sm font-semibold text-gray-800 dark:text-slate-100">{c.title}</h2>
+          <p className="text-xs text-gray-500 dark:text-slate-400">{c.courseName || '—'}</p>
+          {c.createdAt && (
+            <p className="text-xs text-gray-400 dark:text-slate-500">
+              {new Date(c.createdAt).toLocaleDateString()}
+            </p>
+          )}
+          <div className="flex justify-between items-center mt-3">
+            <span className="text-xs text-gray-400 dark:text-slate-500">Chapter</span>
+            <button
+              onClick={() => router.push(`/lectures-view/${c.id}`)}
+              className="bg-gray-900 text-white px-3 py-1 text-xs rounded flex items-center gap-1 cursor-pointer
+                         hover:opacity-90
+                         dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+            >
+              <Play size={14} />
+              Show Lectures
+            </button>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {/* empty state */}
+  {!loading && chapters.length === 0 && !error && (
+    <div className="text-center text-sm text-gray-500 dark:text-slate-400 py-10">
+      No chapters found.
+    </div>
+  )}
+
+  {/* error */}
+  {error && (
+    <div className="text-center text-sm text-red-600 py-6">
+      {error}
+    </div>
+  )}
+
+  {/* Pagination */}
+  <div className="mt-6 flex flex-wrap justify-center gap-2">
+    <button
+      disabled={currentPage === 1 || loading}
+      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+      className="px-3 py-1 border rounded disabled:opacity-50
+                 bg-white border-gray-300 text-gray-800
+                 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
+    >
+      Previous
+    </button>
+    {Array.from({ length: totalPages }).map((_, idx) => (
+      <button
+        key={idx}
+        onClick={() => setCurrentPage(idx + 1)}
+        disabled={loading}
+        className={`px-3 py-1 border rounded
+                    bg-white border-gray-300 text-gray-800
+                    dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100
+                    ${currentPage === idx + 1 ? 'bg-gray-200 dark:bg-slate-800 font-semibold' : ''}`}
+      >
+        {idx + 1}
+      </button>
+    ))}
+    <button
+      disabled={currentPage === totalPages || loading}
+      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+      className="px-3 py-1 border rounded disabled:opacity-50
+                 bg-white border-gray-300 text-gray-800
+                 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
+    >
+      Next
+    </button>
+  </div>
+</div>
+
   );
 }

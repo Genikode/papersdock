@@ -156,111 +156,122 @@ export default function LectureDetailPage() {
   };
 
   return (
-    <Suspense fallback={<div>Loading lectures...</div>}>
-      <main
-        className={`min-h-screen bg-gray-50 ${devtoolsOpen ? 'pointer-events-none select-none' : ''}`}
-        onContextMenu={(e) => e.preventDefault()}
+<Suspense fallback={<div>Loading lectures...</div>}>
+  <main
+    className={`min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 ${
+      devtoolsOpen ? 'pointer-events-none select-none' : ''
+    }`}
+    onContextMenu={(e) => e.preventDefault()}
+  >
+    {/* DevTools overlay blocker */}
+    {devtoolsOpen && (
+      <div className="fixed inset-0 z-50 backdrop-blur-sm bg-black/40 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow p-5 text-center">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+            Developer Tools Detected
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            For content protection, viewing is disabled while browser developer tools are open.
+            Please close DevTools and return to the page.
+          </p>
+        </div>
+      </div>
+    )}
+
+    {/* Main content (still rendered so state persists), visually blurred when blocked */}
+    <div className={`max-w-5xl mx-auto p-4 sm:p-6 ${devtoolsOpen ? 'blur-sm' : ''}`}>
+      <button
+        onClick={() => router.back()}
+        className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 mb-4 hover:underline hover:text-slate-900 dark:hover:text-white pointer-events-auto"
       >
-        {/* DevTools overlay blocker */}
-        {devtoolsOpen && (
-          <div className="fixed inset-0 z-50 backdrop-blur-sm bg-black/40 flex items-center justify-center p-6">
-            <div className="max-w-md w-full bg-white rounded-xl border shadow p-5 text-center">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">Developer Tools Detected</h2>
-              <p className="text-sm text-gray-600">
-                For content protection, viewing is disabled while browser developer tools are open.
-                Please close DevTools and return to the page.
-              </p>
-            </div>
-          </div>
-        )}
+        <ArrowLeft size={16} /> Back
+      </button>
 
-        {/* Main content (still rendered so state persists), visually blurred when blocked */}
-        <div className={`max-w-5xl mx-auto p-4 sm:p-6 ${devtoolsOpen ? 'blur-sm' : ''}`}>
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline pointer-events-auto"
-          >
-            <ArrowLeft size={16} /> Back
-          </button>
-
-          <div className="bg-white border rounded shadow-sm p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-              <div>
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-                  {detail?.title || 'Lecture'}
-                </h1>
-                <p className="text-xs text-gray-500">
-                  {detail?.createdAt ? new Date(detail.createdAt).toLocaleString() : ''}
-                </p>
-              </div>
-            </div>
-
-            {/* Tabs */}
-         
-            {loading && <div className="text-sm text-gray-500">Loading…</div>}
-            {err && <div className="text-sm text-red-600">{err}</div>}
-
-            {!loading && !err && detail && (
-              <>
-                {/* VIDEO */}
-                {tab === 'video' && (
-                  <div className="w-full">
-                    {hasVideo ? (
-                      <video
-                        ref={videoRef}
-                        className="w-full max-h-[70vh] rounded border bg-black"
-                        controls
-                        controlsList="nodownload noplaybackrate"
-                        disablePictureInPicture
-                        onContextMenu={(e) => e.preventDefault()}
-                        onDragStart={(e) => e.preventDefault()}
-                        src={detail.videoUrl}
-                      />
-                    ) : (
-                      <p className="text-sm text-gray-500">No video attached for this lecture.</p>
-                    )}
-                  </div>
-                )}
-
-                {/* PRESENTATION */}
-                {tab === 'presentation' && (
-                  <div className="w-full">
-                    {hasPresentation ? (
-                      <>
-                        {/\.(pdf)(\?|$)/i.test(detail.presentationUrl) ? (
-                          <iframe
-                            sandbox="allow-scripts allow-same-origin"
-                            src={detail.presentationUrl}
-                            className="w-full h-[70vh] rounded border bg-white"
-                          />
-                        ) : (
-                          <div className="text-sm">
-                            <p className="text-gray-600 mb-3">
-                              This presentation cannot be embedded. Open it in a new tab:
-                            </p>
-                            <a
-                              href={detail.presentationUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-2 px-3 py-2 rounded border hover:bg-gray-50"
-                              onContextMenu={(e) => e.preventDefault()}
-                            >
-                              <FileText size={16} />
-                              Open Presentation
-                            </a>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-sm text-gray-500">No presentation provided.</p>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+          <div>
+            <h1 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-slate-100">
+              {detail?.title || 'Lecture'}
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {detail?.createdAt ? new Date(detail.createdAt).toLocaleString() : ''}
+            </p>
           </div>
         </div>
-      </main>
-    </Suspense>
+
+        {/* Tabs */}
+
+        {loading && <div className="text-sm text-slate-500 dark:text-slate-400">Loading…</div>}
+        {err && <div className="text-sm text-red-600 dark:text-red-400">{err}</div>}
+
+        {!loading && !err && detail && (
+          <>
+            {/* VIDEO */}
+            {tab === 'video' && (
+              <div className="w-full">
+                {hasVideo ? (
+                  <video
+                    ref={videoRef}
+                    className="w-full max-h-[70vh] rounded border border-slate-200 dark:border-slate-800 bg-black"
+                    controls
+                    controlsList="nodownload noplaybackrate"
+                    disablePictureInPicture
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    src={detail.videoUrl}
+                  />
+                ) : (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    No video attached for this lecture.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* PRESENTATION */}
+            {tab === 'presentation' && (
+              <div className="w-full">
+                {hasPresentation ? (
+                  <>
+                    {/\.(pdf)(\?|$)/i.test(detail.presentationUrl) ? (
+                      <iframe
+                        sandbox="allow-scripts allow-same-origin"
+                        src={detail.presentationUrl}
+                        className="w-full h-[70vh] rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+                      />
+                    ) : (
+                      <div className="text-sm">
+                        <p className="text-slate-600 dark:text-slate-300 mb-3">
+                          This presentation cannot be embedded. Open it in a new tab:
+                        </p>
+                        <a
+                          href={detail.presentationUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded border
+                                     border-slate-300 dark:border-slate-700
+                                     bg-white dark:bg-slate-900
+                                     text-slate-900 dark:text-slate-100
+                                     hover:bg-slate-50 dark:hover:bg-slate-800"
+                          onContextMenu={(e) => e.preventDefault()}
+                        >
+                          <FileText size={16} />
+                          Open Presentation
+                        </a>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-500 dark:text-slate-400">No presentation provided.</p>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  </main>
+</Suspense>
+
   );
 }

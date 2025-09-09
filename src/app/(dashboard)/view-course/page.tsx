@@ -200,134 +200,175 @@ export default function CoursesPage() {
   }
 
   /* toolbar: just the Add button (search stays in TableComponent) */
-  const toolbarLeft = (
-    <div className="w-full flex flex-wrap items-center gap-2">
-      <button
-        onClick={() => {
-          setShowAdd(true);
-          setAddError(null);
-        }}
-        className="inline-flex items-center gap-2 px-3 py-1.5 rounded border hover:bg-gray-50 text-sm"
-      >
-        <PlusCircle size={16} />
-        Add Course
-      </button>
-    </div>
-  );
+const toolbarLeft = (
+  <div className="w-full flex flex-wrap items-center gap-2">
+    <button
+      onClick={() => {
+        setShowAdd(true);
+        setAddError(null);
+      }}
+      className="inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm
+                 border border-slate-300 dark:border-slate-700
+                 bg-white dark:bg-slate-900
+                 text-slate-900 dark:text-slate-100
+                 hover:bg-slate-50 dark:hover:bg-slate-800"
+    >
+      <PlusCircle size={16} />
+      Add Course
+    </button>
+  </div>
+);
 
-  return (
-    <main className="bg-[#F9FAFB] min-h-screen p-4 sm:p-6 text-gray-800">
-      <PageHeader title="Courses" description="Create, update, and manage courses" />
+return (
+  <main className="min-h-screen p-4 sm:p-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <PageHeader title="Courses" description="Create, update, and manage courses" />
 
-      <div className="bg-white rounded-md shadow-md">
-        {loading && <p className="px-4 py-2 text-sm text-gray-500">Loading courses…</p>}
-        <TableComponent
-          columns={columns}
-          data={tableData}
-          serverMode
-          toolbarLeft={toolbarLeft}
-          searchTerm={searchTerm}
-          onSearchTermChange={(v) => {
-            setCurrentPage(1);
-            setSearchTerm(v);
-          }}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={(n) => {
-            setCurrentPage(1);
-            setItemsPerPage(n);
-          }}
-          totalItems={totalItems}
-        />
-      </div>
-
-      {/* Add Course Modal */}
-      {showAdd && (
-        <Modal title="Add Course" onClose={() => setShowAdd(false)}>
-          <form onSubmit={handleAddCourse} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Title</label>
-              <input
-                type="text"
-                value={addTitle}
-                onChange={(e) => setAddTitle(e.target.value)}
-                placeholder="e.g. Advanced Node.js Masterclass"
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Fees</label>
-              <input
-                type="text"
-                value={addFees}
-                onChange={(e) => setAddFees(e.target.value)}
-                placeholder="e.g. 99"
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
-            </div>
-            {addError && <p className="text-sm text-red-600">{addError}</p>}
-            <button
-              type="submit"
-              disabled={savingAdd}
-              className="w-full bg-gray-900 text-white rounded py-2 text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              <Save size={16} />
-              {savingAdd ? 'Saving…' : 'Save Course'}
-            </button>
-          </form>
-        </Modal>
+    <div className="rounded-md shadow-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      {loading && (
+        <p className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400">Loading courses…</p>
       )}
+      <TableComponent
+        columns={columns}
+        data={tableData}
+        serverMode
+        toolbarLeft={toolbarLeft}
+        searchTerm={searchTerm}
+        onSearchTermChange={(v) => {
+          setCurrentPage(1);
+          setSearchTerm(v);
+        }}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={(n) => {
+          setCurrentPage(1);
+          setItemsPerPage(n);
+        }}
+        totalItems={totalItems}
+      />
+    </div>
 
-      {/* Edit Course Modal */}
-      {showEdit && (
-        <Modal title="Update Course" onClose={() => setShowEdit(null)}>
-          <form onSubmit={handleEditCourse} className="space-y-4">
-            <div className="grid grid-cols-1 gap-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Title</label>
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  placeholder="Updated title"
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-              </div>
-              {/* Intentionally not editing fees here to match your PATCH body spec */}
-                     <div>
-              <label className="block text-sm font-medium mb-1">Fees</label>
+    {/* Add Course Modal */}
+    {showAdd && (
+      <Modal title="Add Course" onClose={() => setShowAdd(false)}>
+        <form onSubmit={handleAddCourse} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">
+              Title
+            </label>
+            <input
+              type="text"
+              value={addTitle}
+              onChange={(e) => setAddTitle(e.target.value)}
+              placeholder="e.g. Advanced Node.js Masterclass"
+              className="w-full rounded px-3 py-2 text-sm
+                         bg-white dark:bg-slate-900
+                         text-slate-900 dark:text-slate-100
+                         placeholder:text-slate-400 dark:placeholder:text-slate-500
+                         border border-slate-300 dark:border-slate-700
+                         focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">
+              Fees
+            </label>
+            <input
+              type="text"
+              value={addFees}
+              onChange={(e) => setAddFees(e.target.value)}
+              placeholder="e.g. 99"
+              className="w-full rounded px-3 py-2 text-sm
+                         bg-white dark:bg-slate-900
+                         text-slate-900 dark:text-slate-100
+                         placeholder:text-slate-400 dark:placeholder:text-slate-500
+                         border border-slate-300 dark:border-slate-700
+                         focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+            />
+          </div>
+          {addError && <p className="text-sm text-red-700 dark:text-red-400">{addError}</p>}
+          <button
+            type="submit"
+            disabled={savingAdd}
+            className="w-full rounded py-2 text-sm inline-flex items-center justify-center gap-2
+                       bg-slate-900 text-white hover:opacity-90 disabled:opacity-60
+                       dark:bg-slate-100 dark:text-slate-900"
+          >
+            <Save size={16} />
+            {savingAdd ? 'Saving…' : 'Save Course'}
+          </button>
+        </form>
+      </Modal>
+    )}
+
+    {/* Edit Course Modal */}
+    {showEdit && (
+      <Modal title="Update Course" onClose={() => setShowEdit(null)}>
+        <form onSubmit={handleEditCourse} className="space-y-4">
+          <div className="grid grid-cols-1 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">
+                Title
+              </label>
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Updated title"
+                className="w-full rounded px-3 py-2 text-sm
+                           bg-white dark:bg-slate-900
+                           text-slate-900 dark:text-slate-100
+                           placeholder:text-slate-400 dark:placeholder:text-slate-500
+                           border border-slate-300 dark:border-slate-700
+                           focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+              />
+            </div>
+
+            {/* Intentionally not editing fees here to match your PATCH body spec */}
+            <div>
+              <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">
+                Fees
+              </label>
               <input
                 type="text"
                 value={editFees}
                 onChange={(e) => setEditFees(e.target.value)}
                 placeholder="e.g. 99"
-                className="w-full border rounded px-3 py-2 text-sm"
+                className="w-full rounded px-3 py-2 text-sm
+                           bg-white dark:bg-slate-900
+                           text-slate-900 dark:text-slate-100
+                           placeholder:text-slate-400 dark:placeholder:text-slate-500
+                           border border-slate-300 dark:border-slate-700
+                           focus:outline-none focus:ring-2 focus:ring-blue-500/60"
               />
             </div>
-            </div>
-            {editError && <p className="text-sm text-red-600">{editError}</p>}
-            <button
-              type="submit"
-              disabled={savingEdit}
-              className="w-full bg-gray-900 text-white rounded py-2 text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              <Save size={16} />
-              {savingEdit ? 'Saving…' : 'Save Changes'}
-            </button>
-          </form>
-        </Modal>
-      )}
+          </div>
 
-      {/* Delete Confirmation */}
-      {deleteId && (
-        <ConfirmationModal
-          title="Delete Course"
-          description="Are you sure you want to delete this course?"
-          onCancel={() => setDeleteId(null)}
-          onConfirm={handleDelete}
-        />
-      )}
-    </main>
-  );
+          {editError && <p className="text-sm text-red-700 dark:text-red-400">{editError}</p>}
+          <button
+            type="submit"
+            disabled={savingEdit}
+            className="w-full rounded py-2 text-sm inline-flex items-center justify-center gap-2
+                       bg-slate-900 text-white hover:opacity-90 disabled:opacity-60
+                       dark:bg-slate-100 dark:text-slate-900"
+          >
+            <Save size={16} />
+            {savingEdit ? 'Saving…' : 'Save Changes'}
+          </button>
+        </form>
+      </Modal>
+    )}
+
+    {/* Delete Confirmation */}
+    {deleteId && (
+      <ConfirmationModal
+        title="Delete Course"
+        description="Are you sure you want to delete this course?"
+        onCancel={() => setDeleteId(null)}
+        onConfirm={handleDelete}
+      />
+    )}
+  </main>
+);
+
 }

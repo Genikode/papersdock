@@ -1,5 +1,7 @@
-// app/components/AssessmentOverview.tsx
-import { BookOpenCheck, Code2, FileText, MonitorPlay } from 'lucide-react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { BookOpenCheck, Code2, FileText, MonitorPlay, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 
 const papers = [
@@ -15,7 +17,8 @@ const papers = [
       '25% of the A Level',
     ],
     icon: <BookOpenCheck size={20} />,
-    color: 'border-blue-200 bg-blue-50',
+    // light + dark variants combined
+    color: 'border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20',
   },
   {
     title: 'Paper 2',
@@ -29,7 +32,7 @@ const papers = [
       '25% of the A Level',
     ],
     icon: <MonitorPlay size={20} />,
-    color: 'border-purple-200 bg-purple-50',
+    color: 'border-purple-200 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/20',
   },
   {
     title: 'Paper 3',
@@ -43,7 +46,7 @@ const papers = [
       '25% of the AS Level',
     ],
     icon: <Code2 size={20} />,
-    color: 'border-green-200 bg-green-50',
+    color: 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20',
   },
   {
     title: 'Paper 4',
@@ -57,50 +60,100 @@ const papers = [
       'No internet/email, all on computer.',
     ],
     icon: <FileText size={20} />,
-    color: 'border-yellow-200 bg-yellow-50',
+    color: 'border-yellow-200 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/20',
   },
 ];
 
 export default function AssessmentOverview() {
+  const [isDark, setIsDark] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // initialize theme from localStorage or system preference
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
+    if (stored === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    } else if (stored === 'light') {
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
+    } else {
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (prefersDark) {
+        document.documentElement.classList.add('dark');
+        setIsDark(true);
+      } else {
+        document.documentElement.classList.remove('dark');
+        setIsDark(false);
+      }
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    if (next) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
   return (
-    <section className="bg-[#F9FAFB] py-20 px-4">
-      <div className="max-w-6xl mx-auto text-center mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Assessment Overview</h2>
-        <p className="text-gray-500 max-w-2xl mx-auto">
-          Our comprehensive learning resources are designed to help you master every aspect of A-Level Computer Science,
-          from basic concepts to advanced programming.
-        </p>
+    <section className="bg-[#F9FAFB] dark:bg-gray-900 py-20 px-4">
+      <div className="max-w-6xl mx-auto mb-12">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="text-center md:text-left">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Assessment Overview</h2>
+            <p className="text-gray-500 dark:text-gray-300 max-w-2xl">
+              Our comprehensive learning resources are designed to help you master every aspect of A-Level Computer Science,
+              from basic concepts to advanced programming.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle dark mode"
+              className="flex items-center gap-2 px-3 py-2 rounded-md border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200"
+            >
+              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+              <span>{isDark ? 'Light' : 'Dark'}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto mb-16">
         {papers.map((paper, index) => (
           <div
             key={index}
-            className={`rounded-xl border ${paper.color} p-6 text-left`}
+            className={`rounded-xl border p-6 text-left bg-white dark:bg-gray-800 ${paper.color} text-gray-900 dark:text-gray-100`}
           >
             <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-2 text-gray-900 font-semibold">
+              <div className="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
                 {paper.icon}
                 <span>{paper.title}</span>
               </div>
-              <div className="text-sm text-gray-700 text-right">
+              <div className="text-sm text-gray-700 dark:text-gray-300 text-right">
                 <p>{paper.duration}</p>
               </div>
             </div>
 
-            <h3 className="font-semibold text-gray-900 text-sm mb-1">{paper.subtitle}</h3>
-            <p className="text-xs text-gray-500 mb-2">{paper.marks}</p>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-1">{paper.subtitle}</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-300 mb-2">{paper.marks}</p>
 
-            <ul className="text-sm text-gray-600 space-y-1 mb-4">
+            <ul className="text-sm text-gray-600 dark:text-gray-200 space-y-1 mb-4">
               {paper.points.map((point, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <span className="mt-[5px] h-[6px] w-[6px] rounded-full bg-gray-400 inline-block"></span>
-                  {point}
+                  <span className="mt-[5px] h-[6px] w-[6px] rounded-full bg-gray-400 dark:bg-gray-300 inline-block"></span>
+                  <span>{point}</span>
                 </li>
               ))}
             </ul>
 
-            <button className="mt-auto bg-gray-900 text-white px-4 py-2 rounded-md text-sm w-full">
+            <button className="mt-auto bg-gray-900 text-white px-4 py-2 rounded-md text-sm w-full hover:opacity-95">
               View Details
             </button>
           </div>

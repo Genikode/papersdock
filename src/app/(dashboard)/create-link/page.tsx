@@ -179,88 +179,112 @@ export default function SendZoomLinkPage() {
   );
 
   /* Column definitions */
-  const columns: TableColumn[] = useMemo<TableColumn[]>(
-    () => [
-      { header: 'S.No', accessor: 'sNo' },
-      { header: 'Title', accessor: 'title' },
-      {
-        header: 'URL',
-        accessor: 'url',
-        render: (value: string) => (
-          <div className="flex items-center gap-2">
-            <a
-              href={value}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 border px-2 py-0.5 rounded text-xs"
-              title={value}
-            >
-              <ExternalLink size={14} /> Open
-            </a>
-            <button
-              className="inline-flex items-center gap-1 border px-2 py-0.5 rounded text-xs"
-              onClick={() => navigator.clipboard.writeText(value)}
-              title="Copy URL"
-            >
-              <Copy size={14} /> Copy
-            </button>
-          </div>
-        ),
-      },
-      {
-        header: 'Description',
-        accessor: 'description',
-        render: (v?: string) => (
-          <span title={v || ''} className="line-clamp-2 max-w-[320px] block">
-            {v || '—'}
-          </span>
-        ),
-      },
-      {
-        header: 'Course',
-        accessor: 'courseName',
-        render: (v?: string) => (
-          <span className="text-xs bg-gray-100 text-gray-700 rounded-full px-2 py-0.5">
-            {v || '—'}
-          </span>
-        ),
-      },
-      {
-        header: 'Sent At',
-        accessor: 'createdAt',
-        render: (v?: string) => fmtDate(v),
-      },
-      {
-        header: 'Actions',
-        accessor: 'actions',
-        render: (_: any, row: ExternalLinkItem) => (
-          <div className="flex items-center gap-2">
-            <button
-              className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-indigo-50"
-              onClick={() => {
-                setEditItem(row);
-                setEditTitle(row.title || 'Zoom');
-                setEditUrl(row.url || '');
-                setEditDescription(row.description || '');
-                setEditCourseId(row.courseId || '');
-              }}
-              title="Edit"
-            >
-              <Edit2 size={14} /> Edit
-            </button>
-            <button
-              className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-red-50"
-              onClick={() => setPendingDeleteId(row.id)}
-              title="Delete"
-            >
-              <Trash2 size={14} /> Delete
-            </button>
-          </div>
-        ),
-      },
-    ],
-    []
-  );
+const columns: TableColumn[] = useMemo<TableColumn[]>(
+  () => [
+    { header: 'S.No', accessor: 'sNo' },
+    { header: 'Title', accessor: 'title' },
+    {
+      header: 'URL',
+      accessor: 'url',
+      render: (value: string) => (
+        <div className="flex items-center gap-2">
+          <a
+            href={value}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded text-xs px-2 py-0.5
+                       border border-slate-300 dark:border-slate-700
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       hover:bg-slate-50 dark:hover:bg-slate-800"
+            title={value}
+          >
+            <ExternalLink size={14} /> Open
+          </a>
+          <button
+            className="inline-flex items-center gap-1 rounded text-xs px-2 py-0.5
+                       border border-slate-300 dark:border-slate-700
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       hover:bg-slate-50 dark:hover:bg-slate-800"
+            onClick={() => navigator.clipboard.writeText(value)}
+            title="Copy URL"
+          >
+            <Copy size={14} /> Copy
+          </button>
+        </div>
+      ),
+    },
+    {
+      header: 'Description',
+      accessor: 'description',
+      render: (v?: string) => (
+        <span
+          title={v || ''}
+          className="block max-w-[320px] line-clamp-2 text-slate-700 dark:text-slate-300"
+        >
+          {v || '—'}
+        </span>
+      ),
+    },
+    {
+      header: 'Course',
+      accessor: 'courseName',
+      render: (v?: string) => (
+        <span
+          className="text-xs rounded-full px-2 py-0.5
+                     bg-slate-100 text-slate-700
+                     dark:bg-slate-800 dark:text-slate-300
+                     ring-1 ring-slate-200 dark:ring-slate-700"
+        >
+          {v || '—'}
+        </span>
+      ),
+    },
+    {
+      header: 'Sent At',
+      accessor: 'createdAt',
+      render: (v?: string) => fmtDate(v),
+    },
+    {
+      header: 'Actions',
+      accessor: 'actions',
+      render: (_: any, row: ExternalLinkItem) => (
+        <div className="flex items-center gap-2">
+          <button
+            className="inline-flex items-center gap-1 rounded text-xs px-2 py-1
+                       border border-slate-300 dark:border-slate-700
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+            onClick={() => {
+              setEditItem(row);
+              setEditTitle(row.title || 'Zoom');
+              setEditUrl(row.url || '');
+              setEditDescription(row.description || '');
+              setEditCourseId(row.courseId || '');
+            }}
+            title="Edit"
+          >
+            <Edit2 size={14} /> Edit
+          </button>
+          <button
+            className="inline-flex items-center gap-1 rounded text-xs px-2 py-1
+                       border border-slate-300 dark:border-slate-700
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       hover:bg-rose-50 dark:hover:bg-rose-950/40"
+            onClick={() => setPendingDeleteId(row.id)}
+            title="Delete"
+          >
+            <Trash2 size={14} /> Delete
+          </button>
+        </div>
+      ),
+    },
+  ],
+  []
+);
 
   /* Create link */
   async function handleCreate(e: React.FormEvent) {
@@ -338,192 +362,251 @@ export default function SendZoomLinkPage() {
   );
 
   return (
-    <main className="bg-[#F9FAFB] min-h-screen p-6 text-gray-900">
-      <PageHeader
-        title="Send Zoom Link"
-        description="Create, manage, and share external meeting links with courses"
-      />
+<main className="min-h-screen p-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+  <PageHeader
+    title="Send Zoom Link"
+    description="Create, manage, and share external meeting links with courses"
+  />
 
-      {/* Create card */}
-      <section className="bg-white border rounded-lg shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <LinkIcon size={18} /> Send a Link
-        </h2>
+  {/* Create card */}
+  <section className="mb-6 rounded-lg shadow-sm p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+      <LinkIcon size={18} /> Send a Link
+    </h2>
 
-        <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Course */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Course <span className="text-red-500">*</span></label>
-            <select
-              value={courseId}
-              onChange={(e) => setCourseId(e.target.value)}
-              className="w-full border rounded px-3 py-2 text-sm"
-            >
-              <option value="">{loadingCourses ? 'Loading courses…' : 'Select course'}</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-          </div>
+    <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      {/* Course */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-900 dark:text-slate-100">
+          Course <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={courseId}
+          onChange={(e) => setCourseId(e.target.value)}
+          className="w-full rounded border px-3 py-2 text-sm
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     border-slate-300 dark:border-slate-700
+                     focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+        >
+          <option value="">{loadingCourses ? 'Loading courses…' : 'Select course'}</option>
+          {courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </select>
+      </div>
 
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Title <span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Zoom"
-              className="w-full border rounded px-3 py-2 text-sm"
-            />
-          </div>
-
-          {/* URL */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">URL <span className="text-red-500">*</span></label>
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://your-zoom-link.com/meeting-id"
-              className="w-full border rounded px-3 py-2 text-sm"
-            />
-          </div>
-
-          {/* Description */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional note for students"
-              className="w-full border rounded px-3 py-2 text-sm"
-            />
-          </div>
-
-          {formError && (
-            <div className="md:col-span-2 text-sm text-red-600">{formError}</div>
-          )}
-
-          <div className="md:col-span-2">
-            <button
-              type="submit"
-              className="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium px-5 py-2 rounded disabled:opacity-60"
-              disabled={submitting}
-            >
-              {submitting ? 'Sending…' : 'Send Link'}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* Table */}
-      <section className="bg-white border rounded-lg shadow-sm">
-        {loadingLinks && <p className="px-4 py-2 text-sm text-gray-500">Loading links…</p>}
-        <TableComponent
-          columns={columns}
-          data={tableRows}
-          serverMode
-          toolbarLeft={toolbarLeft}
-          searchTerm={searchTerm}
-          onSearchTermChange={(v) => {
-            setSearchTerm(v);
-            setCurrentPage(1);
-          }}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={(n) => {
-            setItemsPerPage(n);
-            setCurrentPage(1);
-          }}
-          totalItems={totalItems}
+      {/* Title */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-900 dark:text-slate-100">
+          Title <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Zoom"
+          className="w-full rounded border px-3 py-2 text-sm
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     placeholder:text-slate-400 dark:placeholder:text-slate-500
+                     border-slate-300 dark:border-slate-700
+                     focus:outline-none focus:ring-2 focus:ring-blue-500/60"
         />
-      </section>
+      </div>
 
-      {/* Delete confirm */}
-      {pendingDeleteId && (
-        <ConfirmationModal
-          title="Delete Link"
-          description="Are you sure you want to delete this link?"
-          onCancel={() => setPendingDeleteId(null)}
-          onConfirm={deleteLink}
+      {/* URL */}
+      <div className="md:col-span-2">
+        <label className="mb-1 block text-sm font-medium text-slate-900 dark:text-slate-100">
+          URL <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://your-zoom-link.com/meeting-id"
+          className="w-full rounded border px-3 py-2 text-sm
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     placeholder:text-slate-400 dark:placeholder:text-slate-500
+                     border-slate-300 dark:border-slate-700
+                     focus:outline-none focus:ring-2 focus:ring-blue-500/60"
         />
+      </div>
+
+      {/* Description */}
+      <div className="md:col-span-2">
+        <label className="mb-1 block text-sm font-medium text-slate-900 dark:text-slate-100">
+          Description
+        </label>
+        <textarea
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Optional note for students"
+          className="w-full rounded border px-3 py-2 text-sm resize-y
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     placeholder:text-slate-400 dark:placeholder:text-slate-500
+                     border-slate-300 dark:border-slate-700
+                     focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+        />
+      </div>
+
+      {formError && (
+        <div className="md:col-span-2 text-sm text-red-700 dark:text-red-400">{formError}</div>
       )}
 
-      {/* Edit Modal */}
-      {editItem && (
-        <Modal title={`Edit Link — ${editItem.title}`} onClose={() => setEditItem(null)}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-black">
-            {/* Course */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Course</label>
-              <select
-                value={editCourseId}
-                onChange={(e) => setEditCourseId(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-              >
-                <option value="">{loadingCourses ? 'Loading courses…' : 'Select course'}</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <div className="md:col-span-2">
+        <button
+          type="submit"
+          className="w-full md:w-auto rounded px-5 py-2 text-sm font-medium text-white
+                     bg-gradient-to-r from-indigo-600 to-purple-600
+                     hover:from-indigo-700 hover:to-purple-700
+                     disabled:opacity-60"
+          disabled={submitting}
+        >
+          {submitting ? 'Sending…' : 'Send Link'}
+        </button>
+      </div>
+    </form>
+  </section>
 
-            {/* Title */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Title</label>
-              <input
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-                placeholder="Zoom"
-              />
-            </div>
+  {/* Table */}
+  <section className="rounded-lg shadow-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    {loadingLinks && (
+      <p className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400">Loading links…</p>
+    )}
+    <TableComponent
+      columns={columns}
+      data={tableRows}
+      serverMode
+      toolbarLeft={toolbarLeft}
+      searchTerm={searchTerm}
+      onSearchTermChange={(v) => {
+        setSearchTerm(v);
+        setCurrentPage(1);
+      }}
+      currentPage={currentPage}
+      onPageChange={setCurrentPage}
+      itemsPerPage={itemsPerPage}
+      onItemsPerPageChange={(n) => {
+        setItemsPerPage(n);
+        setCurrentPage(1);
+      }}
+      totalItems={totalItems}
+    />
+  </section>
 
-            {/* URL */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">URL</label>
-              <input
-                value={editUrl}
-                onChange={(e) => setEditUrl(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-                placeholder="https://your-zoom-link.com/meeting-id"
-              />
-            </div>
+  {/* Delete confirm */}
+  {pendingDeleteId && (
+    <ConfirmationModal
+      title="Delete Link"
+      description="Are you sure you want to delete this link?"
+      onCancel={() => setPendingDeleteId(null)}
+      onConfirm={deleteLink}
+    />
+  )}
 
-            {/* Description */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Description</label>
-              <textarea
-                rows={3}
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-                placeholder="Optional note for students"
-              />
-            </div>
-          </div>
+  {/* Edit Modal */}
+  {editItem && (
+    <Modal title={`Edit Link — ${editItem.title}`} onClose={() => setEditItem(null)}>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 text-slate-900 dark:text-slate-100">
+        {/* Course */}
+        <div>
+          <label className="mb-1 block text-sm font-medium">Course</label>
+          <select
+            value={editCourseId}
+            onChange={(e) => setEditCourseId(e.target.value)}
+            className="w-full rounded border px-3 py-2 text-sm
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border-slate-300 dark:border-slate-700
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+          >
+            <option value="">{loadingCourses ? 'Loading courses…' : 'Select course'}</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          <div className="flex justify-end gap-2 mt-4">
-            <button className="px-3 py-1 border rounded" onClick={() => setEditItem(null)}>
-              Cancel
-            </button>
-            <button
-              className="px-3 py-1 rounded text-white bg-indigo-600 disabled:opacity-60"
-              onClick={saveEdit}
-              disabled={savingEdit}
-            >
-              {savingEdit ? 'Saving…' : 'Save Changes'}
-            </button>
-          </div>
-        </Modal>
-      )}
-    </main>
+        {/* Title */}
+        <div>
+          <label className="mb-1 block text-sm font-medium">Title</label>
+          <input
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            className="w-full rounded border px-3 py-2 text-sm
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       placeholder:text-slate-400 dark:placeholder:text-slate-500
+                       border-slate-300 dark:border-slate-700
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+            placeholder="Zoom"
+          />
+        </div>
+
+        {/* URL */}
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-sm font-medium">URL</label>
+          <input
+            value={editUrl}
+            onChange={(e) => setEditUrl(e.target.value)}
+            className="w-full rounded border px-3 py-2 text-sm
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       placeholder:text-slate-400 dark:placeholder:text-slate-500
+                       border-slate-300 dark:border-slate-700
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+            placeholder="https://your-zoom-link.com/meeting-id"
+          />
+        </div>
+
+        {/* Description */}
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-sm font-medium">Description</label>
+          <textarea
+            rows={3}
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+            className="w-full rounded border px-3 py-2 text-sm resize-y
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       placeholder:text-slate-400 dark:placeholder:text-slate-500
+                       border-slate-300 dark:border-slate-700
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+            placeholder="Optional note for students"
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 flex justify-end gap-2">
+        <button
+          className="px-3 py-1 rounded border
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     border-slate-300 dark:border-slate-700
+                     hover:bg-slate-50 dark:hover:bg-slate-800"
+          onClick={() => setEditItem(null)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-3 py-1 rounded text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60"
+          onClick={saveEdit}
+          disabled={savingEdit}
+        >
+          {savingEdit ? 'Saving…' : 'Save Changes'}
+        </button>
+      </div>
+    </Modal>
+  )}
+</main>
+
   );
 }

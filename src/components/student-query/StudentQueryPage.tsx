@@ -27,6 +27,9 @@ import {
   Download,
   FileAudio,
   StopCircle,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { getUserData } from '@/lib/auth';
@@ -73,7 +76,7 @@ type ReplyApiItem = {
   userId: number;
   text: string;
   attachmentUrl?: string | null;
-  attachmentExtension?: string | null; // <-- used for pdf/image decision
+  attachmentExtension?: string | null;
   voiceAttachment?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -103,7 +106,7 @@ type Status = 'pending' | 'answered' | 'resolved';
 
 type Message = {
   id: string;
-  key: string; // unique React key
+  key: string;
   author: 'student' | 'instructor';
   name: string;
   text: string;
@@ -160,7 +163,6 @@ function extFromUrl(url?: string | null): string | null {
     return i > -1 ? url.slice(i + 1).toLowerCase() : null;
   }
 }
-/* derive extension from File */
 function guessExtFromFile(f?: File | null): string | null {
   if (!f) return null;
   const mt = (f.type || '').toLowerCase();
@@ -174,6 +176,51 @@ function guessExtFromFile(f?: File | null): string | null {
   return i > -1 ? n.slice(i + 1) : null;
 }
 
+/* =========================== Theme (Light/Dark) ========================= */
+
+type Theme = 'light' | 'dark' | 'system';
+function useTheme() {
+  const [theme, setTheme] = useState<Theme>('system');
+
+  // load stored
+  useEffect(() => {
+    const stored = (typeof window !== 'undefined' && localStorage.getItem('theme')) as Theme | null;
+    if (stored) setTheme(stored);
+  }, []);
+
+  // apply to <html>
+  useEffect(() => {
+    const root = document.documentElement;
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = theme === 'dark' || (theme === 'system' && systemDark);
+    root.classList.toggle('dark', isDark);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  return { theme, setTheme };
+}
+
+function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
+  const cycle = () => {
+    setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light');
+  };
+  const Icon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor;
+  const label = theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System';
+
+  return (
+    <button
+      onClick={cycle}
+      className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm bg-white text-slate-700 hover:bg-slate-50
+                 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+      title={`Theme: ${label} (click to change)`}
+      aria-label="Toggle theme"
+    >
+      <Icon size={16} />
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
+
 /* ============================== Badges & Bits =========================== */
 
 function StatusBadge({ status, dense = false }: { status: Status; dense?: boolean }) {
@@ -181,17 +228,19 @@ function StatusBadge({ status, dense = false }: { status: Status; dense?: boolea
     pending: {
       label: 'pending',
       Icon: Clock4,
-      classes: 'bg-amber-50 text-amber-700 ring-amber-200',
+      classes:
+        'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:ring-amber-800',
     },
     answered: {
       label: 'answered',
       Icon: MessageSquareText,
-      classes: 'bg-blue-50 text-blue-700 ring-blue-200',
+      classes: 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:ring-blue-800',
     },
     resolved: {
       label: 'resolved',
       Icon: CheckCircle2,
-      classes: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+      classes:
+        'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:ring-emerald-800',
     },
   }[status];
   const Icon = map.Icon;
@@ -211,7 +260,10 @@ function StatusBadge({ status, dense = false }: { status: Status; dense?: boolea
 
 function CategoryBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-700 px-2 py-0.5 text-[11px] ring-1 ring-slate-200">
+    <span
+      className="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-700 px-2 py-0.5 text-[11px] ring-1 ring-slate-200
+                 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"
+    >
       <Tag size={12} />
       General
     </span>
@@ -220,7 +272,10 @@ function CategoryBadge() {
 
 function AvatarInitials({ name }: { name: string }) {
   return (
-    <div className="grid h-7 w-7 select-none place-items-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+    <div
+      className="grid h-7 w-7 select-none place-items-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700
+                 dark:bg-slate-700 dark:text-slate-200"
+    >
       {initials(name)}
     </div>
   );
@@ -241,27 +296,34 @@ function QueryListItem({
     <button
       onClick={onClick}
       className={clsx(
-        'w-full text-left rounded-lg border p-3 hover:bg-slate-50',
-        active && 'ring-2 ring-indigo-300 bg-white'
+        'w-full text-left rounded-lg border p-3 hover:bg-slate-50 bg-white border-slate-200',
+        active && 'ring-2 ring-indigo-300',
+        'dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100'
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-[13.5px] font-semibold text-slate-900 line-clamp-1">{q.title}</h3>
+        <h3 className="text-[13.5px] font-semibold text-slate-900 line-clamp-1 dark:text-slate-100">{q.title}</h3>
         <StatusBadge status={q.status} dense />
       </div>
       <div className="mt-2 flex items-center gap-2">
         <CategoryBadge />
         {q.isPublic === 'Y' ? (
-          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200 px-2 py-0.5 rounded-full">
+          <span
+            className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200 px-2 py-0.5 rounded-full
+                       dark:bg-emerald-900/30 dark:text-emerald-200 dark:ring-emerald-800"
+          >
             <Globe size={12} /> public
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 text-[11px] text-slate-700 bg-slate-50 ring-1 ring-slate-200 px-2 py-0.5 rounded-full">
+          <span
+            className="inline-flex items-center gap-1 text-[11px] text-slate-700 bg-slate-50 ring-1 ring-slate-200 px-2 py-0.5 rounded-full
+                       dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700"
+          >
             <Lock size={12} /> private
           </span>
         )}
       </div>
-      <div className="mt-2 flex items-center justify-between text-[12px] text-slate-600">
+      <div className="mt-2 flex items-center justify-between text-[12px] text-slate-600 dark:text-slate-400">
         <span className="inline-flex items-center gap-1">
           <UserRound size={14} /> {q.student}
         </span>
@@ -269,7 +331,7 @@ function QueryListItem({
           <Clock size={14} /> {q.replyCount} replies
         </span>
       </div>
-      <p className="mt-2 text-[12.5px] text-slate-700 line-clamp-1">{q.text}</p>
+      <p className="mt-2 text-[12.5px] text-slate-700 line-clamp-1 dark:text-slate-300">{q.text}</p>
     </button>
   );
 }
@@ -310,20 +372,22 @@ function QueryList({
   return (
     <aside className="flex h-full flex-col">
       <div className="px-4 pt-4">
-        <h2 className="text-[15px] font-semibold text-slate-900">Student Queries</h2>
+        <h2 className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">Student Queries</h2>
         <div className="mt-3 flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2 top-2.5 text-slate-500" size={16} />
+            <Search className="absolute left-2 top-2.5 text-slate-500 dark:text-slate-400" size={16} />
             <input
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search queries..."
-              className="w-full rounded-md border bg-white pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 ring-indigo-300"
+              className="w-full rounded-md border bg-white pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 ring-indigo-300
+                         dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:placeholder:text-slate-400 dark:focus:ring-indigo-700"
             />
           </div>
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-md border bg-white"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border bg-white
+                       dark:bg-slate-900 dark:border-slate-700"
             title="Filter"
           >
             <Filter size={16} />
@@ -338,8 +402,8 @@ function QueryList({
               className={clsx(
                 'rounded-full px-3 py-1 ring-1 capitalize',
                 closedFilter === s
-                  ? 'bg-slate-900 text-white ring-slate-900'
-                  : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
+                  ? 'bg-slate-900 text-white ring-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:ring-slate-100'
+                  : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-800'
               )}
             >
               {s}
@@ -353,8 +417,8 @@ function QueryList({
                 className={clsx(
                   'rounded-full px-3 py-1 ring-1 capitalize',
                   publicFilter === s
-                    ? 'bg-slate-900 text-white ring-slate-900'
-                    : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
+                    ? 'bg-slate-900 text-white ring-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:ring-slate-100'
+                    : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700 dark:hover:bg-slate-800'
                 )}
               >
                 {s}
@@ -365,7 +429,7 @@ function QueryList({
       </div>
 
       <div className="mt-3 flex-1 overflow-y-auto space-y-3 px-4 pb-3">
-        {loading && <div className="py-4 text-sm text-slate-500">Loading…</div>}
+        {loading && <div className="py-4 text-sm text-slate-500 dark:text-slate-400">Loading…</div>}
         {!loading &&
           items.map((item, index) => (
             <QueryListItem
@@ -376,24 +440,24 @@ function QueryList({
             />
           ))}
         {!loading && items.length === 0 && (
-          <div className="py-10 text-center text-sm text-slate-500">No queries found.</div>
+          <div className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">No queries found.</div>
         )}
       </div>
 
-      <div className="mt-auto border-t p-2 flex items-center justify-between text-xs">
-        <span className="text-slate-600 px-2">
+      <div className="mt-auto border-t p-2 flex items-center justify-between text-xs dark:border-slate-700">
+        <span className="text-slate-600 px-2 dark:text-slate-400">
           Page {page} / {totalPages} • {total} total
         </span>
         <div className="flex items-center gap-1">
           <button
-            className="border rounded p-1 disabled:opacity-50"
+            className="border rounded p-1 disabled:opacity-50 dark:border-slate-700"
             onClick={() => onPageChange(Math.max(1, page - 1))}
             disabled={page <= 1 || loading}
           >
             <ChevronLeft size={16} />
           </button>
           <button
-            className="border rounded p-1 disabled:opacity-50"
+            className="border rounded p-1 disabled:opacity-50 dark:border-slate-700"
             onClick={() => onPageChange(Math.min(totalPages, page + 1))}
             disabled={page >= totalPages || loading}
           >
@@ -445,7 +509,9 @@ function useVoiceRecorder() {
       analyser.getByteTimeDomainData(dataArray);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.lineWidth = 2;
-      ctx.strokeStyle = '#475569';
+      // adapt stroke color for dark mode
+      const isDark = document.documentElement.classList.contains('dark');
+      ctx.strokeStyle = isDark ? '#94a3b8' : '#475569';
       ctx.beginPath();
       const slice = canvas.width / bufferLength;
       for (let i = 0; i < bufferLength; i++) {
@@ -541,20 +607,26 @@ function useVoiceRecorder() {
 
 function PdfCard({ url, filename }: { url: string; filename?: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-[#dcf8c6] p-3 ring-1 ring-emerald-200">
-      <div className="flex h-[70px] w-[88px] items-center justify-center rounded-md bg-white ring-1 ring-emerald-200">
-        <FileText className="h-6 w-6 text-emerald-700" />
+    <div
+      className="flex items-center gap-3 rounded-xl bg-[#dcf8c6] p-3 ring-1 ring-emerald-200
+                 dark:bg-emerald-900/20 dark:ring-emerald-800"
+    >
+      <div
+        className="flex h-[70px] w-[88px] items-center justify-center rounded-md bg-white ring-1 ring-emerald-200
+                   dark:bg-slate-900 dark:ring-emerald-800"
+      >
+        <FileText className="h-6 w-6 text-emerald-700 dark:text-emerald-300" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold text-slate-800">
+        <div className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
           {filename || url.split('/').pop() || 'document.pdf'}
         </div>
-        <div className="mt-0.5 text-xs text-slate-700">PDF • tap to open</div>
+        <div className="mt-0.5 text-xs text-slate-700 dark:text-slate-300">PDF • tap to open</div>
         <a
           href={url}
           target="_blank"
-          rel="noreferrer"
-          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline"
+          rel="noopener noreferrer"
+          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-300"
         >
           <Download className="h-4 w-4" /> Open
         </a>
@@ -565,7 +637,7 @@ function PdfCard({ url, filename }: { url: string; filename?: string }) {
 
 function ImageBubble({ url }: { url: string }) {
   return (
-    <div className="overflow-hidden rounded-xl ring-1 ring-slate-200">
+    <div className="overflow-hidden rounded-xl ring-1 ring-slate-200 dark:ring-slate-700">
       <img
         src={url}
         alt="attachment"
@@ -581,27 +653,42 @@ function VoiceBubble({ url }: { url: string }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const a = audioRef.current; if (!a) return;
+    const a = audioRef.current;
+    if (!a) return;
     const onTime = () => setProgress(a.currentTime / Math.max(1, a.duration || 1));
     const onEnd = () => setPlaying(false);
     a.addEventListener('timeupdate', onTime);
     a.addEventListener('ended', onEnd);
-    return () => { a.removeEventListener('timeupdate', onTime); a.removeEventListener('ended', onEnd); };
+    return () => {
+      a.removeEventListener('timeupdate', onTime);
+      a.removeEventListener('ended', onEnd);
+    };
   }, []);
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-[#dcf8c6] p-3">
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-emerald-200">
-        <FileAudio className="h-5 w-5 text-emerald-700" />
+    <div
+      className="flex items-center gap-3 rounded-2xl bg-[#dcf8c6] p-3
+                 dark:bg-emerald-900/20"
+    >
+      <div
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-white ring-1 ring-emerald-200
+                   dark:bg-slate-900 dark:ring-emerald-800"
+      >
+        <FileAudio className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
       </div>
       <button
         onClick={() => {
           const a = audioRef.current;
           if (!a) return;
-          if (playing) { a.pause(); setPlaying(false); }
-          else { a.play(); setPlaying(true); }
+          if (playing) {
+            a.pause();
+            setPlaying(false);
+          } else {
+            a.play();
+            setPlaying(true);
+          }
         }}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white dark:bg-emerald-500"
       >
         {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
       </button>
@@ -610,13 +697,13 @@ function VoiceBubble({ url }: { url: string }) {
           {Array.from({ length: 36 }).map((_, i) => (
             <div
               key={i}
-              className="w-[4px] rounded-t bg-emerald-500"
+              className="w-[4px] rounded-t bg-emerald-500 dark:bg-emerald-400"
               style={{ height: `${(Math.sin(i / 2) * 0.5 + 0.5) * 16 + 3}px` }}
             />
           ))}
         </div>
         <div
-          className="pointer-events-none absolute inset-y-0 left-0 bg-emerald-200"
+          className="pointer-events-none absolute inset-y-0 left-0 bg-emerald-200 dark:bg-emerald-700/40"
           style={{ width: `${Math.round(progress * 100)}%` }}
         />
       </div>
@@ -628,7 +715,8 @@ function VoiceBubble({ url }: { url: string }) {
 /* ============================== Page (Main) ============================== */
 
 export default function AdminQueryPage() {
-  const currentUser = getUserData(); // must include .id
+  const currentUser = getUserData();
+  const { theme, setTheme } = useTheme();
 
   // list state
   const [items, setItems] = useState<QueryUI[]>([]);
@@ -784,23 +872,20 @@ export default function AdminQueryPage() {
 
       if (fileInput) {
         attachmentUrl = await uploadViaPresign(fileInput, 'query/attachments');
-        // include attachmentExtension in body
-        attachmentExtension =
-          guessExtFromFile(fileInput) || extFromUrl(attachmentUrl || '') || undefined;
+        attachmentExtension = guessExtFromFile(fileInput) || extFromUrl(attachmentUrl || '') || undefined;
       }
       if (rec.blob) {
         voiceAttachment = await uploadViaPresign(rec.blob, 'query/voices');
       }
 
       await api.post(ENDPOINTS.REPLY_CREATE, {
-        text:text || '',
+        text: text || '',
         queryId: activeId,
         attachmentUrl: attachmentUrl || '',
         voiceAttachment: voiceAttachment || '',
-        attachmentExtension: attachmentExtension || '', // <— important bit
+        attachmentExtension: attachmentExtension || '',
       });
 
-      // reset composer
       setFileInput(null);
       if (fileRef.current) fileRef.current.value = '';
       rec.reset();
@@ -838,7 +923,6 @@ export default function AdminQueryPage() {
       text: editingText,
       attachmentUrl: nextAttachment,
       voiceAttachment: nextVoice,
-      // If your update API also accepts attachmentExtension, you can add it here too.
     });
 
     setEditing(null);
@@ -855,16 +939,26 @@ export default function AdminQueryPage() {
   const [messageText, setMessageText] = useState('');
 
   return (
-    <main className="m-4 h-[calc(100vh-2rem)] overflow-hidden rounded-lg border bg-white">
-      <header className="flex items-center justify-between border-b px-5 py-3">
-        <h1 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+    <main
+      className="m-4 h-[calc(100vh-2rem)] overflow-hidden rounded-lg border bg-white text-slate-900
+                 dark:bg-slate-950 dark:text-slate-100 dark:border-slate-800"
+    >
+      <header
+        className="flex items-center justify-between border-b px-5 py-3 bg-white
+                   dark:bg-slate-950 dark:border-slate-800"
+      >
+        <h1 className="flex items-center gap-2 text-lg font-semibold">
           Admin — Student Queries
         </h1>
+        <ThemeToggle theme={theme} setTheme={setTheme} />
       </header>
 
       <div className="relative flex h-[calc(100%-52px)]">
         {/* Left list */}
-        <div className="shrink-0 overflow-y-auto border-r bg-white" style={{ width: 380 }}>
+        <div
+          className="shrink-0 overflow-y-auto border-r bg-white dark:bg-slate-950 dark:border-slate-800"
+          style={{ width: 380 }}
+        >
           <QueryList
             items={items}
             activeId={activeId || undefined}
@@ -893,13 +987,16 @@ export default function AdminQueryPage() {
         </div>
 
         {/* Right panel */}
-        <section className="min-w-0 flex-1 flex flex-col bg-slate-50">
+        <section className="min-w-0 flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
           {/* Active header */}
           {active ? (
-            <div className="flex items-center justify-between border-b bg-white px-5 py-4">
+            <div
+              className="flex items-center justify-between border-b bg-white px-5 py-4
+                         dark:bg-slate-950 dark:border-slate-800"
+            >
               <div className="min-w-0">
-                <h1 className="truncate text-lg font-semibold text-slate-900">{active.title}</h1>
-                <div className="mt-1 flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                <h1 className="truncate text-lg font-semibold">{active.title}</h1>
+                <div className="mt-1 flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
                   <span className="inline-flex items-center gap-1">
                     <UserRound size={14} /> {active.student}
                   </span>
@@ -908,10 +1005,15 @@ export default function AdminQueryPage() {
                   </span>
                   <StatusBadge status={active.status} />
                 </div>
-                <p className="mt-2 text-sm text-slate-800">{active.text}</p>
+                <p className="mt-2 text-sm">{active.text}</p>
                 <div className="mt-1 space-x-3 text-sm">
                   {active.attachmentUrl && (
-                    <a href={active.attachmentUrl} target="_blank" rel="noreferrer" className="underline text-indigo-600">
+                    <a
+                      href={active.attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline text-indigo-600 dark:text-indigo-400"
+                    >
                       View original attachment
                     </a>
                   )}
@@ -925,25 +1027,26 @@ export default function AdminQueryPage() {
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => toggleClosed(active.id)}
-                  className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:opacity-95"
+                  className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:opacity-95 dark:bg-emerald-500"
                 >
                   {active.isClosed === 'Y' ? 'Reopen Query' : 'Mark as Resolved'}
                 </button>
                 <button
                   onClick={() => togglePublic(active.id)}
-                  className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:opacity-95"
+                  className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:opacity-95
+                             dark:bg-slate-200 dark:text-slate-900"
                 >
                   {active.isPublic === 'Y' ? 'Make Private' : 'Make Public'}
                 </button>
               </div>
             </div>
           ) : (
-            <div className="p-6 text-sm text-slate-600">Select a query to view details.</div>
+            <div className="p-6 text-sm text-slate-600 dark:text-slate-400">Select a query to view details.</div>
           )}
 
           {/* Replies */}
           <div className="flex-1 overflow-y-auto space-y-3 px-5 py-4">
-            {loadingReplies && <div className="text-sm text-slate-500">Loading replies…</div>}
+            {loadingReplies && <div className="text-sm text-slate-500 dark:text-slate-400">Loading replies…</div>}
             {!loadingReplies &&
               activeReplies.map((m) => {
                 const isMine = m.author === 'instructor';
@@ -957,22 +1060,28 @@ export default function AdminQueryPage() {
                     <div
                       className={clsx(
                         'max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm',
-                        isMine ? 'bg-slate-900 text-white rounded-br-md' : 'bg-white text-slate-900 border rounded-bl-md'
+                        isMine
+                          ? 'bg-slate-900 text-white rounded-br-md dark:bg-slate-200 dark:text-slate-900'
+                          : 'bg-white text-slate-900 border rounded-bl-md dark:bg-slate-950 dark:text-slate-100 dark:border-slate-800'
                       )}
                     >
-                      <div className={clsx('mb-1 text-[11px]', isMine ? 'text-slate-300' : 'text-slate-500')}>
+                      <div
+                        className={clsx(
+                          'mb-1 text-[11px]',
+                          isMine ? 'text-slate-300 dark:text-slate-700' : 'text-slate-500 dark:text-slate-400'
+                        )}
+                      >
                         <span className="font-medium">{m.name}</span> &nbsp; {timeFull(m.createdAt)}
                       </div>
 
                       {m.text && <div className="mb-2 whitespace-pre-wrap">{m.text}</div>}
 
-                      {/* WhatsApp-style attachments */}
                       {m.attachmentUrl && isPdf && <PdfCard url={m.attachmentUrl} />}
                       {m.attachmentUrl && isImage && <div className="mt-1"><ImageBubble url={m.attachmentUrl} /></div>}
                       {m.voiceAttachment && <div className="mt-1"><VoiceBubble url={m.voiceAttachment} /></div>}
 
                       {!m.attachmentUrl && !m.voiceAttachment && !m.text && (
-                        <div className="italic text-slate-500">Attachment unavailable</div>
+                        <div className="italic text-slate-500 dark:text-slate-400">Attachment unavailable</div>
                       )}
 
                       {isMine && m.editable && (
@@ -990,18 +1099,18 @@ export default function AdminQueryPage() {
                 );
               })}
             {!loadingReplies && activeReplies.length === 0 && active && (
-              <div className="text-sm text-slate-500">No replies yet.</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">No replies yet.</div>
             )}
           </div>
 
           {/* Edit bar */}
           {editing && (
-            <div className="border-t bg-yellow-50 px-4 py-3">
-              <div className="mb-2 text-xs text-yellow-800">Editing your reply…</div>
+            <div className="border-t bg-yellow-50 px-4 py-3 dark:bg-yellow-900/20 dark:border-slate-800">
+              <div className="mb-2 text-xs text-yellow-800 dark:text-yellow-300">Editing your reply…</div>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2">
                   <input
-                    className="flex-1 rounded-md border bg-white px-3 py-2 text-sm"
+                    className="flex-1 rounded-md border bg-white px-3 py-2 text-sm dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
                     value={editingText}
                     onChange={(e) => setEditingText(e.target.value)}
                   />
@@ -1016,7 +1125,8 @@ export default function AdminQueryPage() {
                   <button
                     type="button"
                     onClick={() => editFileRef.current?.click()}
-                    className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50"
+                    className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50
+                               dark:bg-slate-950 dark:border-slate-800 dark:hover:bg-slate-900"
                     title={editFile ? `Attached: ${editFile.name}` : 'Attach/replace file'}
                   >
                     <Paperclip size={16} />
@@ -1026,7 +1136,8 @@ export default function AdminQueryPage() {
                     <button
                       type="button"
                       onClick={() => editRec.start()}
-                      className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50"
+                      className="grid h-10 w-10 place-items-center rounded-md border bg-white hover:bg-slate-50
+                                 dark:bg-slate-950 dark:border-slate-800 dark:hover:bg-slate-900"
                       title="Record new voice"
                       disabled={!editRec.supported}
                     >
@@ -1035,7 +1146,7 @@ export default function AdminQueryPage() {
                   )}
 
                   <button
-                    className="rounded-md border px-3 py-2 text-sm"
+                    className="rounded-md border px-3 py-2 text-sm dark:border-slate-800"
                     onClick={() => {
                       setEditing(null);
                       setEditingText('');
@@ -1046,7 +1157,8 @@ export default function AdminQueryPage() {
                     Cancel
                   </button>
                   <button
-                    className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
+                    className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60
+                               dark:bg-slate-200 dark:text-slate-900"
                     onClick={saveEdit}
                     disabled={editRec.recording}
                     title={editRec.recording ? 'Finish recording before saving' : 'Save'}
@@ -1058,11 +1170,11 @@ export default function AdminQueryPage() {
                 {(editFile || editRec.recording || editRec.blob) && (
                   <div className="flex items-center gap-3 text-sm">
                     {editFile && (
-                      <span className="text-slate-600 inline-flex items-center gap-1">
+                      <span className="text-slate-600 inline-flex items-center gap-1 dark:text-slate-300">
                         📎 {editFile.name}
                         <button
                           type="button"
-                          className="ml-1 text-slate-500 hover:text-red-600"
+                          className="ml-1 text-slate-500 hover:text-red-600 dark:text-slate-400"
                           onClick={() => {
                             setEditFile(null);
                             if (editFileRef.current) editFileRef.current.value = '';
@@ -1075,16 +1187,19 @@ export default function AdminQueryPage() {
                     )}
 
                     {editRec.recording && (
-                      <div className="flex-1 flex items-center gap-3 rounded-full border px-3 py-1.5 bg-white">
+                      <div
+                        className="flex-1 flex items-center gap-3 rounded-full border px-3 py-1.5 bg-white
+                                   dark:bg-slate-950 dark:border-slate-800"
+                      >
                         <button
                           type="button"
                           onClick={() => editRec.stop()}
                           title="Stop"
-                          className="text-slate-600 hover:text-red-600"
+                          className="text-slate-600 hover:text-red-600 dark:text-slate-300"
                         >
                           <Trash2 size={16} />
                         </button>
-                        <span className="inline-flex items-center gap-2 text-[13px] text-slate-700">
+                        <span className="inline-flex items-center gap-2 text-[13px] text-slate-700 dark:text-slate-300">
                           <span className="inline-block h-2 w-2 rounded-full bg-red-600" />
                           {String(Math.floor(editRec.duration / 60)).padStart(1, '0')}:
                           {String(editRec.duration % 60).padStart(2, '0')}
@@ -1093,7 +1208,7 @@ export default function AdminQueryPage() {
                         <button
                           type="button"
                           onClick={() => editRec.pause()}
-                          className="text-slate-700 hover:text-slate-900"
+                          className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200"
                           title={editRec.paused ? 'Resume' : 'Pause'}
                         >
                           {editRec.paused ? <Play size={18} /> : <Pause size={18} />}
@@ -1104,7 +1219,7 @@ export default function AdminQueryPage() {
                             editRec.stop();
                             editRec.reset();
                           }}
-                          className="text-slate-700 hover:text-slate-900"
+                          className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200"
                           title="Discard"
                         >
                           <RotateCcw size={18} />
@@ -1113,11 +1228,14 @@ export default function AdminQueryPage() {
                     )}
 
                     {!editRec.recording && editRec.blob && editRec.url && (
-                      <div className="flex-1 flex items-center gap-3 rounded-full border px-3 py-1.5 bg-white">
+                      <div
+                        className="flex-1 flex items-center gap-3 rounded-full border px-3 py-1.5 bg-white
+                                   dark:bg-slate-950 dark:border-slate-800"
+                      >
                         <button
                           type="button"
                           onClick={() => editRec.reset()}
-                          className="text-slate-600 hover:text-red-600"
+                          className="text-slate-600 hover:text-red-600 dark:text-slate-300"
                           title="Delete voice"
                         >
                           <Trash2 size={16} />
@@ -1136,32 +1254,34 @@ export default function AdminQueryPage() {
             <form
               onSubmit={(e: FormEvent) => {
                 e.preventDefault();
-                if (rec.recording) return; // block while recording
+                if (rec.recording) return;
                 const t = messageText.trim();
                 if (!t && !fileInput && !rec.blob) return;
                 handleSend(t || '');
                 setMessageText('');
               }}
-              className="border-t bg-white px-4 py-3"
+              className="border-t bg-white px-4 py-3 dark:bg-slate-950 dark:border-slate-800"
             >
-              {/* Voice bar ABOVE input */}
               {(rec.recording || rec.blob) && (
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                  <div className="flex items-center gap-2 text-rose-600">
+                <div
+                  className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm
+                             dark:bg-slate-950 dark:border-slate-800"
+                >
+                  <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                     <button
                       type="button"
                       onClick={() => {
                         rec.stop();
-                       
                       }}
-                      title="Delete"
-                      className="text-slate-700 hover:text-red-600"
+                      title="Stop"
+                      className="text-slate-700 hover:text-red-600 dark:text-slate-300"
                     >
-                  <StopCircle />
+                      <StopCircle />
                     </button>
                     <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-rose-600" />
                     <span className="text-sm font-medium tabular-nums">
-                      {String(Math.floor(rec.duration / 60)).padStart(1,'0')}:{String(rec.duration % 60).padStart(2,'0')}
+                      {String(Math.floor(rec.duration / 60)).padStart(1, '0')}:
+                      {String(rec.duration % 60).padStart(2, '0')}
                     </span>
                     <canvas ref={rec.canvasRef} width={280} height={22} className="ml-2 hidden h-[22px] w-[320px] sm:block" />
                   </div>
@@ -1170,7 +1290,8 @@ export default function AdminQueryPage() {
                       <button
                         type="button"
                         onClick={() => rec.pause()}
-                        className="rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
+                        className="rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50
+                                   dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
                         title={rec.paused ? 'Resume' : 'Pause'}
                       >
                         {rec.paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
@@ -1180,7 +1301,8 @@ export default function AdminQueryPage() {
                       <button
                         type="button"
                         onClick={() => rec.reset()}
-                        className="rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
+                        className="rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50
+                                   dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
                         title="Discard"
                       >
                         <RotateCcw className="h-4 w-4" />
@@ -1190,7 +1312,10 @@ export default function AdminQueryPage() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+              <div
+                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm
+                           dark:bg-slate-950 dark:border-slate-800"
+              >
                 <input
                   ref={fileRef}
                   type="file"
@@ -1201,7 +1326,8 @@ export default function AdminQueryPage() {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
+                  className="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50
+                             dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
                   title={fileInput ? `Attached: ${fileInput.name}` : 'Attach file'}
                 >
                   <Paperclip className="h-5 w-5" />
@@ -1209,7 +1335,8 @@ export default function AdminQueryPage() {
 
                 <input
                   name="msg"
-                  className="flex-1 rounded-md bg-transparent px-2 py-2 text-sm outline-none placeholder:text-slate-400"
+                  className="flex-1 rounded-md bg-transparent px-2 py-2 text-sm outline-none placeholder:text-slate-400
+                             dark:text-slate-100 dark:placeholder:text-slate-400"
                   placeholder="Type your message…"
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
@@ -1219,7 +1346,8 @@ export default function AdminQueryPage() {
                   <button
                     type="button"
                     onClick={() => rec.start()}
-                    className="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50"
+                    className="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-700 hover:bg-slate-50
+                               dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
                     title="Record voice"
                     disabled={!rec.supported}
                   >
@@ -1230,7 +1358,8 @@ export default function AdminQueryPage() {
                 <button
                   type="submit"
                   disabled={sending || rec.recording}
-                  className="inline-flex items-center justify-center rounded-md bg-slate-900 p-2 text-white hover:opacity-95 disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-md bg-slate-900 p-2 text-white hover:opacity-95 disabled:opacity-60
+                             dark:bg-slate-200 dark:text-slate-900"
                   title={rec.recording ? 'Finish recording to send' : 'Send'}
                 >
                   <Send className="h-5 w-5" />
@@ -1238,11 +1367,14 @@ export default function AdminQueryPage() {
               </div>
 
               {fileInput && (
-                <div className="mt-2 inline-flex items-center gap-2 rounded border bg-white px-2 py-1 text-xs text-slate-600">
+                <div
+                  className="mt-2 inline-flex items-center gap-2 rounded border bg-white px-2 py-1 text-xs text-slate-600
+                             dark:bg-slate-950 dark:border-slate-800 dark:text-slate-300"
+                >
                   📎 {fileInput.name}
                   <button
                     type="button"
-                    className="text-slate-500 hover:text-red-600"
+                    className="text-slate-500 hover:text-red-600 dark:text-slate-400"
                     onClick={() => {
                       setFileInput(null);
                       if (fileRef.current) fileRef.current.value = '';

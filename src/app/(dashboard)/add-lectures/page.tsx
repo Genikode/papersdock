@@ -282,134 +282,139 @@ export default function AddLecture() {
   }
 
   return (
-    <main className="bg-[#F9FAFB] min-h-screen px-6 py-6 text-black">
-           <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
-        >
-          <ArrowLeft size={16} /> Back
-        </button>
-      <h1 className="text-2xl font-bold">Add New Lecture</h1>
-      <p className="text-sm mb-6">Create and upload educational content</p>
+<main className="min-h-screen px-6 py-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+  <button
+    onClick={() => router.back()}
+    className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 mb-4 hover:underline"
+  >
+    <ArrowLeft size={16} /> Back
+  </button>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow px-6 py-6 max-w-4xl w-full border border-black">
-        <h2 className="text-lg font-semibold mb-4">Lecture Details</h2>
+  <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Add New Lecture</h1>
+  <p className="text-sm mb-6 text-slate-600 dark:text-slate-400">Create and upload educational content</p>
 
-        {/* Lecture Title */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Lecture Title</label>
-          <input
-            type="text"
-            value={lectureTitle}
-            onChange={(e) => setLectureTitle(e.target.value)}
-            placeholder="Enter lecture title"
-            className="w-full border border-black rounded px-3 py-2 text-sm"
+  <form
+    onSubmit={handleSubmit}
+    className="bg-white dark:bg-slate-900 rounded-lg shadow px-6 py-6 max-w-4xl w-full border border-slate-200 dark:border-slate-800"
+  >
+    <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">Lecture Details</h2>
+
+    {/* Lecture Title */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">Lecture Title</label>
+      <input
+        type="text"
+        value={lectureTitle}
+        onChange={(e) => setLectureTitle(e.target.value)}
+        placeholder="Enter lecture title"
+        className="w-full rounded px-3 py-2 text-sm
+                   border border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   placeholder:text-slate-400 dark:placeholder:text-slate-500"
+      />
+    </div>
+
+    {/* Course */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">Course</label>
+      <select
+        value={courseId}
+        onChange={(e) => {
+          setCourseId(e.target.value);
+          setChapterId('');
+        }}
+        className="w-full rounded px-3 py-2 text-sm
+                   border border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100"
+      >
+        <option value="">{loadingCourses ? 'Loading courses…' : 'Select a course'}</option>
+        {courses.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.title}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Select Chapter */}
+    <div className="mb-6">
+      <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">Select Chapter</label>
+      <select
+        value={chapterId}
+        onChange={(e) => setChapterId(e.target.value)}
+        className="w-full rounded px-3 py-2 text-sm
+                   border border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100"
+      >
+        <option value="">{loadingChapters ? 'Loading chapters…' : 'Choose chapter'}</option>
+        {filteredChapters.map((ch) => (
+          <option key={ch.id} value={ch.id}>
+            {ch.title}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Upload Boxes */}
+    <div className="grid grid-cols-1 gap-4 mb-6">
+      {/* Video Upload */}
+      <div className="border rounded-md p-6 flex flex-col items-center justify-center text-center
+                      border-slate-300 dark:border-slate-700
+                      bg-white dark:bg-slate-900">
+        <UploadCloud size={24} className="text-slate-400 dark:text-slate-500 mb-2" />
+        <p className="text-sm mb-2 text-slate-700 dark:text-slate-300">
+          Upload video lecture <span className="text-red-600 dark:text-red-400">*</span>
+        </p>
+        <label className="cursor-pointer text-sm font-medium text-indigo-600 dark:text-indigo-400">
+          <input type="file" accept="video/*" onChange={handleVideoChange} className="hidden" />
+          {video ? 'Change Video' : 'Choose Video'}
+        </label>
+        {video && (
+          <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+            Selected: <span className="font-medium">{video.name}</span>
+          </p>
+        )}
+      </div>
+
+      {/* (Optional) Slides Upload UI — unchanged, add dark classes if you enable it */}
+    </div>
+
+    {/* Error */}
+    {error && <p className="text-red-700 dark:text-red-400 text-sm mb-3">{error}</p>}
+
+    {/* Progress Bar (visible while submitting) */}
+    {submitting && (
+      <div className="mb-4">
+        <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 mb-1">
+          <span>{progressLabel || 'Uploading…'}</span>
+          <span>{uploadProgress}%</span>
+        </div>
+        <div className="w-full h-2 rounded bg-slate-200 dark:bg-slate-800">
+          <div
+            className="h-2 rounded bg-indigo-500 transition-all"
+            style={{ width: `${uploadProgress}%` }}
           />
         </div>
+      </div>
+    )}
 
-        {/* Course */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Course</label>
-          <select
-            value={courseId}
-            onChange={(e) => {
-              setCourseId(e.target.value);
-              setChapterId('');
-            }}
-            className="w-full border border-black rounded px-3 py-2 text-sm"
-          >
-            <option value="">{loadingCourses ? 'Loading courses…' : 'Select a course'}</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </div>
+    {/* Submit */}
+    <button
+      type="submit"
+      disabled={submitting}
+      className="w-full text-white text-sm font-medium py-2 rounded-md
+                 bg-gradient-to-r from-indigo-600 to-purple-600
+                 hover:from-indigo-700 hover:to-purple-700
+                 flex justify-center items-center gap-2 disabled:opacity-60"
+    >
+      <Save size={16} />
+      {submitting ? 'Saving…' : 'Save Lecture'}
+    </button>
+  </form>
+</main>
 
-        {/* Select Chapter */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Select Chapter</label>
-          <select
-            value={chapterId}
-            onChange={(e) => setChapterId(e.target.value)}
-            className="w-full border border-black rounded px-3 py-2 text-sm"
-          >
-            <option value="">{loadingChapters ? 'Loading chapters…' : 'Choose chapter'}</option>
-            {filteredChapters.map((ch) => (
-              <option key={ch.id} value={ch.id}>
-                {ch.title}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Upload Boxes */}
-        <div className="grid grid-cols-1 gap-4 mb-6">
-          {/* Video Upload */}
-          <div className="border border-black rounded-md p-6 flex flex-col items-center justify-center text-center">
-            <UploadCloud size={24} className="text-gray-400 mb-2" />
-            <p className="text-sm mb-2">
-              Upload video lecture <span className="text-red-500">*</span>
-            </p>
-            <label className="cursor-pointer text-sm font-medium">
-              <input type="file" accept="video/*" onChange={handleVideoChange} className="hidden" />
-              {video ? 'Change Video' : 'Choose Video'}
-            </label>
-            {video && (
-              <p className="mt-2 text-xs">
-                Selected: <span className="font-medium">{video.name}</span>
-              </p>
-            )}
-          </div>
-
-          {/* (Optional) Slides Upload UI — uncomment if needed */}
-          {/*
-          <div className="border border-black rounded-md p-6 flex flex-col items-center justify-center text-center">
-            <UploadCloud size={24} className="text-gray-400 mb-2" />
-            <p className="text-sm mb-2">Upload slides (optional)</p>
-            <label className="cursor-pointer text-sm font-medium">
-              <input type="file" accept=".pdf,.ppt,.pptx" onChange={handleSlidesChange} className="hidden" />
-              {slides ? 'Change File' : 'Choose File'}
-            </label>
-            {slides && (
-              <p className="mt-2 text-xs">
-                Selected: <span className="font-medium">{slides.name}</span>
-              </p>
-            )}
-          </div>
-          */}
-        </div>
-
-        {/* Error */}
-        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
-
-        {/* Progress Bar (visible while submitting) */}
-        {submitting && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between text-xs text-gray-700 mb-1">
-              <span>{progressLabel || 'Uploading…'}</span>
-              <span>{uploadProgress}%</span>
-            </div>
-            <div className="w-full h-2 bg-gray-200 rounded">
-              <div
-                className="h-2 rounded bg-indigo-500 transition-all"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium py-2 rounded-md flex justify-center items-center gap-2 disabled:opacity-60"
-        >
-          <Save size={16} />
-          {submitting ? 'Saving…' : 'Save Lecture'}
-        </button>
-      </form>
-    </main>
   );
 }

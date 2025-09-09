@@ -197,138 +197,157 @@ export default function MyQueriesPage() {
   const endIndex = total === 0 ? 0 : Math.min(total, (page - 1) * limit + items.length);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <main className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">My Queries</h1>
+ <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+  <main className="mx-auto max-w-7xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+    <div className="flex flex-wrap items-center gap-2">
+      <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl dark:text-slate-100">My Queries</h1>
 
-          {/* Add Query */}
-          <button
-            type="button"
-            onClick={() => router.push('/add-query')}
-            className="ml-auto rounded-md bg-slate-900 text-white px-3 py-2 text-sm font-medium hover:opacity-95"
-          >
-            Add Query
-          </button>
-        </div>
-
-        {/* Filters row */}
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {/* Status filter (client-side) */}
-          <div className="flex overflow-hidden rounded-md border bg-white">
-            {(['all', 'pending', 'resolved'] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => {
-                  setStatusFilter(s);
-                }}
-                className={clsx(
-                  'px-4 py-2 text-sm capitalize',
-                  statusFilter === s ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-50'
-                )}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-
-          {/* Search */}
-          <div className="relative ml-auto w-full min-w-[200px] max-w-sm flex-1 sm:w-auto">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-            />
-            <input
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search queries..."
-              className="w-full rounded-md border bg-white pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 ring-indigo-300"
-            />
-          </div>
-        </div>
-
-        {/* Grid */}
-        <section className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {loading &&
-            Array.from({ length: Math.min(limit, 6) }).map((_, i) => (
-              <div key={i} className="rounded-lg border bg-white p-4 sm:p-5 animate-pulse">
-                <div className="h-4 w-2/3 rounded bg-slate-200" />
-                <div className="mt-3 h-3 w-full rounded bg-slate-200" />
-                <div className="mt-2 h-3 w-5/6 rounded bg-slate-200" />
-                <div className="mt-4 h-8 w-28 rounded bg-slate-200" />
-              </div>
-            ))}
-
-          {!loading && items.map((item) => <Card key={item.id} item={item} />)}
-
-          {!loading && items.length === 0 && (
-            <div className="rounded-md border bg-white p-6 text-center text-sm text-slate-500">
-              {err ? err : 'No queries found.'}
-            </div>
-          )}
-        </section>
-
-        {/* Footer / pagination */}
-        <div className="mt-8 flex flex-col items-center gap-4 border-t pt-4 text-sm text-slate-600 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-2">
-            <span>Showing</span>
-            <select
-              className="rounded border bg-white px-2 py-1"
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-            >
-              {[10, 20, 30].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-            <span>items</span>
-            <span className="hidden sm:inline mx-3 text-slate-300">|</span>
-            <span className="hidden sm:inline">
-              Showing {startIndex} - {endIndex} of {total}
-            </span>
-          </div>
-
-          <nav className="flex items-center gap-1">
-            <button
-              className="inline-flex items-center gap-1 rounded-md border bg-white px-3 py-2 disabled:opacity-50"
-              disabled={page === 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              <ChevronLeft size={16} /> Previous
-            </button>
-
-            {Array.from({ length: totalPages }).slice(0, 3).map((_, i) => {
-              const n = i + 1;
-              return (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
-                  disabled={loading}
-                  className={clsx(
-                    'rounded-md px-3 py-2',
-                    page === n ? 'bg-slate-900 text-white' : 'bg-white border'
-                  )}
-                >
-                  {n}
-                </button>
-              );
-            })}
-
-            <button
-              className="inline-flex items-center gap-1 rounded-md border bg-white px-3 py-2 disabled:opacity-50"
-              disabled={page === totalPages || loading}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Next <ChevronRight size={16} />
-            </button>
-          </nav>
-        </div>
-      </main>
+      {/* Add Query */}
+      <button
+        type="button"
+        onClick={() => router.push('/add-query')}
+        className="ml-auto rounded-md bg-slate-900 text-white px-3 py-2 text-sm font-medium hover:opacity-95
+                   dark:bg-slate-200 dark:text-slate-900"
+      >
+        Add Query
+      </button>
     </div>
+
+    {/* Filters row */}
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+      {/* Status filter (client-side) */}
+      <div className="flex overflow-hidden rounded-md border bg-white dark:bg-slate-950 dark:border-slate-800">
+        {(['all', 'pending', 'resolved'] as const).map((s) => (
+          <button
+            key={s}
+            onClick={() => {
+              setStatusFilter(s);
+            }}
+            className={clsx(
+              'px-4 py-2 text-sm capitalize',
+              statusFilter === s
+                ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900'
+                : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900'
+            )}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="relative ml-auto w-full min-w-[200px] max-w-sm flex-1 sm:w-auto">
+        <Search
+          size={16}
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
+        />
+        <input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search queries..."
+          className="w-full rounded-md border bg-white pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 ring-indigo-300
+                     dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:focus:ring-indigo-700"
+        />
+      </div>
+    </div>
+
+    {/* Grid */}
+    <section className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {loading &&
+        Array.from({ length: Math.min(limit, 6) }).map((_, i) => (
+          <div
+            key={i}
+            className="rounded-lg border bg-white p-4 sm:p-5 animate-pulse
+                       dark:bg-slate-950 dark:border-slate-800"
+          >
+            <div className="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-700" />
+            <div className="mt-3 h-3 w-full rounded bg-slate-200 dark:bg-slate-700" />
+            <div className="mt-2 h-3 w-5/6 rounded bg-slate-200 dark:bg-slate-700" />
+            <div className="mt-4 h-8 w-28 rounded bg-slate-200 dark:bg-slate-700" />
+          </div>
+        ))}
+
+      {!loading && items.map((item) => <Card key={item.id} item={item} />)}
+
+      {!loading && items.length === 0 && (
+        <div
+          className="rounded-md border bg-white p-6 text-center text-sm text-slate-500
+                     dark:bg-slate-950 dark:border-slate-800 dark:text-slate-400"
+        >
+          {err ? err : 'No queries found.'}
+        </div>
+      )}
+    </section>
+
+    {/* Footer / pagination */}
+    <div
+      className="mt-8 flex flex-col items-center gap-4 border-t pt-4 text-sm text-slate-600 sm:flex-row sm:justify-between
+                 dark:border-slate-800 dark:text-slate-400"
+    >
+      <div className="flex items-center gap-2">
+        <span>Showing</span>
+        <select
+          className="rounded border bg-white px-2 py-1 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+          value={limit}
+          onChange={(e) => {
+            setLimit(Number(e.target.value));
+            setPage(1);
+          }}
+        >
+          {[10, 20, 30].map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+        <span>items</span>
+        <span className="hidden sm:inline mx-3 text-slate-300 dark:text-slate-600">|</span>
+        <span className="hidden sm:inline">
+          Showing {startIndex} - {endIndex} of {total}
+        </span>
+      </div>
+
+      <nav className="flex items-center gap-1">
+        <button
+          className="inline-flex items-center gap-1 rounded-md border bg-white px-3 py-2 disabled:opacity-50
+                     dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+          disabled={page === 1 || loading}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+        >
+          <ChevronLeft size={16} /> Previous
+        </button>
+
+        {Array.from({ length: totalPages }).slice(0, 3).map((_, i) => {
+          const n = i + 1;
+          return (
+            <button
+              key={n}
+              onClick={() => setPage(n)}
+              disabled={loading}
+              className={clsx(
+                'rounded-md px-3 py-2',
+                page === n
+                  ? 'bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900'
+                  : 'bg-white border dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100'
+              )}
+            >
+              {n}
+            </button>
+          );
+        })}
+
+        <button
+          className="inline-flex items-center gap-1 rounded-md border bg-white px-3 py-2 disabled:opacity-50
+                     dark:bg-slate-950 dark:border-slate-800 dark:text-slate-100"
+          disabled={page === totalPages || loading}
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+        >
+          Next <ChevronRight size={16} />
+        </button>
+      </nav>
+    </div>
+  </main>
+</div>
+
   );
 }

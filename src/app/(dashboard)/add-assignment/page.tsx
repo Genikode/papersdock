@@ -77,7 +77,6 @@ export default function AddAssignment() {
     if (!firstDeadline || !/^\d{4}-\d{2}-\d{2}$/.test(firstDeadline)) {
       return setError('First deadline must be YYYY-MM-DD.');
     }
-  
 
     setSubmitting(true);
     try {
@@ -99,7 +98,6 @@ export default function AddAssignment() {
         courseId,
         firstDeadline,  // YYYY-MM-DD
         assignmentFile: fileUrl,       // empty string allowed if optional
-      
       });
 
       router.replace('/view-assignments');
@@ -111,26 +109,30 @@ export default function AddAssignment() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] text-gray-800">
-           <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
-        >
-          <ArrowLeft size={16} /> Back
-        </button>
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      <button
+        onClick={() => router.back()}
+        className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 mb-4 hover:underline"
+      >
+        <ArrowLeft size={16} /> Back
+      </button>
+
       <PageHeader title="Create Assignment" description="Design assignments and quizzes for students" />
 
       <form onSubmit={handleSubmit} className="px-6 pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-md shadow border">
-            <h2 className="text-lg font-semibold mb-4">Assignment Details</h2>
+          <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-md shadow border border-slate-200 dark:border-slate-800">
+            <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">Assignment Details</h2>
 
             <div className="mb-4">
-              <label className="block font-medium text-sm mb-1">Title</label>
+              <label className="block font-medium text-sm mb-1 text-slate-900 dark:text-slate-100">Title</label>
               <input
                 type="text"
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-slate-200 dark:border-slate-800 rounded px-3 py-2
+                           bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100
+                           placeholder:text-slate-400 dark:placeholder:text-slate-500
+                           focus:outline-none focus:ring-2 focus:ring-blue-500/60"
                 placeholder="Weekly Quiz 1"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -138,11 +140,13 @@ export default function AddAssignment() {
             </div>
 
             <div className="mb-4">
-              <label className="block font-medium text-sm mb-1">Course</label>
+              <label className="block font-medium text-sm mb-1 text-slate-900 dark:text-slate-100">Course</label>
               <select
                 value={courseId}
                 onChange={(e) => setCourseId(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
+                className="w-full border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm
+                           bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100
+                           focus:outline-none focus:ring-2 focus:ring-blue-500/60"
               >
                 <option value="">{loadingCourses ? 'Loading…' : 'Select course'}</option>
                 {courses.map((c) => (
@@ -153,22 +157,27 @@ export default function AddAssignment() {
 
             <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
               <div>
-                <label className="block font-medium text-sm mb-1">Deadline (YYYY-MM-DD)</label>
+                <label className="block font-medium text-sm mb-1 text-slate-900 dark:text-slate-100">
+                  Deadline (YYYY-MM-DD)
+                </label>
                 <input
                   type="date"
                   value={firstDeadline}
                   onChange={(e) => setFirstDeadline(e.target.value)}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-slate-200 dark:border-slate-800 rounded px-3 py-2
+                             bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100
+                             focus:outline-none focus:ring-2 focus:ring-blue-500/60"
                 />
               </div>
-            
-       
             </div>
 
             <div className="mb-6">
-              <label className="block font-medium text-sm mb-1">Description</label>
+              <label className="block font-medium text-sm mb-1 text-slate-900 dark:text-slate-100">Description</label>
               <textarea
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-slate-200 dark:border-slate-800 rounded px-3 py-2
+                           bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100
+                           placeholder:text-slate-400 dark:placeholder:text-slate-500
+                           focus:outline-none focus:ring-2 focus:ring-blue-500/60"
                 rows={4}
                 placeholder="Enter assignment description..."
                 value={description}
@@ -176,25 +185,29 @@ export default function AddAssignment() {
               />
             </div>
 
-            {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+            {error && <p className="text-sm text-red-700 dark:text-red-400 mb-3">{error}</p>}
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 rounded text-white font-semibold flex justify-center items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 disabled:opacity-60"
+              className="w-full py-3 rounded text-white font-semibold flex justify-center items-center gap-2
+                         bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700
+                         disabled:opacity-60"
             >
               <Save size={18} /> {submitting ? 'Saving…' : 'Save Assignment'}
             </button>
           </div>
 
           {/* Right: Upload */}
-          <div className="bg-white p-6 rounded-md shadow border">
-            <h2 className="text-lg font-semibold mb-4">Upload Attachment</h2>
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-md shadow border border-slate-200 dark:border-slate-800">
+            <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">Upload Attachment</h2>
 
-            <div className="border rounded-md p-6 text-center">
-              <UploadCloud className="mx-auto text-gray-400" size={28} />
-              <p className="text-sm text-gray-600 mt-2 mb-4">Upload assignment file (PDF/PPT/Docs, etc.)</p>
-              <label className="cursor-pointer inline-block text-blue-600 font-medium">
+            <div className="border border-slate-200 dark:border-slate-800 rounded-md p-6 text-center bg-white dark:bg-slate-900">
+              <UploadCloud className="mx-auto text-slate-400 dark:text-slate-500" size={28} />
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 mb-4">
+                Upload assignment file (PDF/PPT/Docs, etc.)
+              </p>
+              <label className="cursor-pointer inline-block text-blue-600 dark:text-blue-400 font-medium">
                 <input
                   type="file"
                   className="hidden"

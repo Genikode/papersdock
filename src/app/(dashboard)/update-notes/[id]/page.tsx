@@ -206,153 +206,169 @@ export default function UpdateNotesPage() {
   }
 
   return (
-    <main className="bg-[#F9FAFB] text-gray-800 min-h-screen">
-           <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
+   <main className="min-h-screen bg-[#F9FAFB] text-gray-800 dark:bg-slate-950 dark:text-slate-100">
+  <button
+    onClick={() => router.back()}
+    className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline dark:text-slate-400 hover:dark:text-slate-100"
+  >
+    <ArrowLeft size={16} /> Back
+  </button>
+
+  <PageHeader title="Update Notes" description="Modify your note" />
+
+  <form
+    onSubmit={handleSubmit}
+    className="bg-white p-6 rounded-md shadow border max-w-4xl mx-auto dark:bg-slate-900 dark:border-slate-700"
+  >
+    <h2 className="text-lg font-semibold mb-4 text-black dark:text-slate-100">Notes Details</h2>
+
+    {loading && <p className="text-sm text-gray-500 mb-3 dark:text-slate-400">Loading…</p>}
+    {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1 text-black dark:text-slate-200">Title</label>
+        <input
+          className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-indigo-400/40"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Lecture 1 Notes"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1 text-black dark:text-slate-200">Paper</label>
+        <select
+          className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-indigo-400/40"
+          value={paper}
+          onChange={(e) => setPaper(e.target.value as 'Paper 1' | 'Paper 2' | 'Paper 3' | 'Paper 4' | '')}
         >
-          <ArrowLeft size={16} /> Back
-        </button>
-      <PageHeader title="Update Notes" description="Modify your note" />
+          <option value="Paper 1" className="bg-white dark:bg-slate-900">Paper 1</option>
+          <option value="Paper 2" className="bg-white dark:bg-slate-900">Paper 2</option>
+          <option value="Paper 3" className="bg-white dark:bg-slate-900">Paper 3</option>
+          <option value="Paper 4" className="bg-white dark:bg-slate-900">Paper 4</option>
+        </select>
+      </div>
+    </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-md shadow border max-w-4xl mx-auto">
-        <h2 className="text-lg font-semibold mb-4">Notes Details</h2>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div>
+        <label className="block text-sm font-medium mb-1 text-black dark:text-slate-200">Course</label>
+        <select
+          className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-indigo-400/40"
+          value={courseId}
+          onChange={(e) => setCourseId(e.target.value)}
+        >
+          <option value="" className="bg-white dark:bg-slate-900">
+            {loadingCourses ? 'Loading…' : 'Select course'}
+          </option>
+          {courses.map((c) => (
+            <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900">
+              {c.title}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        {loading && <p className="text-sm text-gray-500 mb-3">Loading…</p>}
-        {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-    <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Title</label>
-          <input
-            className="w-full border rounded px-3 py-2 text-sm"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Lecture 1 Notes"
+      <div>
+        <label className="block text-sm font-medium mb-1 text-black dark:text-slate-200">Display Mode</label>
+        <select
+          className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-indigo-400/40"
+          value={attachmentType}
+          onChange={(e) => setAttachmentType(e.target.value as 'dark' | 'light')}
+        >
+          <option value="dark" className="bg-white dark:bg-slate-900">dark</option>
+          <option value="light" className="bg-white dark:bg-slate-900">light</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1 text-black dark:text-slate-200">Web Note</label>
+        <select
+          className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-indigo-400/40"
+          value={webNote}
+          onChange={(e) => setWebNote(e.target.value as 'Y' | 'N')}
+        >
+          <option value="Y" className="bg-white dark:bg-slate-900">Y</option>
+          <option value="N" className="bg-white dark:bg-slate-900">N</option>
+        </select>
+      </div>
+    </div>
+
+    {/* Current previews + uploads */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      {/* Background image */}
+      <div className="border rounded-md p-4 dark:border-slate-700">
+        <p className="text-sm font-medium mb-2 text-black dark:text-slate-100">Background Image</p>
+        {currentBgUrl ? (
+          <img
+            src={currentBgUrl}
+            alt="background"
+            className="w-full h-36 object-cover rounded mb-3 border border-gray-200 dark:border-slate-700"
           />
-        </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Paper</label>
-            <select
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={paper}
-              onChange={(e) => setPaper(e.target.value as 'Paper 1' | 'Paper 2' | 'Paper 3' | 'Paper 4' | '')}
-            >
-              <option value="Paper 1">Paper 1</option>
-              <option value="Paper 2">Paper 2</option>
-              <option value="Paper 3">Paper 3</option>
-              <option value="Paper 4">Paper 4</option>
-            </select>
-          </div>
- </div>
-      
+        ) : (
+          <p className="text-xs text-gray-500 mb-3 dark:text-slate-400">No background uploaded.</p>
+        )}
+        <label className="block cursor-pointer">
+          <span className="text-sm text-indigo-600 inline-flex items-center gap-2 hover:underline dark:text-indigo-400">
+            <UploadCloud size={18} /> {bgFile ? 'Change Image' : 'Upload New Image'}
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => setBgFile(e.target.files?.[0] || null)}
+          />
+        </label>
+        {bgFile && <p className="text-xs text-gray-500 mt-2 dark:text-slate-400">{bgFile.name}</p>}
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Course</label>
-            <select
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={courseId}
-              onChange={(e) => setCourseId(e.target.value)}
-            >
-              <option value="">{loadingCourses ? 'Loading…' : 'Select course'}</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-            </select>
-          </div>
+      {/* Attachment */}
+      <div className="border rounded-md p-4 dark:border-slate-700">
+        <p className="text-sm font-medium mb-2 text-black dark:text-slate-100">Attachment</p>
+        {currentAttachmentUrl ? (
+          <a
+            href={currentAttachmentUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block text-indigo-600 text-sm mb-2 underline dark:text-indigo-400"
+          >
+            Open current attachment ({attachmentExtension.toUpperCase()})
+          </a>
+        ) : (
+          <p className="text-xs text-gray-500 mb-2 dark:text-slate-400">No attachment uploaded.</p>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Display Mode</label>
-            <select
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={attachmentType}
-              onChange={(e) => setAttachmentType(e.target.value as 'dark' | 'light')}
-            >
-              <option value="dark">dark</option>
-              <option value="light">light</option>
-            </select>
-          </div>
+        <label className="block cursor-pointer">
+          <span className="text-sm text-indigo-600 inline-flex items-center gap-2 hover:underline dark:text-indigo-400">
+            <UploadCloud size={18} /> {attachmentFile ? 'Change File' : 'Upload New File'}
+          </span>
+          <input
+            type="file"
+            accept={docExtensions.map((e) => '.' + e).join(',')}
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0] || null;
+              setAttachmentFile(f);
+              if (f) setAttachmentExtension(inferExt(f, 'pdf'));
+            }}
+          />
+        </label>
+        {attachmentFile && (
+          <p className="text-xs text-gray-500 mt-2 dark:text-slate-400">{attachmentFile.name}</p>
+        )}
+      </div>
+    </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Web Note</label>
-            <select
-              className="w-full border rounded px-3 py-2 text-sm"
-              value={webNote}
-              onChange={(e) => setWebNote(e.target.value as 'Y' | 'N')}
-            >
-              <option value="Y">Y</option>
-              <option value="N">N</option>
-            </select>
-          </div>
-        </div>
+    <button
+      type="submit"
+      disabled={saving}
+      className="w-full py-3 rounded text-white font-semibold flex justify-center items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60"
+    >
+      <Save size={18} /> {saving ? 'Saving…' : 'Save Changes'}
+    </button>
+  </form>
+</main>
 
-        {/* Current previews + uploads */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Background image */}
-          <div className="border rounded-md p-4">
-            <p className="text-sm font-medium mb-2">Background Image</p>
-            {currentBgUrl ? (
-              <img src={currentBgUrl} alt="background" className="w-full h-36 object-cover rounded mb-3 border" />
-            ) : (
-              <p className="text-xs text-gray-500 mb-3">No background uploaded.</p>
-            )}
-            <label className="block">
-              <span className="text-sm text-indigo-600 cursor-pointer inline-flex items-center gap-2">
-                <UploadCloud size={18} /> {bgFile ? 'Change Image' : 'Upload New Image'}
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => setBgFile(e.target.files?.[0] || null)}
-              />
-            </label>
-            {bgFile && <p className="text-xs text-gray-500 mt-2">{bgFile.name}</p>}
-          </div>
-
-          {/* Attachment */}
-          <div className="border rounded-md p-4">
-            <p className="text-sm font-medium mb-2">Attachment</p>
-            {currentAttachmentUrl ? (
-              <a
-                href={currentAttachmentUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block text-indigo-600 text-sm mb-2 underline"
-              >
-                Open current attachment ({attachmentExtension.toUpperCase()})
-              </a>
-            ) : (
-              <p className="text-xs text-gray-500 mb-2">No attachment uploaded.</p>
-            )}
-
-            <label className="block">
-              <span className="text-sm text-indigo-600 cursor-pointer inline-flex items-center gap-2">
-                <UploadCloud size={18} /> {attachmentFile ? 'Change File' : 'Upload New File'}
-              </span>
-              <input
-                type="file"
-                accept={docExtensions.map((e) => '.' + e).join(',')}
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] || null;
-                  setAttachmentFile(f);
-                  if (f) setAttachmentExtension(inferExt(f, 'pdf'));
-                }}
-              />
-            </label>
-            {attachmentFile && <p className="text-xs text-gray-500 mt-2">{attachmentFile.name}</p>}
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full py-3 rounded text-white font-semibold flex justify-center items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 disabled:opacity-60"
-        >
-          <Save size={18} /> {saving ? 'Saving…' : 'Save Changes'}
-        </button>
-      </form>
-    </main>
   );
 }

@@ -232,143 +232,137 @@ export default function UpdateChapterById() {
 
   /* --------------------------- UI --------------------------- */
   return (
-    <main className="bg-[#F9FAFB] min-h-screen px-6 py-6">
-           <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
-        >
-          <ArrowLeft size={16} /> Back
-        </button>
-      <h1 className="text-2xl font-bold text-gray-900">Update Chapter</h1>
-      <p className="text-sm text-gray-600 mb-6">Modify chapter details</p>
+  <main className="min-h-screen bg-[#F9FAFB] px-6 py-6 text-gray-900 dark:bg-slate-950 dark:text-slate-100">
+  <button
+    onClick={() => router.back()}
+    className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline dark:text-slate-400 hover:dark:text-slate-100"
+  >
+    <ArrowLeft size={16} /> Back
+  </button>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow px-6 py-6 max-w-3xl w-full">
-        <h2 className="text-lg font-semibold mb-4">Chapter Details</h2>
+  <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Update Chapter</h1>
+  <p className="text-sm text-gray-600 mb-6 dark:text-slate-400">Modify chapter details</p>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter chapter title"
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-          />
-        </div>
+  <form className="bg-white rounded-lg shadow px-6 py-6 max-w-3xl w-full border border-gray-200 dark:bg-slate-900 dark:border-slate-700">
+    <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-slate-100">Chapter Details</h2>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Course</label>
-          <select
-            value={courseId}
-            onChange={(e) => setCourseId(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-          >
-            <option value="">{loadingCourses ? 'Loading courses…' : 'Select Course'}</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </div>
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-slate-200">Title</label>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Enter chapter title"
+        className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-indigo-400/40"
+      />
+    </div>
 
-        {/* Current image + change control */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Chapter Image</label>
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-slate-200">Course</label>
+      <select
+        value={courseId}
+        onChange={(e) => setCourseId(e.target.value)}
+        className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-indigo-400/40"
+      >
+        <option value="">{loadingCourses ? 'Loading courses…' : 'Select Course'}</option>
+        {courses.map((c) => (
+          <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900">
+            {c.title}
+          </option>
+        ))}
+      </select>
+    </div>
 
-          <div className="border border-gray-200 rounded-md p-4 flex gap-4 items-start">
-            <div className="w-40 h-28 rounded-md bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden">
-              {previewUrl && isImageExt(attachmentExtension) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={previewUrl}
-                  alt="Chapter preview"
-                  className="w-full h-full object-cover"
-                />
-              ) : currentImageUrl ? (
-                <a
-                  href={previewUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs text-indigo-600 underline flex items-center gap-1"
-                >
-                  <ImageOff size={14} />
-                  Open current file
-                </a>
-              ) : (
-                <div className="text-xs text-gray-400 flex flex-col items-center">
-                  <ImageOff className="mb-1" size={16} />
-                  No image
-                </div>
-              )}
-            </div>
+    {/* Current image + change control */}
+    <div className="mb-6">
+      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-slate-200">Chapter Image</label>
 
-            <div className="flex-1">
-              <p className="text-xs text-gray-600 mb-2">
-                {newFile ? (
-                  <>
-                    Selected: <span className="font-medium">{newFile.name}</span>
-                  </>
-                ) : currentImageUrl ? (
-                  <>Current file will be kept unless you upload a new one.</>
-                ) : (
-                  <>Upload a new image for this chapter.</>
-                )}
-              </p>
-
-              <label className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 cursor-pointer">
-                <UploadCloud size={16} />
-                <span>{newFile ? 'Change Image' : 'Upload Image'}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={onPickImage}
-                />
-              </label>
-
-              {newFile && (
-                <button
-                  type="button"
-                  className="ml-3 text-sm text-gray-600 underline"
-                  onClick={() => setNewFile(null)}
-                >
-                  Remove selection
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Extension picker (kept visible in case API needs non-image, but defaults to inferred) */}
-          <div className="mt-3">
-            <label className="block text-sm font-medium mb-1">Attachment Extension</label>
-            <select
-              value={attachmentExtension}
-              onChange={(e) => setAttachmentExtension(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+      <div className="border border-gray-200 rounded-md p-4 flex gap-4 items-start dark:border-slate-700">
+        <div className="w-40 h-28 rounded-md bg-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden dark:bg-slate-800 dark:border-slate-700">
+          {previewUrl && isImageExt(attachmentExtension) ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={previewUrl} alt="Chapter preview" className="w-full h-full object-cover" />
+          ) : currentImageUrl ? (
+            <a
+              href={previewUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-indigo-600 underline flex items-center gap-1 dark:text-indigo-400"
             >
-              {/* keep common types; image default */}
-              {['png', 'jpg', 'jpeg', 'webp', 'gif', 'pdf', 'doc', 'docx', 'ppt', 'pptx'].map((ext) => (
-                <option key={ext} value={ext}>
-                  {ext}
-                </option>
-              ))}
-            </select>
-          </div>
+              <ImageOff size={14} />
+              Open current file
+            </a>
+          ) : (
+            <div className="text-xs text-gray-400 flex flex-col items-center dark:text-slate-500">
+              <ImageOff className="mb-1" size={16} />
+              No image
+            </div>
+          )}
         </div>
 
-        {loading && <p className="text-sm text-gray-600 mb-2">Loading…</p>}
-        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+        <div className="flex-1">
+          <p className="text-xs text-gray-600 mb-2 dark:text-slate-400">
+            {newFile ? (
+              <>
+                Selected: <span className="font-medium text-gray-800 dark:text-slate-100">{newFile.name}</span>
+              </>
+            ) : currentImageUrl ? (
+              <>Current file will be kept unless you upload a new one.</>
+            ) : (
+              <>Upload a new image for this chapter.</>
+            )}
+          </p>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium py-2 rounded-md flex justify-center items-center gap-2 disabled:opacity-60"
+          <label className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 cursor-pointer hover:underline dark:text-indigo-400">
+            <UploadCloud size={16} />
+            <span>{newFile ? 'Change Image' : 'Upload Image'}</span>
+            <input type="file" accept="image/*" className="hidden" onChange={onPickImage} />
+          </label>
+
+          {newFile && (
+            <button
+              type="button"
+              className="ml-3 text-sm text-gray-600 underline dark:text-slate-400 hover:dark:text-slate-200"
+              onClick={() => setNewFile(null)}
+            >
+              Remove selection
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Extension picker */}
+      <div className="mt-3">
+        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-slate-200">
+          Attachment Extension
+        </label>
+        <select
+          value={attachmentExtension}
+          onChange={(e) => setAttachmentExtension(e.target.value)}
+          className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-indigo-400/40"
         >
-          <Save size={16} />
-          {submitting ? 'Saving…' : 'Save Changes'}
-        </button>
-      </form>
-    </main>
+          {['png', 'jpg', 'jpeg', 'webp', 'gif', 'pdf', 'doc', 'docx', 'ppt', 'pptx'].map((ext) => (
+            <option key={ext} value={ext} className="bg-white dark:bg-slate-900">
+              {ext}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    {loading && <p className="text-sm text-gray-600 mb-2 dark:text-slate-400">Loading…</p>}
+    {error && <p className="text-red-600 text-sm mb-3 dark:text-rose-400">{error}</p>}
+
+    <button
+      type="submit"
+      disabled={submitting}
+      className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium py-2 rounded-md flex justify-center items-center gap-2 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60"
+    >
+      <Save size={16} />
+      {submitting ? 'Saving…' : 'Save Changes'}
+    </button>
+  </form>
+</main>
+
   );
 }

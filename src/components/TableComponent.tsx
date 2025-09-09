@@ -107,138 +107,167 @@ export default function TableComponent({
   const clearSearch = () => handleSearchChange("");
 
   return (
-    <div className="bg-white border border-black rounded-md">
-      {/* Header toolbar */}
-      <div className="flex justify-between items-center px-4 py-3 border-black border-b gap-3">
-        {/* LEFT: external filters/actions */}
-        <div className="flex flex-wrap items-center gap-3">{toolbarLeft}</div>
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md">
+  {/* Header toolbar */}
+  <div className="flex justify-between items-center px-4 py-3 border-b border-slate-200 dark:border-slate-800 gap-3">
+    {/* LEFT: external filters/actions */}
+    <div className="flex flex-wrap items-center gap-3">{toolbarLeft}</div>
 
-        {/* RIGHT: Search */}
-        {!hideSearch && (
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-black" size={16} />
-            <input
-              type="text"
-              placeholder="Search…"
-              value={searchInput}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              onKeyDown={(e) => {
-                // Optional: submit immediately on Enter in server mode
-                if (serverMode && e.key === "Enter") {
-                  onSearchTermChange?.(searchInput);
-                }
-              }}
-              className="border border-black rounded pl-8 pr-8 py-1 text-sm w-64 text-black"
-            />
-            {searchInput ? (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs px-1 border border-black rounded"
-                aria-label="Clear search"
-                title="Clear"
-              >
-                ×
-              </button>
-            ) : null}
-          </div>
-        )}
+    {/* RIGHT: Search */}
+    {!hideSearch && (
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={16} />
+        <input
+          type="text"
+          placeholder="Search…"
+          value={searchInput}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          onKeyDown={(e) => {
+            // Optional: submit immediately on Enter in server mode
+            if (serverMode && e.key === 'Enter') {
+              onSearchTermChange?.(searchInput);
+            }
+          }}
+          className="w-64 text-sm rounded pl-8 pr-8 py-1
+                     border border-slate-300 dark:border-slate-700
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     placeholder:text-slate-400 dark:placeholder:text-slate-500"
+        />
+        {searchInput ? (
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs px-1 rounded
+                       border border-slate-300 dark:border-slate-700
+                       bg-white dark:bg-slate-900
+                       text-slate-600 dark:text-slate-300
+                       hover:bg-slate-50 dark:hover:bg-slate-800"
+            aria-label="Clear search"
+            title="Clear"
+          >
+            ×
+          </button>
+        ) : null}
       </div>
+    )}
+  </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b">
-              {columns.map((col, idx) => (
-                <th key={idx} className="text-left font-medium px-4 py-3 text-gray-600">
-                  {col.header}
-                </th>
+  {/* Table */}
+  <div className="overflow-x-auto">
+    <table className="min-w-full text-sm">
+      <thead>
+        <tr className="bg-slate-100 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+          {columns.map((col, idx) => (
+            <th key={idx} className="text-left font-medium px-4 py-3 text-slate-700 dark:text-slate-300">
+              {col.header}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {pageData.length === 0 ? (
+          <tr>
+            <td colSpan={columns.length} className="px-4 py-6 text-center text-slate-500 dark:text-slate-400">
+              No data found.
+            </td>
+          </tr>
+        ) : (
+          pageData.map((row, rowIdx) => (
+            <tr
+              key={rowIdx}
+              className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+            >
+              {columns.map((col, colIdx) => (
+                <td key={colIdx} className="px-4 py-2 text-slate-800 dark:text-slate-200">
+                  {col.render ? col.render((row as any)[col.accessor], row) : (row as any)[col.accessor]}
+                </td>
               ))}
             </tr>
-          </thead>
-          <tbody>
-            {pageData.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className="px-4 py-6 text-center text-gray-500">
-                  No data found.
-                </td>
-              </tr>
-            ) : (
-              pageData.map((row, rowIdx) => (
-                <tr key={rowIdx} className="border-b hover:bg-gray-50">
-                  {columns.map((col, colIdx) => (
-                    <td key={colIdx} className="px-4 py-2 text-gray-800">
-                      {col.render ? col.render((row as any)[col.accessor], row) : (row as any)[col.accessor]}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+          ))
+        )}
+      </tbody>
+    </table>
+  </div>
 
-      {/* Footer / pagination */}
-      <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600">
-        <div className="flex items-center gap-2">
-          <span>Showing</span>
-          <select
-            className="border rounded px-2 py-1"
-            value={effectivePerPage}
-            onChange={(e) => {
-              const next = Number(e.target.value);
-              if (serverMode) {
-                onItemsPerPageChange?.(next);
-              } else {
-                setLocalPerPage(next);
-                setLocalPage(1);
-              }
-            }}
-          >
-            {[5, 10, 20, 50].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-          <span>
-            items | Showing {startIndex} - {endIndex} of {total} entries
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            disabled={effectivePage === 1}
-            onClick={() =>
-              serverMode ? onPageChange?.(effectivePage - 1) : setLocalPage((p) => Math.max(1, p - 1))
-            }
-            className="border rounded px-2 py-1 disabled:opacity-30"
-          >
-            <ChevronLeft size={16} />
-          </button>
-
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
-              key={i}
-              className={`border rounded px-2 py-1 ${effectivePage === i + 1 ? "bg-gray-200 font-semibold" : ""}`}
-              onClick={() => (serverMode ? onPageChange?.(i + 1) : setLocalPage(i + 1))}
-            >
-              {i + 1}
-            </button>
-          ))}
-
-          <button
-            disabled={effectivePage === totalPages}
-            onClick={() =>
-              serverMode ? onPageChange?.(effectivePage + 1) : setLocalPage((p) => Math.min(totalPages, p + 1))
-            }
-            className="border rounded px-2 py-1 disabled:opacity-30"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
+  {/* Footer / pagination */}
+  <div className="flex items-center justify-between px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+    <div className="flex items-center gap-2">
+      <span>Showing</span>
+      <select
+        className="border rounded px-2 py-1
+                   border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+        value={effectivePerPage}
+        onChange={(e) => {
+          const next = Number(e.target.value);
+          if (serverMode) {
+            onItemsPerPageChange?.(next);
+          } else {
+            setLocalPerPage(next);
+            setLocalPage(1);
+          }
+        }}
+      >
+        {[5, 10, 20, 50].map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))}
+      </select>
+      <span>
+        items | Showing {startIndex} - {endIndex} of {total} entries
+      </span>
     </div>
+
+    <div className="flex items-center gap-2">
+      <button
+        disabled={effectivePage === 1}
+        onClick={() =>
+          serverMode ? onPageChange?.(effectivePage - 1) : setLocalPage((p) => Math.max(1, p - 1))
+        }
+        className="border rounded px-2 py-1 disabled:opacity-30
+                   border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   hover:bg-slate-50 dark:hover:bg-slate-800"
+      >
+        <ChevronLeft size={16} />
+      </button>
+
+      {Array.from({ length: totalPages }).map((_, i) => (
+        <button
+          key={i}
+          className={`border rounded px-2 py-1
+                      border-slate-300 dark:border-slate-700
+                      bg-white dark:bg-slate-900
+                      text-slate-700 dark:text-slate-300
+                      hover:bg-slate-50 dark:hover:bg-slate-800
+                      ${effectivePage === i + 1 ? 'bg-slate-200 dark:bg-slate-700 font-semibold text-slate-900 dark:text-slate-100' : ''}`}
+          onClick={() => (serverMode ? onPageChange?.(i + 1) : setLocalPage(i + 1))}
+        >
+          {i + 1}
+        </button>
+      ))}
+
+      <button
+        disabled={effectivePage === totalPages}
+        onClick={() =>
+          serverMode ? onPageChange?.(effectivePage + 1) : setLocalPage((p) => Math.min(totalPages, p + 1))
+        }
+        className="border rounded px-2 py-1 disabled:opacity-30
+                   border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   hover:bg-slate-50 dark:hover:bg-slate-800"
+      >
+        <ChevronRight size={16} />
+      </button>
+    </div>
+  </div>
+</div>
+
   );
 }

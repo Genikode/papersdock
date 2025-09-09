@@ -107,110 +107,110 @@ function PaymentSuccessInner() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB]">
-      <div className="max-w-3xl mx-auto p-6">
-        <div className="bg-white border rounded-xl shadow-sm p-6">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-green-100 text-green-700 p-2">
-              <CheckCircle2 size={22} />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">Payment Successful</h1>
-              <p className="text-sm text-gray-500">
-                Your payment for <span className="font-medium">{monthName(monthNum)} {yearNum}</span> was recorded.
-              </p>
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          <div className="mt-4 flex flex-wrap gap-3">
-            <button
-              onClick={() => router.back()}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded border text-gray-700 hover:bg-gray-50"
-            >
-              <ArrowLeft size={16} /> Go Back
-            </button>
-            <button
-              onClick={handleDownloadInvoice}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
-            >
-              <Download size={16} /> Download Invoice
-            </button>
-          </div>
-
-          {/* Visual confirmation / invoice preview */}
-          <div ref={invoiceRef} className="mt-6">
-            {/* Everything inside this wrapper becomes the PDF content */}
-            <header className="flex items-center justify-between pb-4 border-b">
-              <div>
-                <div className="text-lg font-bold">Papers Dock</div>
-        
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-semibold">Invoice</div>
-                <div className="text-xs text-gray-500">#{invoiceNo}</div>
-              </div>
-            </header>
-
-            <section className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              <div className="bg-gray-50 rounded border p-3">
-                <div className="text-xs text-gray-500">Billed To</div>
-                <div className="text-sm font-medium mt-1 break-all">Student ID: {studentId}</div>
-              </div>
-              <div className="bg-gray-50 rounded border p-3">
-                <div className="text-xs text-gray-500">Billing Period</div>
-                <div className="text-sm font-medium mt-1">
-                  {monthName(monthNum)} {yearNum}
-                </div>
-              </div>
-            </section>
-
-            <table className="w-full mt-4">
-              <thead>
-                <tr className="text-xs text-gray-500">
-                  <th className="text-left">Description</th>
-                  <th className="right">Qty</th>
-                  <th className="right">Price</th>
-                  <th className="right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Monthly Tuition Fee — {monthName(monthNum)} {yearNum}</td>
-                  <td className="right">1</td>
-                  <td className="right">{amount ? `PKR${amount}` : '-'}</td>
-                  <td className="right">{amount ? `PKR${amount}` : '-'}</td>
-                </tr>
-                <tr>
-                  <td colSpan={3} className="right total">Total</td>
-                  <td className="right total">{amount ? `PKR${amount}` : '-'}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-              <div className="bg-gray-50 rounded border p-3">
-                <div className="text-xs text-gray-500">Payment Date</div>
-                <div className="text-sm font-medium mt-1">
-                  {paidAt.toLocaleDateString()} {paidAt.toLocaleTimeString()}
-                </div>
-              </div>
-              <div className="bg-gray-50 rounded border p-3">
-                <div className="text-xs text-gray-500">Transaction ID</div>
-                <div className="text-sm font-medium mt-1">{txnId || '—'}</div>
-              </div>
-              <div className="bg-gray-50 rounded border p-3">
-                <div className="text-xs text-gray-500">Reference</div>
-                <div className="text-sm font-medium mt-1">{invoiceNo}</div>
-              </div>
-            </section>
-
-            <p className="mt-4 text-xs text-gray-500">
-              This is a system-generated invoice for your records.
-            </p>
-          </div>
+<main className="min-h-screen bg-[#F9FAFB] dark:bg-slate-950">
+  <div className="max-w-3xl mx-auto p-6">
+    <div className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-xl shadow-sm p-6">
+      <div className="flex items-center gap-3">
+        <div className="rounded-full bg-green-100 text-green-700 dark:bg-emerald-900/30 dark:text-emerald-300 p-2">
+          <CheckCircle2 size={22} />
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-slate-100">Payment Successful</h1>
+          <p className="text-sm text-gray-500 dark:text-slate-400">
+            Your payment for <span className="font-medium text-gray-800 dark:text-slate-200">{monthName(monthNum)} {yearNum}</span> was recorded.
+          </p>
         </div>
       </div>
-    </main>
+
+      {/* Action buttons */}
+      <div className="mt-4 flex flex-wrap gap-3">
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded border text-gray-700 hover:bg-gray-50 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+        >
+          <ArrowLeft size={16} /> Go Back
+        </button>
+        <button
+          onClick={handleDownloadInvoice}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-500"
+        >
+          <Download size={16} /> Download Invoice
+        </button>
+      </div>
+
+      {/* Visual confirmation / invoice preview */}
+      <div ref={invoiceRef} className="mt-6">
+        {/* Everything inside this wrapper becomes the PDF content */}
+        <header className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-slate-800">
+          <div>
+            <div className="text-lg font-bold text-gray-900 dark:text-slate-100">Papers Dock</div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-semibold text-gray-900 dark:text-slate-100">Invoice</div>
+            <div className="text-xs text-gray-500 dark:text-slate-400">#{invoiceNo}</div>
+          </div>
+        </header>
+
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+          <div className="bg-gray-50 dark:bg-slate-800/60 rounded border border-gray-200 dark:border-slate-800 p-3">
+            <div className="text-xs text-gray-500 dark:text-slate-400">Billed To</div>
+            <div className="text-sm font-medium mt-1 break-all text-gray-800 dark:text-slate-200">Student ID: {studentId}</div>
+          </div>
+          <div className="bg-gray-50 dark:bg-slate-800/60 rounded border border-gray-200 dark:border-slate-800 p-3">
+            <div className="text-xs text-gray-500 dark:text-slate-400">Billing Period</div>
+            <div className="text-sm font-medium mt-1 text-gray-800 dark:text-slate-200">
+              {monthName(monthNum)} {yearNum}
+            </div>
+          </div>
+        </section>
+
+        <table className="w-full mt-4">
+          <thead>
+            <tr className="text-xs text-gray-500 dark:text-slate-400">
+              <th className="text-left">Description</th>
+              <th className="right">Qty</th>
+              <th className="right">Price</th>
+              <th className="right">Amount</th>
+            </tr>
+          </thead>
+          <tbody className="text-gray-700 dark:text-slate-200">
+            <tr>
+              <td>Monthly Tuition Fee — {monthName(monthNum)} {yearNum}</td>
+              <td className="right">1</td>
+              <td className="right">{amount ? `PKR${amount}` : '-'}</td>
+              <td className="right">{amount ? `PKR${amount}` : '-'}</td>
+            </tr>
+            <tr>
+              <td colSpan={3} className="right total">Total</td>
+              <td className="right total">{amount ? `PKR${amount}` : '-'}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+          <div className="bg-gray-50 dark:bg-slate-800/60 rounded border border-gray-200 dark:border-slate-800 p-3">
+            <div className="text-xs text-gray-500 dark:text-slate-400">Payment Date</div>
+            <div className="text-sm font-medium mt-1 text-gray-800 dark:text-slate-200">
+              {paidAt.toLocaleDateString()} {paidAt.toLocaleTimeString()}
+            </div>
+          </div>
+          <div className="bg-gray-50 dark:bg-slate-800/60 rounded border border-gray-200 dark:border-slate-800 p-3">
+            <div className="text-xs text-gray-500 dark:text-slate-400">Transaction ID</div>
+            <div className="text-sm font-medium mt-1 text-gray-800 dark:text-slate-200">{txnId || '—'}</div>
+          </div>
+          <div className="bg-gray-50 dark:bg-slate-800/60 rounded border border-gray-200 dark:border-slate-800 p-3">
+            <div className="text-xs text-gray-500 dark:text-slate-400">Reference</div>
+            <div className="text-sm font-medium mt-1 text-gray-800 dark:text-slate-200">{invoiceNo}</div>
+          </div>
+        </section>
+
+        <p className="mt-4 text-xs text-gray-500 dark:text-slate-400">
+          This is a system-generated invoice for your records.
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
   );
 }

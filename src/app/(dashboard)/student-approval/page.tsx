@@ -273,266 +273,299 @@ export default function StudentApprovalPage() {
   }
 
   /* Columns */
-  const columns: TableColumn[] = useMemo<TableColumn[]>(
-    () => [
-      { header: 'S.No', accessor: 'sNo' },
-      { header: 'Name', accessor: 'name' },
-      { header: 'Email', accessor: 'email' },
-      { header: 'Contact', accessor: 'contact' },
-      {
-        header: 'Parents Contact',
-        accessor: 'parentsContact',
-        render: (v: string) => (v ? v : <span className="text-xs text-gray-400">—</span>),
-      },
-    
-      {
-        header: 'Courses',
-        accessor: 'allowedCourses',
-        render: (v: string) => {
-          const ids = parseAllowedCourses(v);
-          if (!ids.length) return <span className="text-xs text-gray-400">—</span>;
-          return (
-            <div className="flex flex-wrap gap-1">
-              {ids.map((id) => (
-                <span key={id} className="text-xs bg-gray-100 text-gray-700 rounded-full px-2 py-0.5">
-                  {courseMap[id] ?? id}
-                </span>
-              ))}
-            </div>
-          );
-        },
-      },
-      { header: 'Role', accessor: 'roleName' },
-      {
-        header: 'Action',
-        accessor: 'actions',
-        render: (_: any, row: UserApiItem) => (
-          <div className="flex items-center gap-2">
-          
-            <button
-              className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-indigo-50"
-              onClick={() => openEditModal(row)}
-              title="Edit User"
-            >
-              Edit
-            </button>
-            <button
-              className={`inline-flex items-center gap-1 border px-2 py-1 rounded text-xs  ${
-              row.isSecurityBypassed === 'Y' ? 'border-green-500 bg-green-500 text-white' : ''
-              }`}
-              onClick={() => setMakeFreeId(row.id)}
-              
-            >
-              Free
-            </button>
+const columns: TableColumn[] = useMemo<TableColumn[]>(
+  () => [
+    { header: 'S.No', accessor: 'sNo' },
+    { header: 'Name', accessor: 'name' },
+    { header: 'Email', accessor: 'email' },
+    { header: 'Contact', accessor: 'contact' },
+    {
+      header: 'Parents Contact',
+      accessor: 'parentsContact',
+      render: (v: string) =>
+        v ? v : <span className="text-xs text-gray-400 dark:text-slate-500">—</span>,
+    },
+
+    {
+      header: 'Courses',
+      accessor: 'allowedCourses',
+      render: (v: string) => {
+        const ids = parseAllowedCourses(v);
+        if (!ids.length)
+          return <span className="text-xs text-gray-400 dark:text-slate-500">—</span>;
+        return (
+          <div className="flex flex-wrap gap-1">
+            {ids.map((id) => (
+              <span
+                key={id}
+                className="text-xs rounded-full px-2 py-0.5
+                           bg-gray-100 text-gray-700 border border-gray-200
+                           dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700"
+              >
+                {courseMap[id] ?? id}
+              </span>
+            ))}
           </div>
-        ),
+        );
       },
-    ],
-    [courseMap]
-  );
+    },
+    { header: 'Role', accessor: 'roleName' },
+    {
+      header: 'Action',
+      accessor: 'actions',
+      render: (_: any, row: UserApiItem) => (
+        <div className="flex items-center gap-2">
+          <button
+            className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs
+                       hover:bg-indigo-50
+                       dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60"
+            onClick={() => openEditModal(row)}
+            title="Edit User"
+          >
+            Edit
+          </button>
+          <button
+            className={`inline-flex items-center gap-1 border px-2 py-1 rounded text-xs
+                        dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60
+                        ${
+                          row.isSecurityBypassed === 'Y'
+                            ? 'border-green-500 bg-green-500 text-white dark:bg-green-600 dark:border-green-600'
+                            : ''
+                        }`}
+            onClick={() => setMakeFreeId(row.id)}
+          >
+            Free
+          </button>
+        </div>
+      ),
+    },
+  ],
+  [courseMap]
+);
 
   /* Toolbar with filters + search */
-  const toolbarLeft = (
-    <div className="flex flex-wrap items-center gap-2">
-   
-     
+ const toolbarLeft = (
+  <div className="flex flex-wrap items-center gap-2">
+    <label className="text-sm text-gray-600 dark:text-slate-400 ml-1">Course</label>
+    <select
+      value={courseFilter}
+      onChange={(e) => {
+        setCourseFilter(e.target.value);
+        setCurrentPage(1);
+      }}
+      className="min-w-[180px] text-sm px-2 py-1 rounded border border-gray-300 bg-white text-gray-800
+                 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:focus:ring-indigo-400"
+    >
+      <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
+      {courses.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.title}
+        </option>
+      ))}
+    </select>
 
-      <label className="text-sm text-gray-600 ml-1">Course</label>
-      <select
-        value={courseFilter}
-        onChange={(e) => {
-          setCourseFilter(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="border rounded px-2 py-1 text-sm min-w-[180px]"
-      >
-        <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
-        {courses.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.title}
-          </option>
-        ))}
-      </select>
+    <input
+      value={searchTerm}
+      onChange={(e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+      }}
+      placeholder="Search students…"
+      className="ml-2 w-56 text-sm px-3 py-1 rounded border border-gray-300 bg-white text-gray-800
+                 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500
+                 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:placeholder:text-slate-500 dark:focus:ring-indigo-400"
+    />
+  </div>
+);
 
-      <input
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        placeholder="Search students…"
-        className="border rounded px-3 py-1 text-sm ml-2 w-56"
-      />
-    </div>
-  );
+return (
+  <main className="bg-gray-50 dark:bg-slate-950 p-6 text-gray-800 dark:text-slate-100">
+    <PageHeader
+      title="Student Approval"
+      description="Review students, grant access, edit users, and mark fee exemptions"
+    />
 
-  return (
-    <main className="bg-[#F9FAFB] p-6 text-gray-800">
-      <PageHeader title="Student Approval" description="Review students, grant access, edit users, and mark fee exemptions" />
-
-      <div className="bg-white rounded-md shadow-md">
-        {loading && <p className="px-4 py-2 text-sm text-gray-500">Loading students…</p>}
-
-        <TableComponent
-          columns={columns}
-          data={tableData}
-          serverMode
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={(n) => {
-            setItemsPerPage(n);
-            setCurrentPage(1);
-          }}
-          /* show the count that matches the course filter */
-          totalItems={visibleTotal}
-          toolbarLeft={toolbarLeft}
-          hideSearch
-          searchTerm={searchTerm}
-          onSearchTermChange={(v) => {
-            setSearchTerm(v);
-            setCurrentPage(1);
-          }}
-        />
-      </div>
-
-      {/* Confirm Make Free */}
-      {makeFreeId && (
-        <ConfirmationModal
-          title="Make Student Free"
-          description="This will mark the student as fee-exempt for billing. Continue?"
-          onCancel={() => setMakeFreeId(null)}
-          onConfirm={() => makeStudentFree(makeFreeId)}
-        />
+    <div className="bg-white dark:bg-slate-900 rounded-md shadow-md border border-gray-200 dark:border-slate-800">
+      {loading && (
+        <p className="px-4 py-2 text-sm text-gray-500 dark:text-slate-400">Loading students…</p>
       )}
 
-      {/* Give Course Access Modal */}
-      {accessUser && (
-        <Modal title={`Give Course Access — ${accessUser.name}`} onClose={() => setAccessUser(null)}>
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600">
-              Select courses to allow for this student. Current selections are pre-checked.
-            </p>
-            <div className="max-h-72 overflow-auto border rounded p-3">
-              {courses.length === 0 && <p className="text-sm text-gray-500">No courses found.</p>}
+      <TableComponent
+        columns={columns}
+        data={tableData}
+        serverMode
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={(n) => {
+          setItemsPerPage(n);
+          setCurrentPage(1);
+        }}
+        totalItems={visibleTotal}
+        toolbarLeft={toolbarLeft}
+        hideSearch
+        searchTerm={searchTerm}
+        onSearchTermChange={(v) => {
+          setSearchTerm(v);
+          setCurrentPage(1);
+        }}
+      />
+    </div>
+
+    {/* Confirm Make Free */}
+    {makeFreeId && (
+      <ConfirmationModal
+        title="Make Student Free"
+        description="This will mark the student as fee-exempt for billing. Continue?"
+        onCancel={() => setMakeFreeId(null)}
+        onConfirm={() => makeStudentFree(makeFreeId)}
+      />
+    )}
+
+    {/* Give Course Access Modal */}
+    {accessUser && (
+      <Modal title={`Give Course Access — ${accessUser.name}`} onClose={() => setAccessUser(null)}>
+        <div className="space-y-3">
+          <p className="text-sm text-gray-600 dark:text-slate-400">
+            Select courses to allow for this student. Current selections are pre-checked.
+          </p>
+          <div className="max-h-72 overflow-auto border rounded p-3 border-gray-200 dark:border-slate-700">
+            {courses.length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-slate-400">No courses found.</p>
+            )}
+            {courses.map((c) => {
+              const checked = accessSelections.includes(c.id);
+              return (
+                <label key={c.id} className="flex items-center gap-2 py-1">
+                  <input type="checkbox" checked={checked} onChange={() => toggleCourseInAccess(c.id)} />
+                  <span className="text-sm text-gray-800 dark:text-slate-100">{c.title}</span>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              className="px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
+                         dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60"
+              onClick={() => setAccessUser(null)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-3 py-1 rounded text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60
+                         dark:bg-indigo-600 dark:hover:bg-indigo-500"
+              onClick={saveCourseAccess}
+              disabled={savingAccess}
+            >
+              {savingAccess ? 'Saving…' : 'Save Access'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    )}
+
+    {/* Edit User Modal */}
+    {editUser && (
+      <Modal title={`Edit User — ${editUser.name}`} onClose={() => setEditUser(null)}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Name</label>
+            <input
+              className="w-full text-sm px-3 py-2 rounded border border-gray-300 bg-white text-gray-800
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500
+                         dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:focus:ring-indigo-400"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="Updated Student"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Email</label>
+            <input
+              className="w-full text-sm px-3 py-2 rounded border border-gray-300 bg-white text-gray-800
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500
+                         dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:focus:ring-indigo-400"
+              value={editEmail}
+              onChange={(e) => setEditEmail(e.target.value)}
+              placeholder="updatedstudent@example.com"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Password (optional)</label>
+            <input
+              type="password"
+              className="w-full text-sm px-3 py-2 rounded border border-gray-300 bg-white text-gray-800
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500
+                         dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:focus:ring-indigo-400"
+              value={editPassword}
+              onChange={(e) => setEditPassword(e.target.value)}
+              placeholder="newpassword123"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Contact</label>
+            <input
+              className="w-full text-sm px-3 py-2 rounded border border-gray-300 bg-white text-gray-800
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500
+                         dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:focus:ring-indigo-400"
+              value={editContact}
+              onChange={(e) => setEditContact(e.target.value)}
+              placeholder="9876543210"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Parent Contact</label>
+            <input
+              className="w-full text-sm px-3 py-2 rounded border border-gray-300 bg-white text-gray-800
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500
+                         dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:focus:ring-indigo-400"
+              value={editParentsContact}
+              onChange={(e) => setEditParentsContact(e.target.value)}
+              placeholder="9876543210"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Course Access</label>
+            <div className="max-h-56 overflow-auto border rounded p-3 border-gray-200 dark:border-slate-700">
+              {courses.length === 0 && (
+                <p className="text-sm text-gray-500 dark:text-slate-400">No courses found.</p>
+              )}
               {courses.map((c) => {
-                const checked = accessSelections.includes(c.id);
+                const checked = editCourseIds.includes(c.id);
                 return (
                   <label key={c.id} className="flex items-center gap-2 py-1">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleCourseInAccess(c.id)}
-                    />
-                    <span className="text-sm">{c.title}</span>
+                    <input type="checkbox" checked={checked} onChange={() => toggleCourseInEdit(c.id)} />
+                    <span className="text-sm text-gray-800 dark:text-slate-100">{c.title}</span>
                   </label>
                 );
               })}
             </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button className="px-3 py-1 border rounded" onClick={() => setAccessUser(null)}>
-                Cancel
-              </button>
-              <button
-                className="px-3 py-1 rounded text-white bg-indigo-600 disabled:opacity-60"
-                onClick={saveCourseAccess}
-                disabled={savingAccess}
-              >
-                {savingAccess ? 'Saving…' : 'Save Access'}
-              </button>
-            </div>
           </div>
-        </Modal>
-      )}
+        </div>
 
-      {/* Edit User Modal */}
-      {editUser && (
-        <Modal title={`Edit User — ${editUser.name}`} onClose={() => setEditUser(null)}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm mb-1">Name</label>
-              <input
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Updated Student"
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Email</label>
-              <input
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
-                placeholder="updatedstudent@example.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Password (optional)</label>
-              <input
-                type="password"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={editPassword}
-                onChange={(e) => setEditPassword(e.target.value)}
-                placeholder="newpassword123"
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Contact</label>
-              <input
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={editContact}
-                onChange={(e) => setEditContact(e.target.value)}
-                placeholder="9876543210"
-              />
-            </div>
-            <div >
-                    <label className="block text-sm mb-1">Parent Contact</label>
-                  <input
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={editParentsContact}
-                onChange={(e) => setEditParentsContact(e.target.value)}
-                placeholder="9876543210"
-              />  
-            </div>
-          
-            <div className="md:col-span-2">
-              <label className="block text-sm mb-1">Course Access</label>
-              <div className="max-h-56 overflow-auto border rounded p-3">
-                {courses.length === 0 && <p className="text-sm text-gray-500">No courses found.</p>}
-                {courses.map((c) => {
-                  const checked = editCourseIds.includes(c.id);
-                  return (
-                    <label key={c.id} className="flex items-center gap-2 py-1">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleCourseInEdit(c.id)}
-                      />
-                      <span className="text-sm">{c.title}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+        <div className="flex justify-end gap-2 mt-4">
+          <button
+            className="px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
+                       dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60"
+            onClick={() => setEditUser(null)}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-3 py-1 rounded text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60
+                       dark:bg-indigo-600 dark:hover:bg-indigo-500"
+            onClick={saveEditedUser}
+            disabled={savingEdit}
+          >
+            {savingEdit ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </Modal>
+    )}
+  </main>
+);
 
-          <div className="flex justify-end gap-2 mt-4">
-            <button className="px-3 py-1 border rounded" onClick={() => setEditUser(null)}>
-              Cancel
-            </button>
-            <button
-              className="px-3 py-1 rounded text-white bg-indigo-600 disabled:opacity-60"
-              onClick={saveEditedUser}
-              disabled={savingEdit}
-            >
-              {savingEdit ? 'Saving…' : 'Save Changes'}
-            </button>
-          </div>
-        </Modal>
-      )}
-    </main>
-  );
 }

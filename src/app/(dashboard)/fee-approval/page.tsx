@@ -301,7 +301,7 @@ export default function FeeApprovalPage() {
               {canAct ? (
                 <>
                      <button
-                    className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50"
+                    className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50 hover:text-black"
                     title="Edit"
                     onClick={() =>{
                       setFeeAmount(row.feesAmount);
@@ -312,7 +312,7 @@ export default function FeeApprovalPage() {
                     <CheckCircle size={14} /> Edit
                   </button>
                   <button
-                    className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50"
+                    className="inline-flex items-center gap-1 border px-2 py-1 rounded text-xs hover:bg-green-50 hover:text-black"
                     title="Approve"
                     onClick={() => setApproveId(row.feeId)}
                   >
@@ -339,204 +339,249 @@ export default function FeeApprovalPage() {
 
   /* Toolbar with filters */
   const toolbar = (
-    <div className="flex flex-wrap items-center gap-3">
-      {/* Month */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-gray-600">Month</label>
-        <select
-          value={month}
-          onChange={(e) => {
-            setMonth(Number(e.target.value));
-            setCurrentPage(1);
-          }}
-          className="border rounded px-2 py-1 text-sm"
-        >
-          {MONTHS.map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
-            </option>
-          ))}
-        </select>
-      </div>
+   <div className="flex flex-wrap items-center gap-3">
+  {/* Month */}
+  <div className="flex items-center gap-2">
+    <label className="text-sm text-slate-600 dark:text-slate-400">Month</label>
+    <select
+      value={month}
+      onChange={(e) => {
+        setMonth(Number(e.target.value));
+        setCurrentPage(1);
+      }}
+      className="text-sm px-2 py-1 rounded border
+                 bg-white dark:bg-slate-900
+                 text-slate-900 dark:text-slate-100
+                 border-slate-300 dark:border-slate-700
+                 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+    >
+      {MONTHS.map((m) => (
+        <option key={m.value} value={m.value}>
+          {m.label}
+        </option>
+      ))}
+    </select>
+  </div>
 
-      {/* Year */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-gray-600">Year</label>
-        <select
-          value={year}
-          onChange={(e) => {
-            setYear(Number(e.target.value));
-            setCurrentPage(1);
-          }}
-          className="border rounded px-2 py-1 text-sm"
-        >
-          {Array.from({ length: 7 }, (_, i) => now.getFullYear() - 3 + i).map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
-      </div>
+  {/* Year */}
+  <div className="flex items-center gap-2">
+    <label className="text-sm text-slate-600 dark:text-slate-400">Year</label>
+    <select
+      value={year}
+      onChange={(e) => {
+        setYear(Number(e.target.value));
+        setCurrentPage(1);
+      }}
+      className="text-sm px-2 py-1 rounded border
+                 bg-white dark:bg-slate-900
+                 text-slate-900 dark:text-slate-100
+                 border-slate-300 dark:border-slate-700
+                 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+    >
+      {Array.from({ length: 7 }, (_, i) => now.getFullYear() - 3 + i).map((y) => (
+        <option key={y} value={y}>
+          {y}
+        </option>
+      ))}
+    </select>
+  </div>
 
-      {/* Course */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-gray-600">Course</label>
-        <select
-          value={courseId}
-          onChange={(e) => {
-            setCourseId(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="border rounded px-2 py-1 text-sm min-w-[120px]"
-        >
-          <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
-          {courses.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.title}
-            </option>
-          ))}
-        </select>
-      </div>
+  {/* Course */}
+  <div className="flex items-center gap-2">
+    <label className="text-sm text-slate-600 dark:text-slate-400">Course</label>
+    <select
+      value={courseId}
+      onChange={(e) => {
+        setCourseId(e.target.value);
+        setCurrentPage(1);
+      }}
+      className="text-sm px-2 py-1 rounded border min-w-[120px]
+                 bg-white dark:bg-slate-900
+                 text-slate-900 dark:text-slate-100
+                 border-slate-300 dark:border-slate-700
+                 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+    >
+      <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
+      {courses.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.title}
+        </option>
+      ))}
+    </select>
+  </div>
 
-      {/* Status */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-gray-600">Status</label>
-        <select
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="border rounded px-2 py-1 text-sm"
-        >
-          <option value="">All</option>
-          <option value="Approved">Approved</option>
-          <option value="Pending">Pending</option>
-          <option value="Unpaid">Unpaid</option>
-          <option value="Rejected">Rejected</option>
-         
-        </select>
-      </div>
-    </div>
+  {/* Status */}
+  <div className="flex items-center gap-2">
+    <label className="text-sm text-slate-600 dark:text-slate-400">Status</label>
+    <select
+      value={status}
+      onChange={(e) => {
+        setStatus(e.target.value);
+        setCurrentPage(1);
+      }}
+      className="text-sm px-2 py-1 rounded border
+                 bg-white dark:bg-slate-900
+                 text-slate-900 dark:text-slate-100
+                 border-slate-300 dark:border-slate-700
+                 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+    >
+      <option value="">All</option>
+      <option value="Approved">Approved</option>
+      <option value="Pending">Pending</option>
+      <option value="Unpaid">Unpaid</option>
+      <option value="Rejected">Rejected</option>
+    </select>
+  </div>
+</div>
+
   );
 
   return (
-    <main className="bg-[#F9FAFB] p-6 text-gray-800">
-      <PageHeader title="Fee Approval" description="Review and approve student fee submissions" />
+   <main className="min-h-screen p-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+  <PageHeader title="Fee Approval" description="Review and approve student fee submissions" />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {stats.map((s, i) => (
-          <div key={i} className="p-4 rounded-md shadow-sm border bg-white">
-            <div className="text-sm text-gray-500 flex justify-between items-center">
-              {s.label}
-              {s.icon}
-            </div>
-            <div className="mt-1 text-lg font-semibold text-gray-800">{s.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-md shadow-md">
-        {loading && <p className="px-4 py-2 text-sm text-gray-500">Loading fees…</p>}
-        <TableComponent
-          columns={columns}
-          data={tableData}
-          serverMode
-          toolbarLeft={toolbar}
-          searchTerm={searchTerm}                 // type the student name here
-          onSearchTermChange={(v) => {
-            setCurrentPage(1);
-            setSearchTerm(v);                     // used as `name` in fetch
-          }}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={(n) => {
-            setCurrentPage(1);
-            setItemsPerPage(n);
-          }}
-          totalItems={totalItems}
-        />
-      </div>
-
-      {/* Receipt Modal */}
-      {receiptUrl && (
-        <Modal title="Fee Receipt" onClose={() => setReceiptUrl(null)}>
-          <div className="w-full">
-            <iframe src={receiptUrl} className="w-full h-[70vh] border rounded" title="Receipt" />
-            <div className="mt-2 text-right">
-              <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline">
-                Open in new tab
-              </a>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Approve */}
-      {
-        updateId && (
-        <div className="fixed inset-0 bg-transparent bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-md shadow-lg p-6 w-full max-w-sm">
-            <h2 className="text-lg font-semibold mb-4">Update Due Date</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Due Date</label>
-              <input
-                type="date"
-                value={dueDate.toISOString().split('T')[0]}
-                onChange={(e) => setDueDate(new Date(e.target.value))}
-                className="border rounded-md px-3 py-2 w-full"
-              />
-
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fees Amount</label>
-              <input
-                type="number"
-                value={feeamount}
-                onChange={(e) => setFeeAmount(e.target.value)}
-                className="border rounded-md px-3 py-2 w-full"
-              />
-            </div>
-            
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setUpateId(null)}
-                className="px-4 py-2 border rounded-md"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => updatefee(updateId)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md"
-              >
-                Update
-              </button>
-            </div>
-          </div>
+  {/* Stats */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    {stats.map((s, i) => (
+      <div
+        key={i}
+        className="p-4 rounded-md shadow-sm border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+      >
+        <div className="text-sm text-slate-600 dark:text-slate-400 flex justify-between items-center">
+          {s.label}
+          {s.icon}
         </div>
-      )
-      }
-      {approveId && (
-        <ConfirmationModal
-          title="Approve Fee"
-          description="Are you sure you want to approve this fee submission?"
-          onCancel={() => setApproveId(null)}
-          onConfirm={() => approveFee(approveId)}
-        />
-      )}
+        <div className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{s.value}</div>
+      </div>
+    ))}
+  </div>
 
-      {/* Reject */}
-      {rejectId && (
-        <ConfirmationModal
-          title="Reject Fee"
-          description="Are you sure you want to reject this fee submission?"
-          onCancel={() => setRejectId(null)}
-          onConfirm={() => rejectFee(rejectId)}
+  {/* Table */}
+  <div className="bg-white dark:bg-slate-900 rounded-md shadow-md border border-slate-200 dark:border-slate-800">
+    {loading && <p className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400">Loading fees…</p>}
+    <TableComponent
+      columns={columns}
+      data={tableData}
+      serverMode
+      toolbarLeft={toolbar}
+      searchTerm={searchTerm} // type the student name here
+      onSearchTermChange={(v) => {
+        setCurrentPage(1);
+        setSearchTerm(v); // used as `name` in fetch
+      }}
+      currentPage={currentPage}
+      onPageChange={setCurrentPage}
+      itemsPerPage={itemsPerPage}
+      onItemsPerPageChange={(n) => {
+        setCurrentPage(1);
+        setItemsPerPage(n);
+      }}
+      totalItems={totalItems}
+    />
+  </div>
+
+  {/* Receipt Modal */}
+  {receiptUrl && (
+    <Modal title="Fee Receipt" onClose={() => setReceiptUrl(null)}>
+      <div className="w-full">
+        <iframe
+          src={receiptUrl}
+          className="w-full h-[70vh] rounded ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900"
+          title="Receipt"
         />
-      )}
-    </main>
+        <div className="mt-2 text-right">
+          <a
+            href={receiptUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm underline text-indigo-600 dark:text-indigo-400"
+          >
+            Open in new tab
+          </a>
+        </div>
+      </div>
+    </Modal>
+  )}
+
+  {/* Approve */}
+  {updateId && (
+    <div className="fixed inset-0 z-50 bg-black/40 dark:bg-black/60 flex items-center justify-center">
+      <div className="bg-white dark:bg-slate-900 rounded-md shadow-lg p-6 w-full max-w-sm border border-slate-200 dark:border-slate-800">
+        <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">Update Due Date</h2>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            New Due Date
+          </label>
+          <input
+            type="date"
+            value={dueDate.toISOString().split('T')[0]}
+            onChange={(e) => setDueDate(new Date(e.target.value))}
+            className="w-full rounded-md px-3 py-2
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border border-slate-300 dark:border-slate-700
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            Fees Amount
+          </label>
+          <input
+            type="number"
+            value={feeamount}
+            onChange={(e) => setFeeAmount(e.target.value)}
+            className="w-full rounded-md px-3 py-2
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border border-slate-300 dark:border-slate-700
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+          />
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setUpateId(null)}
+            className="px-4 py-2 rounded-md border
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border-slate-300 dark:border-slate-700
+                       hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => updatefee(updateId)}
+            className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+          >
+            Update
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {approveId && (
+    <ConfirmationModal
+      title="Approve Fee"
+      description="Are you sure you want to approve this fee submission?"
+      onCancel={() => setApproveId(null)}
+      onConfirm={() => approveFee(approveId)}
+    />
+  )}
+
+  {/* Reject */}
+  {rejectId && (
+    <ConfirmationModal
+      title="Reject Fee"
+      description="Are you sure you want to reject this fee submission?"
+      onCancel={() => setRejectId(null)}
+      onConfirm={() => rejectFee(rejectId)}
+    />
+  )}
+</main>
+
   );
 }

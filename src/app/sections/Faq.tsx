@@ -46,33 +46,38 @@ export default function FAQ() {
   };
 
   return (
-    <section className="bg-white py-20 px-4">
+    <section className="bg-white dark:bg-gray-900 transition-colors py-20 px-4">
       <div className="max-w-3xl mx-auto text-center mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Frequently Asked Questions</h2>
-        <p className="text-gray-600">Everything you need to know about PapersDock</p>
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Frequently Asked Questions
+        </h2>
+        <p className="text-gray-600 dark:text-gray-300">
+          Everything you need to know about PapersDock
+        </p>
       </div>
 
       <div className="max-w-3xl mx-auto space-y-4">
         {faqs.map((faq, i) => (
           <div
             key={i}
-            className="bg-gray-50 rounded-lg p-5 text-left shadow-sm border border-gray-100 transition"
+            className="bg-gray-50 dark:bg-gray-800 rounded-lg p-5 text-left shadow-sm border border-gray-100 dark:border-gray-700 transition-colors"
           >
             <button
               onClick={() => toggle(i)}
-              className="w-full flex justify-between items-center text-left"
+              aria-expanded={openIndex === i}
+              className="w-full flex justify-between items-center text-left focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 rounded"
             >
-              <span className="text-sm md:text-base font-medium text-gray-900">
+              <span className="text-sm md:text-base font-medium text-gray-900 dark:text-gray-100">
                 {faq.question}
               </span>
               {openIndex === i ? (
-                <ChevronUp className="w-5 h-5 text-gray-600" />
+                <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               ) : (
-                <ChevronDown className="w-5 h-5 text-gray-600" />
+                <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               )}
             </button>
             {openIndex === i && (
-              <div className="mt-3 text-sm text-gray-600 leading-relaxed">
+              <div className="mt-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 {faq.answer}
               </div>
             )}
@@ -81,10 +86,10 @@ export default function FAQ() {
       </div>
 
       <div className="text-center mt-10">
-        <p className="text-sm text-gray-500 mb-3">Still have questions?</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Still have questions?</p>
         <Link
           href="#"
-          className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md text-sm font-medium shadow hover:bg-blue-700"
+          className="inline-block bg-blue-600 dark:bg-blue-500 text-white px-6 py-2 rounded-md text-sm font-medium shadow hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
         >
           Contact Support
         </Link>

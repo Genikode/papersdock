@@ -141,71 +141,84 @@ function AssignmentCard({
   const cls = statusBadgeClass(statusText);
 
   return (
-    <div className="bg-white rounded-md shadow border p-4 flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-base sm:text-sm font-semibold text-gray-900 truncate">
-            {item.assignmentTitle}
-          </h3>
-          <p className="text-xs text-gray-600 line-clamp-2">
-            {item.description || '—'}
-          </p>
-        </div>
-        <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-          {item.courseTitle || '—'}
-        </span>
-      </div>
-
-      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3 text-xs text-gray-600 mt-1">
-        <span className="inline-flex items-center gap-1">
-          <Calendar size={14} /> Deadline: {fmtDate(item.firstDeadline)}
-        </span>
-      
-        {typeof item.totalMarks === 'number' && (
-          <span className="inline-flex items-center gap-1">
-            <FileText size={14} /> {item.totalMarks} marks
-          </span>
-        )}
-      </div>
-
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
-        <span className={`inline-block w-max text-[11px] px-2 py-0.5 rounded-full ${cls}`}>
-          {statusText}
-        </span>
-
-        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
-          {/* View assignment brief */}
-          <button
-            disabled={!item.assignmentFile}
-            onClick={() => item.assignmentFile && onViewAssignmentFile(item)}
-            className="inline-flex items-center justify-center gap-1 text-xs px-3 py-1.5 rounded border hover:bg-gray-50 disabled:opacity-50"
-            title={item.assignmentFile ? 'View assignment file' : 'No file'}
-          >
-            <Eye size={14} /> <span className="hidden xs:inline">View</span> File
-          </button>
-
-          {/* View student's submission (only when submitted/checked) */}
-          {(statusLower === 'submitted' || statusLower === 'checked') && (
-            <button
-              disabled={!item.submissionFile}
-              onClick={() => item.submissionFile && onViewSubmissionFile(item)}
-              className="inline-flex items-center justify-center gap-1 text-xs px-3 py-1.5 rounded border hover:bg-gray-50 disabled:opacity-50"
-              title={item.submissionFile ? 'View your submission' : 'No submission file'}
-            >
-              <Eye size={14} /> My Submission
-            </button>
-          )}
-
-          <button
-            onClick={() => onSubmitClick(item)}
-            className="inline-flex items-center justify-center gap-2 text-xs px-3 py-1.5 rounded bg-gray-900 text-white hover:opacity-90"
-          >
-            <UploadCloud size={14} />
-            {statusLower === 'submitted' || statusLower === 'checked' ? 'Update' : 'Submit'}
-          </button>
-        </div>
-      </div>
+    <div className="bg-white dark:bg-slate-900 rounded-md shadow border border-slate-200 dark:border-slate-800 p-4 flex flex-col gap-3">
+  <div className="flex items-start justify-between gap-3">
+    <div className="min-w-0">
+      <h3 className="text-base sm:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+        {item.assignmentTitle}
+      </h3>
+      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
+        {item.description || '—'}
+      </p>
     </div>
+    <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700">
+      {item.courseTitle || '—'}
+    </span>
+  </div>
+
+  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3 text-xs text-slate-600 dark:text-slate-400 mt-1">
+    <span className="inline-flex items-center gap-1">
+      <Calendar size={14} /> Deadline: {fmtDate(item.firstDeadline)}
+    </span>
+
+    {typeof item.totalMarks === 'number' && (
+      <span className="inline-flex items-center gap-1">
+        <FileText size={14} /> {item.totalMarks} marks
+      </span>
+    )}
+  </div>
+
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
+    <span className={`inline-block w-max text-[11px] px-2 py-0.5 rounded-full ring-1 ring-slate-200 dark:ring-slate-700 ${cls}`}>
+      {statusText}
+    </span>
+
+    <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2">
+      {/* View assignment brief */}
+      <button
+        disabled={!item.assignmentFile}
+        onClick={() => item.assignmentFile && onViewAssignmentFile(item)}
+        className="inline-flex items-center justify-center gap-1 text-xs px-3 py-1.5 rounded border
+                   border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   hover:bg-slate-50 dark:hover:bg-slate-800
+                   disabled:opacity-50"
+        title={item.assignmentFile ? 'View assignment file' : 'No file'}
+      >
+        <Eye size={14} /> <span className="hidden xs:inline">View</span> File
+      </button>
+
+      {/* View student's submission (only when submitted/checked) */}
+      {(statusLower === 'submitted' || statusLower === 'checked') && (
+        <button
+          disabled={!item.submissionFile}
+          onClick={() => item.submissionFile && onViewSubmissionFile(item)}
+          className="inline-flex items-center justify-center gap-1 text-xs px-3 py-1.5 rounded border
+                     border-slate-300 dark:border-slate-700
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     hover:bg-slate-50 dark:hover:bg-slate-800
+                     disabled:opacity-50"
+          title={item.submissionFile ? 'View your submission' : 'No submission file'}
+        >
+          <Eye size={14} /> My Submission
+        </button>
+      )}
+
+      <button
+        onClick={() => onSubmitClick(item)}
+        className="inline-flex items-center justify-center gap-2 text-xs px-3 py-1.5 rounded
+                   bg-slate-900 text-white hover:opacity-90
+                   dark:bg-slate-100 dark:text-slate-900 dark:hover:opacity-90"
+      >
+        <UploadCloud size={14} />
+        {statusLower === 'submitted' || statusLower === 'checked' ? 'Update' : 'Submit'}
+      </button>
+    </div>
+  </div>
+</div>
+
   );
 }
 
@@ -303,108 +316,113 @@ function SubmitModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-md max-w-[95vw] sm:rounded-lg sm:shadow-lg sm:overflow-hidden rounded-t-xl">
-        <div className="px-4 sm:px-5 py-4 border-b flex items-center justify-between">
-          <h3 className="text-sm font-semibold pr-2 truncate">
-            Submit Assignment — {assignment.assignmentTitle}
-          </h3>
-          <button
-            className="text-gray-500 hover:text-red-500 text-lg leading-none disabled:opacity-50"
-            onClick={onClose}
-            disabled={uploading}
-            title={uploading ? 'Uploading…' : 'Close'}
-          >
-            &times;
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="px-4 sm:px-5 py-4 space-y-4 max-h-[85vh] overflow-auto">
-          {/* Label */}
-          <label className="block text-sm font-medium">Upload Attachment</label>
-
-          {/* Pretty upload box (matches your screenshot) */}
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={onDrop}
-            className={`rounded-lg border ${
-              dragOver ? 'border-indigo-400 ring-2 ring-indigo-200' : 'border-gray-300'
-            } p-6 sm:p-8 text-center transition-all`}
-          >
-            <UploadCloud size={28} className="mx-auto text-gray-400 mb-2" />
-            {!file ? (
-              <>
-                <p className="text-sm text-gray-600">Choose a file to upload</p>
-                <label className="mt-1 inline-block text-sm text-indigo-600 hover:underline cursor-pointer">
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    disabled={uploading}
-                  />
-                  Choose File
-                </label>
-              </>
-            ) : (
-              <div className="space-y-1">
-                <p className="text-sm text-gray-700">
-                  Selected: <span className="font-medium break-all">{file.name}</span>
-                </p>
-                <div className="flex items-center justify-center gap-3 text-sm">
-                  <label className="text-indigo-600 hover:underline cursor-pointer">
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => setFile(e.target.files?.[0] || null)}
-                      disabled={uploading}
-                    />
-                    Change File
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setFile(null)}
-                    className="text-gray-500 hover:underline"
-                    disabled={uploading}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Progress bar */}
-          {uploading && (
-            <div>
-              <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                <span>Uploading…</span>
-                <span>{progress}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded h-2 overflow-hidden">
-                <div
-                  className="h-2 bg-indigo-600 transition-[width] duration-150"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={uploading || !file}
-            className="w-full rounded-md bg-gray-900 text-white text-sm py-2 disabled:opacity-60"
-          >
-            {uploading ? 'Submitting…' : 'Submit'}
-          </button>
-        </form>
-      </div>
+  <div className="fixed inset-0 z-50 bg-black/50 dark:bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div className="bg-white dark:bg-slate-900 w-full sm:max-w-md max-w-[95vw] sm:rounded-lg sm:shadow-lg sm:overflow-hidden rounded-t-xl border border-slate-200 dark:border-slate-800">
+    <div className="px-4 sm:px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <h3 className="text-sm font-semibold pr-2 truncate text-slate-900 dark:text-slate-100">
+        Submit Assignment — {assignment.assignmentTitle}
+      </h3>
+      <button
+        className="text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 text-lg leading-none disabled:opacity-50"
+        onClick={onClose}
+        disabled={uploading}
+        title={uploading ? 'Uploading…' : 'Close'}
+      >
+        &times;
+      </button>
     </div>
+
+    <form onSubmit={handleSubmit} className="px-4 sm:px-5 py-4 space-y-4 max-h-[85vh] overflow-auto">
+      {/* Label */}
+      <label className="block text-sm font-medium text-slate-900 dark:text-slate-100">Upload Attachment</label>
+
+      {/* Pretty upload box */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        className={`rounded-lg p-6 sm:p-8 text-center transition-all border bg-white dark:bg-slate-900 ${
+          dragOver
+            ? 'border-indigo-400 ring-2 ring-indigo-200 dark:border-indigo-600 dark:ring-indigo-900/50'
+            : 'border-slate-300 dark:border-slate-700'
+        }`}
+      >
+        <UploadCloud size={28} className="mx-auto text-slate-400 dark:text-slate-500 mb-2" />
+        {!file ? (
+          <>
+            <p className="text-sm text-slate-600 dark:text-slate-400">Choose a file to upload</p>
+            <label className="mt-1 inline-block text-sm text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+              <input
+                type="file"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                disabled={uploading}
+              />
+              Choose File
+            </label>
+          </>
+        ) : (
+          <div className="space-y-1">
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              Selected: <span className="font-medium break-all">{file.name}</span>
+            </p>
+            <div className="flex items-center justify-center gap-3 text-sm">
+              <label className="text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  disabled={uploading}
+                />
+                Change File
+              </label>
+              <button
+                type="button"
+                onClick={() => setFile(null)}
+                className="text-slate-500 dark:text-slate-400 hover:underline"
+                disabled={uploading}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Progress bar */}
+      {uploading && (
+        <div>
+          <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
+            <span>Uploading…</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="w-full bg-slate-200 dark:bg-slate-800 rounded h-2 overflow-hidden">
+            <div
+              className="h-2 bg-indigo-600 dark:bg-indigo-500 transition-[width] duration-150"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {error && <p className="text-sm text-red-700 dark:text-red-400">{error}</p>}
+
+      <button
+        type="submit"
+        disabled={uploading || !file}
+        className="w-full rounded-md text-sm py-2 disabled:opacity-60
+                   bg-slate-900 text-white hover:opacity-90
+                   dark:bg-slate-100 dark:text-slate-900 dark:hover:opacity-90"
+      >
+        {uploading ? 'Submitting…' : 'Submit'}
+      </button>
+    </form>
+  </div>
+</div>
+
   );
 }
 
@@ -424,41 +442,57 @@ function FileModal({
   const canIframe = isPdfExt(ext);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full max-w-[95vw] sm:max-w-3xl sm:rounded-lg sm:shadow-lg overflow-hidden rounded-t-xl">
-        <div className="px-4 sm:px-5 py-4 border-b flex items-center justify-between">
-          <h3 className="text-sm font-semibold pr-2 truncate">File — {title}</h3>
-          <button
-            className="text-gray-500 hover:text-red-500 text-lg leading-none"
-            onClick={onClose}
-          >
-            &times;
-          </button>
-        </div>
+  <div className="fixed inset-0 z-50 bg-black/50 dark:bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div className="bg-white dark:bg-slate-900 w-full max-w-[95vw] sm:max-w-3xl sm:rounded-lg sm:shadow-lg overflow-hidden rounded-t-xl border border-slate-200 dark:border-slate-800">
+    <div className="px-4 sm:px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <h3 className="text-sm font-semibold pr-2 truncate text-slate-900 dark:text-slate-100">
+        File — {title}
+      </h3>
+      <button
+        className="text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 text-lg leading-none"
+        onClick={onClose}
+      >
+        &times;
+      </button>
+    </div>
 
-        <div className="p-4 max-h-[85vh] overflow-auto">
-          {isImageExt(ext) ? (
-            <img src={url} alt={title} className="w-full max-h-[70vh] object-contain rounded border" />
-          ) : canIframe ? (
-            <iframe title="File" src={url} className="w-full h-[70vh] border rounded" />
-          ) : (
-            <p className="text-sm text-gray-700">
-              Preview not available for .{ext}.{' '}
-              <a href={url} target="_blank" rel="noreferrer" className="underline text-indigo-600">
-                Open in new tab
-              </a>
-              .
-            </p>
-          )}
+    <div className="p-4 max-h-[85vh] overflow-auto">
+      {isImageExt(ext) ? (
+        <img
+          src={url}
+          alt={title}
+          className="w-full max-h-[70vh] object-contain rounded ring-1 ring-slate-200 dark:ring-slate-800"
+        />
+      ) : canIframe ? (
+        <iframe
+          title="File"
+          src={url}
+          className="w-full h-[70vh] rounded ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-slate-900"
+        />
+      ) : (
+        <p className="text-sm text-slate-700 dark:text-slate-300">
+          Preview not available for .{ext}.{' '}
+          <a href={url} target="_blank" rel="noreferrer" className="underline text-indigo-600 dark:text-indigo-400">
+            Open in new tab
+          </a>
+          .
+        </p>
+      )}
 
-          <div className="mt-3 text-right">
-            <a href={url} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 underline">
-              Open in new tab
-            </a>
-          </div>
-        </div>
+      <div className="mt-3 text-right">
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm underline text-indigo-600 dark:text-indigo-400"
+        >
+          Open in new tab
+        </a>
       </div>
     </div>
+  </div>
+</div>
+
   );
 }
 
@@ -562,161 +596,183 @@ export default function AssignmentsPage() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <main className="bg-[#F9FAFB] min-h-screen text-gray-800">
-      <div className="px-3 sm:px-6 py-6 max-w-7xl mx-auto">
-        <PageHeader title="Assignments" description="All current assignments" />
+<main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+  <div className="px-3 sm:px-6 py-6 max-w-7xl mx-auto">
+    <PageHeader title="Assignments" description="All current assignments" />
 
-        {/* Filters Bar */}
-        <div className="bg-white border rounded-md p-3 sm:p-4 mb-4">
-          <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:flex-wrap md:items-center">
-            {/* Course */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
-              <div className="inline-flex items-center gap-2">
-                <Filter size={16} className="text-gray-500 shrink-0" />
-                <span className="text-sm text-gray-600">Course</span>
-              </div>
-              <select
-                value={courseId}
-                onChange={(e) => {
-                  setCourseId(e.target.value);
-                  setPage(1);
-                }}
-                className="border rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-60 md:w-56"
-              >
-                <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Status (filters assignmentSubmissionStatus) */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
-              <span className="text-sm text-gray-600">Status</span>
-              <select
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value);
-                  setPage(1);
-                }}
-                className="border rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-48"
-              >
-                <option value="">All</option>
-                <option value="Active">Active</option>
-                <option value="Submitted">Submitted</option>
-                <option value="Checked">Checked</option>
-                <option value="Pending">Pending</option>
-                <option value="Time Exceeded">Time Exceeded</option>
-              </select>
-            </div>
-
-            {/* Per Page */}
-       
-
-            {/* Search */}
-            <div className="relative w-full md:ml-auto md:w-72">
-              <Search
-                size={16}
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                placeholder="Search assignment…"
-                className="border rounded pl-8 pr-3 py-2 sm:py-1.5 text-sm w-full"
-              />
-            </div>
+    {/* Filters Bar */}
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3 sm:p-4 mb-4">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:flex-wrap md:items-center">
+        {/* Course */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
+          <div className="inline-flex items-center gap-2">
+            <Filter size={16} className="text-slate-500 dark:text-slate-400 shrink-0" />
+            <span className="text-sm text-slate-600 dark:text-slate-400">Course</span>
           </div>
+          <select
+            value={courseId}
+            onChange={(e) => {
+              setCourseId(e.target.value);
+              setPage(1);
+            }}
+            className="w-full sm:w-60 md:w-56 border rounded px-2 py-2 sm:py-1.5 text-sm
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border-slate-300 dark:border-slate-700
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+          >
+            <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Grid */}
-        {loading && <p className="text-sm text-gray-500 mb-2">Loading assignments…</p>}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {rows.map((item) => (
-            <AssignmentCard
-              key={item.id}
-              item={item}
-              onSubmitClick={(assn) => setSelected(assn)}
-              onViewAssignmentFile={(assn) => {
-                if (assn.assignmentFile) {
-                  setFileView({ url: assn.assignmentFile, title: assn.assignmentTitle });
-                }
-              }}
-              onViewSubmissionFile={(assn) => {
-                if (assn.submissionFile) {
-                  setFileView({
-                    url: assn.submissionFile,
-                    title: `${assn.assignmentTitle} — My Submission`,
-                  });
-                }
-              }}
-            />
+        {/* Status */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
+          <span className="text-sm text-slate-600 dark:text-slate-400">Status</span>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
+            className="w-full sm:w-48 border rounded px-2 py-2 sm:py-1.5 text-sm
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border-slate-300 dark:border-slate-700
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+          >
+            <option value="">All</option>
+            <option value="Active">Active</option>
+            <option value="Submitted">Submitted</option>
+            <option value="Checked">Checked</option>
+            <option value="Pending">Pending</option>
+            <option value="Time Exceeded">Time Exceeded</option>
+          </select>
+        </div>
+
+        {/* Search */}
+        <div className="relative w-full md:ml-auto md:w-72">
+          <Search
+            size={16}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+          />
+          <input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search assignment…"
+            className="w-full border rounded pl-8 pr-3 py-2 sm:py-1.5 text-sm
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border-slate-300 dark:border-slate-700
+                       placeholder:text-slate-400 dark:placeholder:text-slate-500
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Grid */}
+    {loading && <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Loading assignments…</p>}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {rows.map((item) => (
+        <AssignmentCard
+          key={item.id}
+          item={item}
+          onSubmitClick={(assn) => setSelected(assn)}
+          onViewAssignmentFile={(assn) => {
+            if (assn.assignmentFile) {
+              setFileView({ url: assn.assignmentFile, title: assn.assignmentTitle });
+            }
+          }}
+          onViewSubmissionFile={(assn) => {
+            if (assn.submissionFile) {
+              setFileView({
+                url: assn.submissionFile,
+                title: `${assn.assignmentTitle} — My Submission`,
+              });
+            }
+          }}
+        />
+      ))}
+    </div>
+
+    {/* Empty */}
+    {!loading && rows.length === 0 && (
+      <div className="text-center text-sm text-slate-500 dark:text-slate-400 py-10">No assignments found.</div>
+    )}
+
+    {/* Pagination */}
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-400">
+      <span className="block">
+        Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)} of {total}
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          disabled={page === 1}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          className="px-3 py-1.5 border rounded disabled:opacity-50
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     border-slate-300 dark:border-slate-700
+                     hover:bg-slate-50 dark:hover:bg-slate-800"
+        >
+          Previous
+        </button>
+
+        {/* Page numbers hidden on very small screens */}
+        <div className="hidden sm:flex items-center gap-2">
+          {Array.from({ length: Math.max(1, Math.ceil(total / limit)) }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i + 1)}
+              className={`px-3 py-1.5 border rounded
+                          bg-white dark:bg-slate-900
+                          text-slate-900 dark:text-slate-100
+                          border-slate-300 dark:border-slate-700
+                          hover:bg-slate-50 dark:hover:bg-slate-800
+                          ${page === i + 1 ? 'bg-slate-200 dark:bg-slate-700 font-semibold' : ''}`}
+            >
+              {i + 1}
+            </button>
           ))}
         </div>
 
-        {/* Empty */}
-        {!loading && rows.length === 0 && (
-          <div className="text-center text-sm text-gray-500 py-10">No assignments found.</div>
-        )}
-
-        {/* Pagination */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
-          <span className="block">
-            Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)} of {total}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-3 py-1.5 border rounded disabled:opacity-50"
-            >
-              Previous
-            </button>
-
-            {/* Page numbers hidden on very small screens */}
-            <div className="hidden sm:flex items-center gap-2">
-              {Array.from({ length: Math.max(1, Math.ceil(total / limit)) }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`px-3 py-1.5 border rounded ${
-                    page === i + 1 ? 'bg-gray-200 font-semibold' : ''
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-
-            <button
-              disabled={page >= Math.max(1, Math.ceil(total / limit))}
-              onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-1.5 border rounded disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-
-        {/* Submit Modal */}
-        {selected && (
-          <SubmitModal
-            assignment={selected}
-            onClose={() => setSelected(null)}
-            onSubmitted={() => fetchAssignments()}
-          />
-        )}
-
-        {/* File View Modal */}
-        {fileView && (
-          <FileModal url={fileView.url} title={fileView.title} onClose={() => setFileView(null)} />
-        )}
+        <button
+          disabled={page >= Math.max(1, Math.ceil(total / limit))}
+          onClick={() => setPage((p) => p + 1)}
+          className="px-3 py-1.5 border rounded disabled:opacity-50
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     border-slate-300 dark:border-slate-700
+                     hover:bg-slate-50 dark:hover:bg-slate-800"
+        >
+          Next
+        </button>
       </div>
-    </main>
+    </div>
+
+    {/* Submit Modal */}
+    {selected && (
+      <SubmitModal
+        assignment={selected}
+        onClose={() => setSelected(null)}
+        onSubmitted={() => fetchAssignments()}
+      />
+    )}
+
+    {/* File View Modal */}
+    {fileView && (
+      <FileModal url={fileView.url} title={fileView.title} onClose={() => setFileView(null)} />
+    )}
+  </div>
+</main>
+
   );
 }

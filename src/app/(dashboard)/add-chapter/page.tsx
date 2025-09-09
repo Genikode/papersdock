@@ -197,76 +197,93 @@ export default function AddChapter() {
 
   /* --------------------------- UI --------------------------- */
   return (
-    <main className="bg-[#F9FAFB] min-h-screen px-6 py-6">
-           <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
-        >
-          <ArrowLeft size={16} /> Back
-        </button>
-      <h1 className="text-2xl font-bold text-gray-900">Add Chapter</h1>
-      <p className="text-sm text-gray-600 mb-6">Create and upload chapter</p>
+<main className="min-h-screen px-6 py-6 bg-slate-50 dark:bg-slate-950">
+  <button
+    onClick={() => router.back()}
+    className="inline-flex items-center gap-2 text-sm mb-4 text-slate-700 hover:underline dark:text-slate-300"
+  >
+    <ArrowLeft size={16} /> Back
+  </button>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow px-6 py-6 max-w-3xl w-full">
-        <h2 className="text-lg font-semibold mb-4">Chapter Details</h2>
+  <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Add Chapter</h1>
+  <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">Create and upload chapter</p>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter chapter title"
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-          />
-        </div>
+  <form
+    onSubmit={handleSubmit}
+    className="bg-white dark:bg-slate-900 rounded-lg shadow px-6 py-6 max-w-3xl w-full border border-slate-200 dark:border-slate-800"
+  >
+    <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-slate-100">Chapter Details</h2>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Course</label>
-          <select
-            value={courseId}
-            onChange={(e) => setCourseId(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-          >
-            <option value="">{loadingCourses ? 'Loading courses…' : 'Select Course'}</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </div>
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">Title</label>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Enter chapter title"
+        className="w-full rounded px-3 py-2 text-sm
+                   border border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   placeholder:text-slate-400 dark:placeholder:text-slate-500
+                   focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+      />
+    </div>
 
-       
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">Course</label>
+      <select
+        value={courseId}
+        onChange={(e) => setCourseId(e.target.value)}
+        className="w-full rounded px-3 py-2 text-sm
+                   border border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+      >
+        <option value="">{loadingCourses ? 'Loading courses…' : 'Select Course'}</option>
+        {courses.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.title}
+          </option>
+        ))}
+      </select>
+    </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Upload Attachment</label>
-          <div className="border border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center">
-            <UploadCloud size={24} className="text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600 mb-2">Choose a file to upload</p>
-            <label className="cursor-pointer text-sm font-medium text-indigo-600">
-              <input type="file" onChange={onFileChange} className="hidden" />
-              {file ? 'Change File' : 'Choose File'}
-            </label>
-            {file && (
-              <p className="mt-2 text-xs text-gray-500">
-                Selected: <span className="font-medium">{file.name}</span>
-              </p>
-            )}
-          </div>
-        </div>
+    <div className="mb-6">
+      <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">Upload Attachment</label>
+      <div className="border rounded-md p-6 flex flex-col items-center justify-center text-center
+                      border-slate-300 dark:border-slate-700
+                      bg-white dark:bg-slate-900">
+        <UploadCloud size={24} className="mb-2 text-slate-400 dark:text-slate-500" />
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Choose a file to upload</p>
+        <label className="cursor-pointer text-sm font-medium text-indigo-600 dark:text-indigo-400">
+          <input type="file" onChange={onFileChange} className="hidden" />
+          {file ? 'Change File' : 'Choose File'}
+        </label>
+        {file && (
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            Selected: <span className="font-medium">{file.name}</span>
+          </p>
+        )}
+      </div>
+    </div>
 
-        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
+    {error && <p className="text-sm mb-3 text-red-700 dark:text-red-400">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium py-2 rounded-md flex justify-center items-center gap-2 disabled:opacity-60"
-        >
-          <Save size={16} />
-          {submitting ? 'Saving…' : 'Save Chapter'}
-        </button>
-      </form>
-    </main>
+    <button
+      type="submit"
+      disabled={submitting}
+      className="w-full text-sm font-medium py-2 rounded-md flex justify-center items-center gap-2
+                 text-white bg-gradient-to-r from-indigo-600 to-purple-600
+                 hover:from-indigo-700 hover:to-purple-700
+                 disabled:opacity-60"
+    >
+      <Save size={16} />
+      {submitting ? 'Saving…' : 'Save Chapter'}
+    </button>
+  </form>
+</main>
+
   );
 }

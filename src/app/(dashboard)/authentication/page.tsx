@@ -143,264 +143,260 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen relative bg-white text-black">
-      {/* Background art */}
-     
+   <div className="min-h-screen relative bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+  {/* Background art */}
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-12 md:py-20">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-white backdrop-blur flex items-center justify-center">
-              <Image src="/logo.webp" alt="logo" width={28} height={28} />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold">PapersDock</h1>
-              {/* <p className="text-xs text-black/60">A-Level Computer Science LMS</p> */}
-            </div>
-          </div>
+  <div className="relative z-10 max-w-6xl mx-auto px-4 py-12 md:py-20">
+    {/* Header */}
+    <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-white dark:bg-slate-900 backdrop-blur ring-1 ring-slate-200 dark:ring-slate-800 flex items-center justify-center">
+          <Image src="/logo.webp" alt="logo" width={28} height={28} />
         </div>
-
-        {/* Shell */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-          {/* Left card */}
-          <div className="rounded-2xl bg-white backdrop-blur-md border border-black/10 shadow-2xl p-6 md:p-8">
-            {/* Mobile tabs */}
-        
-
-            {tab === 'login' ? (
-              <form onSubmit={handleLogin} className="space-y-4">
-                <h2 className="text-2xl font-bold">Welcome back</h2>
-                <p className="text-sm text-black/70 mb-4">
-                  Sign in to manage your LMS dashboard.
-                </p>
-
-                <Field
-                  label="Email"
-                  icon={<Mail size={16} />}
-                  input={
-                    <input
-                      type="email"
-                      className="bg-transparent outline-none w-full"
-                      placeholder="you@example.com"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      required
-                    />
-                  }
-                />
-                <Field
-                  label="Password"
-                  icon={<Lock size={16} />}
-                  input={
-                    <input
-                      type={showPw ? 'text' : 'password'}
-                      className="bg-transparent outline-none w-full"
-                      placeholder="********"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      required
-                    />
-                  }
-                  trailing={
-                    <button
-                      type="button"
-                      onClick={() => setShowPw(s => !s)}
-                      className="text-black/70 hover:text-black"
-                      aria-label={showPw ? 'Hide password' : 'Show password'}
-                    >
-                      {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  }
-                />
-
-                <button
-                  type="submit"
-                  className="w-full py-2.5 rounded-lg bg-black text-white font-semibold hover:opacity-90"
-                >
-                  Continue
-                </button>
-
-                <p className="text-xs text-black/60 text-center">
-                  Need an account? Use the <span className="text-black font-medium">Create user</span> tab.
-                </p>
-              </form>
-            ) : (
-              <form onSubmit={handleRegister} className="space-y-4">
-                <h2 className="text-2xl font-bold">Create user</h2>
-                <p className="text-sm text-black/70 mb-4">
-                  Add an account and assign role/courses.
-                </p>
-
-                {errorMsg && (
-                  <p className="text-sm bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg">
-                    {errorMsg}
-                  </p>
-                )}
-                {successMsg && (
-                  <p className="text-sm bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 rounded-lg flex items-center gap-2">
-                    <CheckCircle2 size={16} /> {successMsg}
-                  </p>
-                )}
-
-                <Field
-                  label="Full name"
-                  icon={<User2 size={16} />}
-                  input={
-                    <input
-                      className="bg-transparent outline-none w-full"
-                      placeholder="Student: Jane Doe"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  }
-                />
-
-                <Field
-                  label="Email"
-                  icon={<Mail size={16} />}
-                  input={
-                    <input
-                      type="email"
-                      className="bg-transparent outline-none w-full"
-                      placeholder="student@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  }
-                />
-
-                <Field
-                  label="Password"
-                  icon={<Lock size={16} />}
-                  input={
-                    <input
-                      type="password"
-                      className="bg-transparent outline-none w-full"
-                      placeholder="At least 8 characters"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  }
-                />
-
-                <Field
-                  label="Contact"
-                  icon={<Phone size={16} />}
-                  input={
-                    <input
-                      className="bg-transparent outline-none w-full"
-                      placeholder="090078601"
-                      value={contact}
-                      onChange={(e) => setContact(e.target.value)}
-                    />
-                  }
-                />
-
-                {/* Role */}
-                <div>
-                  <Label>Role</Label>
-                  <div className="rounded-xl bg-black/5 border border-black/10 px-3 py-2">
-                    <select
-                      className="bg-transparent w-full outline-none"
-                      value={roleId}
-                      onChange={(e) => {
-                        setRoleId(e.target.value);
-                        setSelectedCourseIds([]); // reset courses when role changes
-                      }}
-                      required
-                    >
-                      <option value="" className="bg-white">
-                        {loadingRoles ? 'Loading…' : 'Select a role'}
-                      </option>
-                      {roles.map(r => (
-                        <option key={r.id} value={r.id} className="bg-white">
-                          {r.roleName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {selectedRole?.description && (
-                    <p className="text-xs text-black/60 mt-1">{selectedRole.description}</p>
-                  )}
-                </div>
-
-                {/* Courses (only for students) */}
-                {isStudent && (
-                  <div className="mt-4">
-
-                  <div>
-                    <Label>Assign Courses (required)</Label>
-                    <div className="rounded-xl bg-black/5 border border-black/10 p-3 max-h-48 overflow-auto space-y-2">
-                      {loadingCourses && <p className="text-sm text-black/70">Loading courses…</p>}
-                      {!loadingCourses && courses.length === 0 && (
-                        <p className="text-sm text-black/60">No courses available.</p>
-                      )}
-                      {courses.map(c => {
-                        const checked = selectedCourseIds.includes(c.id);
-                        return (
-                          <label
-                            key={c.id}
-                            className="flex items-center justify-between gap-3 bg-black/5 rounded-lg px-3 py-2 cursor-pointer hover:bg-black/10"
-                          >
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                className="accent-black"
-                                checked={checked}
-                                onChange={() => toggleCourse(c.id)}
-                              />
-                              <span className="text-sm">{c.title}</span>
-                            </div>
-                            {c.fees && <span className="text-xs text-black/60">PKR{c.fees}</span>}
-                          </label>
-                        );
-                      })}
-                    </div>
-                    <p className="text-xs text-black/60 mt-1">
-                      Tip: You can assign multiple courses.
-                    </p>
-                  </div>
-                  <div className="mt-2">
-                    <Field
-                      label="Parents/Guardian Contact"
-                      icon={<Phone size={16} />}
-                      input={
-                        <input
-                          className="bg-transparent outline-none w-full"
-                          placeholder="090078601"
-                          value={parentsContact}
-                          onChange={(e) => setParentsContact(e.target.value)}
-                        />
-                      }
-                    />
-                  </div>
-                    
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-2.5 rounded-lg bg-black text-white font-semibold hover:opacity-90 disabled:opacity-60"
-                >
-                  {submitting ? 'Creating…' : 'Create user'}
-                </button>
-              </form>
-            )}
-          </div>
-
-          {/* Right side highlight (optional content area) */}
-          {/* Add any marketing/feature highlights here if needed */}
+        <div>
+          <h1 className="text-xl font-semibold">PapersDock</h1>
+          {/* <p className="text-xs text-black/60">A-Level Computer Science LMS</p> */}
         </div>
       </div>
     </div>
+
+    {/* Shell */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+      {/* Left card */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-2xl p-6 md:p-8">
+        {/* Mobile tabs */}
+
+        {tab === 'login' ? (
+          <form onSubmit={handleLogin} className="space-y-4">
+            <h2 className="text-2xl font-bold">Welcome back</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              Sign in to manage your LMS dashboard.
+            </p>
+
+            <Field
+              label="Email"
+              icon={<Mail size={16} />}
+              input={
+                <input
+                  type="email"
+                  className="bg-transparent outline-none w-full text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder="you@example.com"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  required
+                />
+              }
+            />
+            <Field
+              label="Password"
+              icon={<Lock size={16} />}
+              input={
+                <input
+                  type={showPw ? 'text' : 'password'}
+                  className="bg-transparent outline-none w-full text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder="********"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  required
+                />
+              }
+              trailing={
+                <button
+                  type="button"
+                  onClick={() => setShowPw((s) => !s)}
+                  className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                >
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              }
+            />
+
+            <button
+              type="submit"
+              className="w-full py-2.5 rounded-lg bg-slate-900 text-white font-semibold hover:opacity-90
+                         dark:bg-slate-100 dark:text-slate-900"
+            >
+              Continue
+            </button>
+
+            <p className="text-xs text-slate-600 dark:text-slate-400 text-center">
+              Need an account? Use the <span className="text-slate-900 dark:text-slate-100 font-medium">Create user</span> tab.
+            </p>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} className="space-y-4">
+            <h2 className="text-2xl font-bold">Create user</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              Add an account and assign role/courses.
+            </p>
+
+            {errorMsg && (
+              <p className="text-sm bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 px-3 py-2 rounded-lg">
+                {errorMsg}
+              </p>
+            )}
+            {successMsg && (
+              <p className="text-sm bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-400 px-3 py-2 rounded-lg flex items-center gap-2">
+                <CheckCircle2 size={16} /> {successMsg}
+              </p>
+            )}
+
+            <Field
+              label="Full name"
+              icon={<User2 size={16} />}
+              input={
+                <input
+                  className="bg-transparent outline-none w-full text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder="Student: Jane Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              }
+            />
+
+            <Field
+              label="Email"
+              icon={<Mail size={16} />}
+              input={
+                <input
+                  type="email"
+                  className="bg-transparent outline-none w-full text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder="student@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              }
+            />
+
+            <Field
+              label="Password"
+              icon={<Lock size={16} />}
+              input={
+                <input
+                  type="password"
+                  className="bg-transparent outline-none w-full text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder="At least 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              }
+            />
+
+            <Field
+              label="Contact"
+              icon={<Phone size={16} />}
+              input={
+                <input
+                  className="bg-transparent outline-none w-full text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  placeholder="090078601"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                />
+              }
+            />
+
+            {/* Role */}
+            <div>
+              <Label >Role</Label>
+              <div className="rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-3 py-2">
+                <select
+                  className="bg-transparent w-full outline-none text-slate-900 dark:text-slate-100"
+                  value={roleId}
+                  onChange={(e) => {
+                    setRoleId(e.target.value);
+                    setSelectedCourseIds([]); // reset courses when role changes
+                  }}
+                  required
+                >
+                  <option value="" className="bg-white dark:bg-slate-900">
+                    {loadingRoles ? 'Loading…' : 'Select a role'}
+                  </option>
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id} className="bg-white dark:bg-slate-900">
+                      {r.roleName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedRole?.description && (
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{selectedRole.description}</p>
+              )}
+            </div>
+
+            {/* Courses (only for students) */}
+            {isStudent && (
+              <div className="mt-4">
+                <div>
+                  <Label >Assign Courses (required)</Label>
+                  <div className="rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-3 max-h-48 overflow-auto space-y-2">
+                    {loadingCourses && <p className="text-sm text-slate-600 dark:text-slate-400">Loading courses…</p>}
+                    {!loadingCourses && courses.length === 0 && (
+                      <p className="text-sm text-slate-600 dark:text-slate-400">No courses available.</p>
+                    )}
+                    {courses.map((c) => {
+                      const checked = selectedCourseIds.includes(c.id);
+                      return (
+                        <label
+                          key={c.id}
+                          className="flex items-center justify-between gap-3 bg-slate-100 dark:bg-slate-800/50 rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800"
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              className="accent-slate-900 dark:accent-slate-100"
+                              checked={checked}
+                              onChange={() => toggleCourse(c.id)}
+                            />
+                            <span className="text-sm">{c.title}</span>
+                          </div>
+                          {c.fees && <span className="text-xs text-slate-600 dark:text-slate-400">PKR{c.fees}</span>}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Tip: You can assign multiple courses.</p>
+                </div>
+                <div className="mt-2">
+                  <Field
+                    label="Parents/Guardian Contact"
+                    icon={<Phone size={16} />}
+                    input={
+                      <input
+                        className="bg-transparent outline-none w-full text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                        placeholder="090078601"
+                        value={parentsContact}
+                        onChange={(e) => setParentsContact(e.target.value)}
+                      />
+                    }
+                  />
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full py-2.5 rounded-lg bg-slate-900 text-white font-semibold hover:opacity-90 disabled:opacity-60
+                         dark:bg-slate-100 dark:text-slate-900"
+            >
+              {submitting ? 'Creating…' : 'Create user'}
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* Right side highlight (optional content area) */}
+      {/* Add any marketing/feature highlights here if needed */}
+    </div>
+  </div>
+</div>
+
   );
 }
-
 /* ---------- tiny UI bits ---------- */
 function Field({
   label,
@@ -416,8 +412,12 @@ function Field({
   return (
     <div>
       <Label>{label}</Label>
-      <div className="flex items-center gap-3 rounded-xl bg-black/5 border border-black/10 px-3 py-2">
-        {icon && <span className="shrink-0 text-black/70">{icon}</span>}
+      <div
+        className="flex items-center gap-3 rounded-xl px-3 py-2
+                   bg-slate-100 dark:bg-slate-800/50
+                   border border-slate-200 dark:border-slate-700"
+      >
+        {icon && <span className="shrink-0 text-slate-600 dark:text-slate-400">{icon}</span>}
         <div className="flex-1">{input}</div>
         {trailing}
       </div>
@@ -426,14 +426,22 @@ function Field({
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <label className="block text-xs mb-1 text-black/70">{children}</label>;
+  return (
+    <label className="block text-xs mb-1 text-slate-700 dark:text-slate-300">
+      {children}
+    </label>
+  );
 }
 
 function Badge({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="rounded-lg bg-black/5 border border-black/10 p-3">
-      <p className="font-medium">{title}</p>
-      <p className="text-black/60 text-xs mt-1">{desc}</p>
+    <div
+      className="rounded-lg p-3
+                 bg-slate-100 dark:bg-slate-800/50
+                 border border-slate-200 dark:border-slate-700"
+    >
+      <p className="font-medium text-slate-900 dark:text-slate-100">{title}</p>
+      <p className="text-xs mt-1 text-slate-600 dark:text-slate-400">{desc}</p>
     </div>
   );
 }

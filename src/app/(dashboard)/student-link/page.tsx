@@ -178,190 +178,196 @@ export default function StudentZoomLinksPage() {
   }
 
   return (
-    <main className="bg-[#F9FAFB] min-h-screen text-gray-800">
-      <div className="px-3 sm:px-6 py-6 max-w-7xl mx-auto">
-        <PageHeader
-          title="Live Class Links"
-          description="Join your live sessions quickly. Filter by course, search, and tap to join."
-        />
+    <main className="min-h-screen bg-gray-50 dark:bg-slate-950 text-gray-800 dark:text-slate-100">
+  <div className="px-3 sm:px-6 py-6 max-w-7xl mx-auto">
+    <PageHeader
+      title="Live Class Links"
+      description="Join your live sessions quickly. Filter by course, search, and tap to join."
+    />
 
-        {/* Filters Bar */}
-        <div className="bg-white border rounded-md p-3 sm:p-4 mb-4">
-          <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
-            {/* Only Zoom toggle */}
-           
-
-            {/* Course filter */}
-            <div className="flex items-center gap-2">
-              <Filter size={16} className="text-gray-500" />
-              <span className="text-sm text-gray-600">Course</span>
-               <select
-                value={courseId}
-                onChange={(e) => {
-                  setCourseId(e.target.value);
-               
-                }}
-                className="border rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-60 md:w-56"
-              >
-                <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Per page */}
-           
-
-            {/* Search box (push to end on md+) */}
-            <div className="relative w-full md:ml-auto md:w-72">
-              <Search
-                size={16}
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search links…"
-                className="border rounded pl-8 pr-3 py-2 sm:py-1.5 text-sm w-full"
-              />
-            </div>
-          </div>
+    {/* Filters Bar */}
+    <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-md p-3 sm:p-4 mb-4">
+      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
+        {/* Course filter */}
+        <div className="flex items-center gap-2">
+          <Filter size={16} className="text-gray-500 dark:text-slate-400" />
+          <span className="text-sm text-gray-600 dark:text-slate-400">Course</span>
+          <select
+            value={courseId}
+            onChange={(e) => {
+              setCourseId(e.target.value);
+            }}
+            className="border border-gray-300 dark:border-slate-700 rounded px-2 py-2 sm:py-1.5 text-sm w-full sm:w-60 md:w-56
+                       bg-white text-gray-800 dark:bg-slate-900 dark:text-slate-100
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+          >
+            <option value="">{loadingCourses ? 'Loading…' : 'All courses'}</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900">
+                {c.title}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Loading state */}
-        {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-md shadow border p-4 animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-2/3 mb-3" />
-                <div className="h-3 bg-gray-200 rounded w-1/2 mb-2" />
-                <div className="h-3 bg-gray-200 rounded w-1/3 mb-5" />
-                <div className="h-9 bg-gray-200 rounded w-full" />
-              </div>
-            ))}
+        {/* Search box (push to end on md+) */}
+        <div className="relative w-full md:ml-auto md:w-72">
+          <Search
+            size={16}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500"
+          />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search links…"
+            className="border border-gray-300 dark:border-slate-700 rounded pl-8 pr-3 py-2 sm:py-1.5 text-sm w-full
+                       bg-white text-gray-800 placeholder:text-gray-400
+                       dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Loading state */}
+    {loading && (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-white dark:bg-slate-900 rounded-md shadow border border-gray-200 dark:border-slate-800 p-4 animate-pulse"
+          >
+            <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-2/3 mb-3" />
+            <div className="h-3 bg-gray-200 dark:bg-slate-700 rounded w-1/2 mb-2" />
+            <div className="h-3 bg-gray-200 dark:bg-slate-700 rounded w-1/3 mb-5" />
+            <div className="h-9 bg-gray-200 dark:bg-slate-700 rounded w-full" />
           </div>
-        )}
+        ))}
+      </div>
+    )}
 
-        {/* Error */}
-        {!loading && error && (
-          <div className="mb-4 text-sm text-red-600">{error}</div>
-        )}
+    {/* Error */}
+    {!loading && error && (
+      <div className="mb-4 text-sm text-red-600 dark:text-rose-400">{error}</div>
+    )}
 
-        {/* Grid */}
-        {!loading && !error && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pageData.map((l) => {
-                const zoomLike = isZoomLike(l.title, l.url);
-                return (
-                  <div
-                    key={l.id}
-                    className="bg-white rounded-md shadow border p-4 flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <h3 className="text-base sm:text-sm font-semibold text-gray-900 truncate">
-                            {l.title || 'Link'}
-                          </h3>
-                          <p className="text-xs text-gray-600 line-clamp-2">
-                            {l.description || '—'}
-                          </p>
-                        </div>
-                        <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                          {l.courseName || '—'}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-2">
-                        {zoomLike ? (
-                          <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">
-                            <Video size={14} /> Live
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-700 px-2 py-0.5 rounded-full">
-                            <LinkIcon size={14} /> Link
-                          </span>
-                        )}
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar size={14} /> {fmtDate(l.createdAt)}
-                        </span>
-                      </div>
+    {/* Grid */}
+    {!loading && !error && (
+      <>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {pageData.map((l) => {
+            const zoomLike = isZoomLike(l.title, l.url);
+            return (
+              <div
+                key={l.id}
+                className="bg-white dark:bg-slate-900 rounded-md shadow border border-gray-200 dark:border-slate-800 p-4 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-base sm:text-sm font-semibold text-gray-900 dark:text-slate-100 truncate">
+                        {l.title || 'Link'}
+                      </h3>
+                      <p className="text-xs text-gray-600 dark:text-slate-400 line-clamp-2">
+                        {l.description || '—'}
+                      </p>
                     </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <a
-                        href={l.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-2 text-xs font-medium px-3 py-2 rounded border hover:bg-gray-50"
-                      >
-                        <ExternalLinkIcon size={14} />
-                        {zoomLike ? 'Join' : 'Open'}
-                      </a>
-                      <button
-                        onClick={() => copyLink(l.id, l.url)}
-                        className="inline-flex items-center justify-center gap-2 text-xs px-3 py-2 rounded border hover:bg-gray-50"
-                      >
-                        {copiedId === l.id ? <Check size={14} /> : <Copy size={14} />}
-                        {copiedId === l.id ? 'Copied' : 'Copy'}
-                      </button>
-                    </div>
+                    <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200">
+                      {l.courseName || '—'}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
 
-            {/* Empty */}
-            {pageData.length === 0 && (
-              <div className="text-center text-sm text-gray-500 py-10">
-                No links found. Try changing filters or search.
-              </div>
-            )}
-
-            {/* Pagination */}
-            {total > 0 && (
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
-                <span>
-                  Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)} of {total}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="px-3 py-1.5 border rounded disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <div className="hidden sm:flex items-center gap-2">
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setPage(i + 1)}
-                        className={`px-3 py-1.5 border rounded ${
-                          page === i + 1 ? 'bg-gray-200 font-semibold' : ''
-                        }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-slate-400 mt-2">
+                    {zoomLike ? (
+                      <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 px-2 py-0.5 rounded-full">
+                        <Video size={14} /> Live
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-700 dark:bg-slate-800 dark:text-slate-200 px-2 py-0.5 rounded-full">
+                        <LinkIcon size={14} /> Link
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar size={14} /> {fmtDate(l.createdAt)}
+                    </span>
                   </div>
-                  <button
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="px-3 py-1.5 border rounded disabled:opacity-50"
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 text-xs font-medium px-3 py-2 rounded border border-gray-300 hover:bg-gray-50
+                               dark:border-slate-700 dark:hover:bg-slate-800/60"
                   >
-                    Next
+                    <ExternalLinkIcon size={14} />
+                    {zoomLike ? 'Join' : 'Open'}
+                  </a>
+                  <button
+                    onClick={() => copyLink(l.id, l.url)}
+                    className="inline-flex items-center justify-center gap-2 text-xs px-3 py-2 rounded border border-gray-300 hover:bg-gray-50
+                               dark:border-slate-700 dark:hover:bg-slate-800/60"
+                  >
+                    {copiedId === l.id ? <Check size={14} /> : <Copy size={14} />}
+                    {copiedId === l.id ? 'Copied' : 'Copy'}
                   </button>
                 </div>
               </div>
-            )}
-          </>
+            );
+          })}
+        </div>
+
+        {/* Empty */}
+        {pageData.length === 0 && (
+          <div className="text-center text-sm text-gray-500 dark:text-slate-400 py-10">
+            No links found. Try changing filters or search.
+          </div>
         )}
-      </div>
-    </main>
+
+        {/* Pagination */}
+        {total > 0 && (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600 dark:text-slate-400">
+            <span>
+              Showing {(page - 1) * limit + 1} – {Math.min(page * limit, total)} of {total}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="px-3 py-1.5 border rounded disabled:opacity-50
+                           bg-white border-gray-300 dark:bg-slate-900 dark:border-slate-700"
+              >
+                Previous
+              </button>
+              <div className="hidden sm:flex items-center gap-2">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i + 1)}
+                    className={`px-3 py-1.5 border rounded
+                                bg-white border-gray-300 dark:bg-slate-900 dark:border-slate-700
+                                ${page === i + 1 ? 'bg-gray-200 dark:bg-slate-800 font-semibold' : ''}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="px-3 py-1.5 border rounded disabled:opacity-50
+                           bg-white border-gray-300 dark:bg-slate-900 dark:border-slate-700"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </>
+    )}
+  </div>
+</main>
+
   );
 }

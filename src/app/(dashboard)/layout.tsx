@@ -44,10 +44,15 @@ function NavLinks({
             href={item.href}
             onClick={onNavigate}
             className={`flex ${collapsed ? 'justify-center px-0' : 'justify-start px-4'} items-center py-3 gap-3 text-sm transition-colors duration-200 w-full ${
-              isActive ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-100'
+              isActive
+                ? 'bg-blue-50 text-blue-600 font-medium dark:bg-blue-950/40 dark:text-blue-400'
+                : 'text-gray-700 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800'
             }`}
           >
-            <Icon size={20} className={isActive ? 'text-blue-600' : 'text-gray-600'} />
+            <Icon
+              size={20}
+              className={isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-slate-400'}
+            />
             {!collapsed && <span>{item.label}</span>}
           </Link>
         );
@@ -77,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     ],
     []
   );
-  
+
   const studentNavItems = useMemo(
     () => [
       { label: 'Recorded Lectures', href: '/recorded-lectures', icon: Video },
@@ -125,18 +130,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className="antialiased bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <div className="flex h-screen overflow-hidden">
           {/* ========== Desktop Sidebar (md+) ========== */}
           <aside
-            className={`hidden md:block bg-white border-[1.5px] border-[whitesmoke] shadow-sm transition-all duration-300 ${
+            className={`hidden md:block bg-white dark:bg-slate-900 border-[1.5px] border-[whitesmoke] dark:border-slate-800 shadow-sm transition-all duration-300 ${
               collapsed ? 'w-16' : 'w-64'
             } overflow-y-auto`}
           >
-            <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke]">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke] dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="bg-blue-600 text-white font-bold p-2 rounded-md">PD</div>
-                {!collapsed && <span className="font-semibold text-gray-700">PapersDock</span>}
+                {!collapsed && <span className="font-semibold text-gray-700 dark:text-slate-200">PapersDock</span>}
               </div>
             </div>
 
@@ -147,7 +152,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className={`md:hidden`} aria-hidden={!mobileOpen}>
             {/* Overlay */}
             <div
-              className={`fixed inset-0 z-40 bg-black/40 transition-opacity ${
+              className={`fixed inset-0 z-40 bg-black/40 dark:bg-black/60 transition-opacity ${
                 mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
               }`}
               onClick={() => setMobileOpen(false)}
@@ -155,20 +160,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {/* Panel */}
             <div
-              className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-[whitesmoke] shadow-lg transform transition-transform ${
+              className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-slate-900 border-r border-[whitesmoke] dark:border-slate-800 shadow-lg transform transition-transform ${
                 mobileOpen ? 'translate-x-0' : '-translate-x-full'
               }`}
               role="dialog"
               aria-modal="true"
             >
-              <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke]">
+              <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke] dark:border-slate-800">
                 <div className="flex items-center gap-2">
                   <div className="bg-blue-600 text-white font-bold p-2 rounded-md">PD</div>
-                  <span className="font-semibold text-gray-700">PapersDock</span>
+                  <span className="font-semibold text-gray-700 dark:text-slate-200">PapersDock</span>
                 </div>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="rounded p-2 text-gray-600 hover:bg-gray-100"
+                  className="rounded p-2 text-gray-600 hover:bg-gray-100 hover:text-black dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                   aria-label="Close navigation"
                 >
                   <X size={20} />
@@ -176,18 +181,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
 
               <div className="px-1">
-                <NavLinks
-                  items={navItems}
-                  pathname={pathname}
-                  onNavigate={() => setMobileOpen(false)}
-                />
+                <NavLinks items={navItems} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
               </div>
 
               {/* Mobile footer actions */}
-              <div className="mt-auto border-t border-[whitesmoke] p-4">
+              <div className="mt-auto border-t border-[whitesmoke] dark:border-slate-800 p-4">
                 <button
                   onClick={handleLogout}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded border px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded border px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-slate-800"
                 >
                   <LogOut size={18} /> Logout
                 </button>
@@ -198,12 +199,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* ========== Main Content ========== */}
           <div className="flex-1 flex flex-col">
             {/* Topbar */}
-            <header className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-[whitesmoke] bg-white shadow-sm">
+            <header className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-[whitesmoke] dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
               <div className="flex items-center gap-3 sm:gap-4">
                 {/* Mobile burger (only on mobile) */}
                 <button
                   onClick={() => setMobileOpen(true)}
-                  className="md:hidden rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100"
+                  className="md:hidden rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
                   aria-label="Open navigation"
                 >
                   <Menu size={22} />
@@ -212,34 +213,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {/* Desktop collapse toggle (hidden on mobile) */}
                 <button
                   onClick={() => setCollapsed((c) => !c)}
-                  className="hidden md:inline-flex rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100"
+                  className="hidden md:inline-flex rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
                   aria-label="Toggle sidebar"
                 >
                   <Menu size={22} />
                 </button>
 
-                <h1 className="font-semibold text-lg text-gray-800 hidden sm:block">Dashboard</h1>
+                <h1 className="font-semibold text-lg text-gray-800 dark:text-slate-100 hidden sm:block">Dashboard</h1>
               </div>
 
-              <div className="hidden md:flex items-center gap-4 text-sm text-gray-600">
+              <div className="hidden md:flex items-center gap-4 text-sm text-gray-600 dark:text-slate-400">
                 <span className="truncate max-w-[40ch]">
                   Welcome back, {currentUser?.name || 'User'}
                 </span>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-1 text-red-500 hover:underline"
-                >
+                <button onClick={handleLogout} className="flex items-center gap-1 text-red-500 dark:text-red-400 hover:underline">
                   <LogOut size={18} /> Logout
                 </button>
               </div>
 
               {/* Compact topbar actions for mobile */}
               <div className="md:hidden flex items-center gap-2">
-                <span className="text-sm text-gray-600">Hi, {currentUser?.name?.split(' ')[0] || 'User'}</span>
+                <span className="text-sm text-gray-600 dark:text-slate-400">
+                  Hi, {currentUser?.name?.split(' ')[0] || 'User'}
+                </span>
               </div>
             </header>
 
-            <main className="flex-1 p-4 sm:p-6 bg-gray-50 overflow-y-auto">{children}</main>
+            <main className="flex-1 p-4 sm:p-6 bg-gray-50 dark:bg-slate-950 overflow-y-auto">{children}</main>
           </div>
         </div>
       </body>

@@ -339,152 +339,148 @@ export default function UpdateLecturePage() {
 
   /* ===== UI ===== */
   return (
-    <main className="bg-[#F9FAFB] min-h-screen px-6 py-6">
-           <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
-        >
-          <ArrowLeft size={16} /> Back
-        </button>
-      <h1 className="text-2xl font-bold text-black">Update Lecture</h1>
-      <p className="text-sm text-gray-600 mb-6">Modify lecture details and assets</p>
+  <main className="min-h-screen px-6 py-6 bg-[#F9FAFB] text-gray-900 dark:bg-slate-950 dark:text-slate-100">
+  <button
+    onClick={() => router.back()}
+    className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline dark:text-slate-400 hover:dark:text-slate-100"
+  >
+    <ArrowLeft size={16} /> Back
+  </button>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow px-6 py-6 max-w-4xl w-full">
-        <h2 className="text-lg font-semibold mb-4 text-black">Lecture Details</h2>
+  <h1 className="text-2xl font-bold text-black dark:text-slate-100">Update Lecture</h1>
+  <p className="text-sm text-gray-600 mb-6 dark:text-slate-400">Modify lecture details and assets</p>
 
-        {loadingLecture && (
-          <p className="text-sm text-gray-500 mb-4">Loading lecture…</p>
+  <form
+    onSubmit={handleSubmit}
+    className="bg-white rounded-lg shadow px-6 py-6 max-w-4xl w-full border border-gray-200 dark:bg-slate-900 dark:border-slate-700"
+  >
+    <h2 className="text-lg font-semibold mb-4 text-black dark:text-slate-100">Lecture Details</h2>
+
+    {loadingLecture && <p className="text-sm text-gray-500 mb-4 dark:text-slate-400">Loading lecture…</p>}
+
+    {/* Title */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-1 text-black dark:text-slate-200">Lecture Title</label>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Enter lecture title"
+        className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-indigo-400/40"
+      />
+    </div>
+
+    {/* Course */}
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-1 text-black dark:text-slate-200">Course</label>
+      <select
+        value={courseId}
+        onChange={(e) => {
+          setCourseId(e.target.value);
+          setChapterId('');
+        }}
+        className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-indigo-400/40"
+      >
+        <option value="">{loadingCourses ? 'Loading courses…' : 'Select a course'}</option>
+        {courses.map((c) => (
+          <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900">
+            {c.title}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Chapter */}
+    <div className="mb-6">
+      <label className="block text-sm font-medium mb-1 text-black dark:text-slate-200">Chapter</label>
+      <select
+        value={chapterId}
+        onChange={(e) => setChapterId(e.target.value)}
+        className="w-full rounded px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:ring-indigo-400/40"
+      >
+        <option value="">{loadingChapters ? 'Loading chapters…' : 'Select chapter'}</option>
+        {filteredChapters.map((ch) => (
+          <option key={ch.id} value={ch.id} className="bg-white dark:bg-slate-900">
+            {ch.title}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+      {/* New Video */}
+      <div className="border border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center dark:border-slate-700">
+        <UploadCloud size={24} className="text-gray-400 mb-2 dark:text-slate-400" />
+        <p className="text-sm text-gray-600 mb-2 dark:text-slate-400">Re-upload video (optional)</p>
+        <label className="cursor-pointer text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+          <input type="file" accept="video/*" onChange={onVideoChange} className="hidden" />
+          {videoFile ? 'Change Video' : 'Choose Video'}
+        </label>
+        {videoFile && (
+          <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">
+            Selected: <span className="font-medium text-gray-800 dark:text-slate-100">{videoFile.name}</span>
+          </p>
         )}
+      </div>
 
-        {/* Title */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1 text-black">Lecture Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter lecture title"
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+      {/* New Slides (kept omitted as in your code) */}
+    </div>
+
+    {/* Current assets */}
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+      {/* Current Video */}
+      <div className="rounded-lg border p-4 dark:border-slate-700">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold text-sm text-black dark:text-slate-100">Current Video</h3>
+          {currentVideoUrl ? (
+            <a
+              href={currentVideoUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400"
+            >
+              <LinkIcon size={14} /> Open
+            </a>
+          ) : (
+            <span className="text-xs text-gray-400 dark:text-slate-500">None</span>
+          )}
+        </div>
+        {currentVideoUrl ? (
+          <video className="w-full rounded bg-black" controls src={currentVideoUrl} />
+        ) : (
+          <p className="text-xs text-gray-500 dark:text-slate-400">No video uploaded.</p>
+        )}
+      </div>
+
+      {/* Current Slides (omitted) */}
+    </div>
+
+    {/* Progress Bar — themed */}
+    {submitting && (
+      <div className="mb-4 border rounded p-3 border-gray-900 dark:border-slate-600">
+        <div className="flex items-center justify-between text-xs mb-1 text-black dark:text-slate-200">
+          <span>{progressLabel || 'Uploading…'}</span>
+          <span>{uploadProgress}%</span>
+        </div>
+        <div className="w-full h-2 bg-gray-200 rounded overflow-hidden dark:bg-slate-800">
+          <div
+            className="h-2 rounded bg-indigo-600 transition-all dark:bg-indigo-500"
+            style={{ width: `${uploadProgress}%` }}
           />
         </div>
+      </div>
+    )}
 
-        {/* Course */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1 text-black">Course</label>
-          <select
-            value={courseId}
-            onChange={(e) => {
-              setCourseId(e.target.value);
-              setChapterId('');
-            }}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-          >
-            <option value="">{loadingCourses ? 'Loading courses…' : 'Select a course'}</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </div>
+    <button
+      type="submit"
+      disabled={submitting}
+      className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium py-2 rounded-md flex justify-center items-center gap-2 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/60"
+    >
+      <Save size={16} />
+      {submitting ? 'Saving…' : 'Save Changes'}
+    </button>
+  </form>
+</main>
 
-        {/* Chapter */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1 text-black">Chapter</label>
-          <select
-            value={chapterId}
-            onChange={(e) => setChapterId(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-          >
-            <option value="">{loadingChapters ? 'Loading chapters…' : 'Select chapter'}</option>
-            {filteredChapters.map((ch) => (
-              <option key={ch.id} value={ch.id}>
-                {ch.title}
-              </option>
-            ))}
-          </select>
-        </div>
-   <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
-          {/* New Video */}
-          <div className="border border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center">
-            <UploadCloud size={24} className="text-gray-400 mb-2" />
-            <p className="text-sm text-gray-600 mb-2">
-              Re-upload video (optional)
-            </p>
-            <label className="cursor-pointer text-sm font-medium text-indigo-600">
-              <input type="file" accept="video/*" onChange={onVideoChange} className="hidden" />
-              {videoFile ? 'Change Video' : 'Choose Video'}
-            </label>
-            {videoFile && (
-              <p className="mt-2 text-xs text-gray-500">
-                Selected: <span className="font-medium">{videoFile.name}</span>
-              </p>
-            )}
-          </div>
-
-          {/* New Slides */}
-       
-        </div>
-        {/* Current assets */}
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
-          {/* Current Video */}
-          <div className="rounded-lg border p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-sm text-black">Current Video</h3>
-              {currentVideoUrl ? (
-                <a
-                  href={currentVideoUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-indigo-600"
-                >
-                  <LinkIcon size={14} /> Open
-                </a>
-              ) : (
-                <span className="text-xs text-gray-400">None</span>
-              )}
-            </div>
-            {currentVideoUrl ? (
-              <video className="w-full rounded" controls src={currentVideoUrl} />
-            ) : (
-              <p className="text-xs text-gray-500">No video uploaded.</p>
-            )}
-          </div>
-
-          {/* Current Slides */}
-       
-        </div>
-
-        {/* Re-upload boxes */}
-     
-
-        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
-
-        {/* Progress Bar — border and text in gray-900 */}
-        {submitting && (
-          <div className="mb-4 border border-gray-900 rounded p-3">
-            <div className="flex items-center justify-between text-xs text-black mb-1">
-              <span>{progressLabel || 'Uploading…'}</span>
-              <span>{uploadProgress}%</span>
-            </div>
-            <div className="w-full h-2 bg-gray-200 rounded">
-              <div
-                className="h-2 rounded bg-gray-900 transition-all"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium py-2 rounded-md flex justify-center items-center gap-2 disabled:opacity-60"
-        >
-          <Save size={16} />
-          {submitting ? 'Saving…' : 'Save Changes'}
-        </button>
-      </form>
-    </main>
   );
 }

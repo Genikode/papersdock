@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
+import Script from 'next/script';
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -29,6 +29,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
+ <Script id="theme-init" strategy="beforeInteractive">
+          {`
+            (function() {
+              try {
+                var pref = localStorage.getItem('theme') || 'system';
+                var dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (dark) document.documentElement.classList.add('dark');
+              } catch(e) {}
+            })();
+          `}
+        </Script>
         <Header />
         <div className="container mx-auto px-4 py-8"></div>
           <main className="min-h-screen">{children}</main>

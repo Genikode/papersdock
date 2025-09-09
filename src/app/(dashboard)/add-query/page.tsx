@@ -292,221 +292,282 @@ export default function AddQueryPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <main className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-gray-700 mb-4 hover:underline"
-        >
-          <ArrowLeft size={16} /> Back
-        </button>
+ <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+  <main className="mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
+    <button
+      onClick={() => router.back()}
+      className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 mb-4 hover:underline"
+    >
+      <ArrowLeft size={16} /> Back
+    </button>
 
-        <h1 className="text-2xl font-semibold text-slate-900">Add Query</h1>
-        <p className="mt-1 text-sm text-slate-500">Create a new query with optional attachments.</p>
+    <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Add Query</h1>
+    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+      Create a new query with optional attachments.
+    </p>
 
-        {(errorMsg || okMsg) && (
-          <div
-            className={`mt-4 rounded border px-3 py-2 text-sm ${
-              errorMsg
-                ? 'border-red-200 bg-red-50 text-red-700'
-                : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-            }`}
+    {(errorMsg || okMsg) && (
+      <div
+        className={`mt-4 rounded border px-3 py-2 text-sm ${
+          errorMsg
+            ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400'
+        }`}
+      >
+        {errorMsg || okMsg}
+      </div>
+    )}
+
+    <form
+      onSubmit={onSubmit}
+      className="mt-5 rounded-lg border bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm
+                 border-slate-200 dark:border-slate-800"
+    >
+      <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Query Details</h2>
+
+      {/* Title */}
+      <div className="mt-4">
+        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+          Query Title
+        </label>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter query title"
+          className="w-full rounded-md border px-3 py-2 text-sm outline-none
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     placeholder:text-slate-400 dark:placeholder:text-slate-500
+                     border-slate-300 dark:border-slate-700
+                     focus:ring-2 ring-indigo-300 dark:ring-indigo-500/60"
+        />
+      </div>
+
+      {/* Course + Chapter */}
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+            Select Course
+          </label>
+          <select
+            value={courseId}
+            onChange={(e) => setCourseId(e.target.value)}
+            className="w-full appearance-none rounded-md border px-3 py-2 text-sm outline-none
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border-slate-300 dark:border-slate-700
+                       focus:ring-2 ring-indigo-300 dark:ring-indigo-500/60"
           >
-            {errorMsg || okMsg}
-          </div>
-        )}
+            <option value="">{loadingCourses ? 'Loading…' : 'Choose course'}</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <form onSubmit={onSubmit} className="mt-5 rounded-lg border bg-white p-4 sm:p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Query Details</h2>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+            Select Chapter
+          </label>
+          <select
+            value={chapterId}
+            onChange={(e) => setChapterId(e.target.value)}
+            disabled={!courseId}
+            className="w-full appearance-none rounded-md border px-3 py-2 text-sm outline-none
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       border-slate-300 dark:border-slate-700
+                       focus:ring-2 ring-indigo-300 dark:ring-indigo-500/60
+                       disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-800/40"
+          >
+            <option value="">
+              {!courseId ? 'Choose course first' : loadingChapters ? 'Loading…' : 'Choose chapter'}
+            </option>
+            {chapters.map((ch) => (
+              <option key={ch.id} value={ch.id}>
+                {ch.title}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
-          {/* Title */}
-          <div className="mt-4">
-            <label className="mb-1 block text-sm font-medium text-slate-700">Query Title</label>
+      {/* Details */}
+      <div className="mt-4">
+        <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
+          Write Details
+        </label>
+        <textarea
+          value={details}
+          onChange={(e) => setDetails(e.target.value)}
+          placeholder="Enter details of your question"
+          rows={4}
+          className="w-full resize-y rounded-md border px-3 py-2 text-sm outline-none
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     placeholder:text-slate-400 dark:placeholder:text-slate-500
+                     border-slate-300 dark:border-slate-700
+                     focus:ring-2 ring-indigo-300 dark:ring-indigo-500/60"
+        />
+      </div>
+
+      {/* Uploads */}
+      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* File (image/pdf) */}
+        <div className="flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-lg border p-4 text-center
+                        bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+          {filePreview ? (
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={filePreview}
+                alt="preview"
+                className="h-28 w-40 rounded object-cover ring-1 ring-slate-200 dark:ring-slate-800"
+              />
+              <button
+                type="button"
+                onClick={removeFile}
+                className="absolute -right-2 -top-2 rounded-full bg-white dark:bg-slate-900 p-1 shadow ring-1 ring-slate-200 dark:ring-slate-700"
+                aria-label="Remove file"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Attach image or PDF
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                PNG, JPG, or PDF (max ~10MB)
+              </div>
+            </>
+          )}
+          <div className="mt-2">
             <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter query title"
-              className="w-full rounded-md border bg-white px-3 py-2 text-sm outline-none ring-indigo-300 focus:ring-2"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              hidden
+              onChange={() => onPickFile()}
             />
-          </div>
-
-          {/* Course + Chapter */}
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Select Course</label>
-              <select
-                value={courseId}
-                onChange={(e) => setCourseId(e.target.value)}
-                className="w-full appearance-none rounded-md border bg-white px-3 py-2 text-sm outline-none ring-indigo-300 focus:ring-2"
-              >
-                <option value="">{loadingCourses ? 'Loading…' : 'Choose course'}</option>
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Select Chapter</label>
-              <select
-                value={chapterId}
-                onChange={(e) => setChapterId(e.target.value)}
-                disabled={!courseId}
-                className="w-full appearance-none rounded-md border bg-white px-3 py-2 text-sm outline-none ring-indigo-300 focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-100"
-              >
-                <option value="">
-                  {!courseId ? 'Choose course first' : loadingChapters ? 'Loading…' : 'Choose chapter'}
-                </option>
-                {chapters.map((ch) => (
-                  <option key={ch.id} value={ch.id}>
-                    {ch.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Details */}
-          <div className="mt-4">
-            <label className="mb-1 block text-sm font-medium text-slate-700">Write Details</label>
-            <textarea
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              placeholder="Enter details of your question"
-              rows={4}
-              className="w-full resize-y rounded-md border bg-white px-3 py-2 text-sm outline-none ring-indigo-300 focus:ring-2"
-            />
-          </div>
-
-          {/* Uploads */}
-          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* File (image/pdf) */}
-            <div className="flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-lg border bg-slate-50 p-4 text-center">
-              {filePreview ? (
-                <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={filePreview}
-                    alt="preview"
-                    className="h-28 w-40 rounded object-cover ring-1 ring-slate-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeFile}
-                    className="absolute -right-2 -top-2 rounded-full bg-white p-1 shadow ring-1 ring-slate-200"
-                    aria-label="Remove file"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="text-sm font-medium text-slate-700">Attach image or PDF</div>
-                  <div className="text-xs text-slate-500">PNG, JPG, or PDF (max ~10MB)</div>
-                </>
-              )}
-              <div className="mt-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,application/pdf"
-                  hidden
-                  onChange={() => onPickFile()}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm font-medium hover:bg-slate-100"
-                >
-                  <UploadCloud size={16} />
-                  Choose File
-                </button>
-                {file && (
-                  <button
-                    type="button"
-                    onClick={removeFile}
-                    className="ml-2 inline-flex items-center gap-1 rounded-md border bg-white px-2 py-2 text-xs hover:bg-slate-100"
-                  >
-                    <Trash2 size={14} /> Remove
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Audio (choose/record) */}
-            <div className="flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-lg border bg-slate-50 p-4 text-center">
-              {audioUrl ? (
-                <div className="flex items-center gap-2">
-                  <audio src={audioUrl} controls className="max-w-[240px]" />
-                  <button
-                    type="button"
-                    onClick={removeAudio}
-                    className="rounded-full bg-white p-1 shadow ring-1 ring-slate-200"
-                    aria-label="Remove audio"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="text-sm font-medium text-slate-700">Attach / Record audio</div>
-                  <div className="text-xs text-slate-500">Upload a file or record a quick note</div>
-                </>
-              )}
-
-              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm font-medium hover:bg-slate-100">
-                  <UploadCloud size={16} />
-                  <span>Choose Audio</span>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    hidden
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) onPickAudio(f);
-                    }}
-                  />
-                </label>
-
-                {!recording ? (
-                  <button
-                    type="button"
-                    onClick={startRecording}
-                    className="inline-flex items-center gap-2 rounded-md border bg-white px-3 py-2 text-sm font-medium hover:bg-slate-100"
-                  >
-                    <Mic size={16} />
-                    Record
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={stopRecording}
-                    className="inline-flex items-center gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
-                  >
-                    <StopCircle size={16} />
-                    Stop
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Submit */}
-          <div className="mt-6">
             <button
-              type="submit"
-              disabled={!canSubmit || submitting}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-purple-600 px-4 py-3 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium
+                         bg-white hover:bg-slate-100 border-slate-300 text-slate-900
+                         dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
             >
-              <PlayCircle size={16} />
-              {submitting ? 'Submitting…' : 'Upload Query'}
+              <UploadCloud size={16} />
+              Choose File
             </button>
+            {file && (
+              <button
+                type="button"
+                onClick={removeFile}
+                className="ml-2 inline-flex items-center gap-1 rounded-md border px-2 py-2 text-xs
+                           bg-white hover:bg-slate-100 border-slate-300 text-slate-900
+                           dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
+              >
+                <Trash2 size={14} /> Remove
+              </button>
+            )}
           </div>
-        </form>
-      </main>
-    </div>
+        </div>
+
+        {/* Audio (choose/record) */}
+        <div className="flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-lg border p-4 text-center
+                        bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+          {audioUrl ? (
+            <div className="flex items-center gap-2">
+              <audio src={audioUrl} controls className="max-w-[240px]" />
+              <button
+                type="button"
+                onClick={removeAudio}
+                className="rounded-full bg-white dark:bg-slate-900 p-1 shadow ring-1 ring-slate-200 dark:ring-slate-700"
+                aria-label="Remove audio"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Attach / Record audio
+              </div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Upload a file or record a quick note
+              </div>
+            </>
+          )}
+
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            <label
+              className="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium
+                         bg-white hover:bg-slate-100 border-slate-300 text-slate-900
+                         dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
+            >
+              <UploadCloud size={16} />
+              <span>Choose Audio</span>
+              <input
+                type="file"
+                accept="audio/*"
+                hidden
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onPickAudio(f);
+                }}
+              />
+            </label>
+
+            {!recording ? (
+              <button
+                type="button"
+                onClick={startRecording}
+                className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium
+                           bg-white hover:bg-slate-100 border-slate-300 text-slate-900
+                           dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
+              >
+                <Mic size={16} />
+                Record
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={stopRecording}
+                className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium
+                           border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100
+                           dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-900/40"
+              >
+                <StopCircle size={16} />
+                Stop
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Submit */}
+      <div className="mt-6">
+        <button
+          type="submit"
+          disabled={!canSubmit || submitting}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-medium text-white shadow-sm
+                     bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-purple-600
+                     hover:from-indigo-700 hover:via-fuchsia-700 hover:to-purple-700
+                     disabled:cursor-not-allowed disabled:opacity-60
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                     focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+        >
+          <PlayCircle size={16} />
+          {submitting ? 'Submitting…' : 'Upload Query'}
+        </button>
+      </div>
+    </form>
+  </main>
+</div>
+
   );
 }

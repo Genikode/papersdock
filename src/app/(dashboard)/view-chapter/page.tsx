@@ -101,7 +101,7 @@ export default function ViewChapter() {
         render: (_: any, row: ChapterRow) => (
           <button
             onClick={() => router.push(`/view-lectures/${row.id}`)}
-            className="inline-flex items-center gap-2 text-sm border px-3 py-1 rounded hover:bg-gray-50"
+            className="inline-flex items-center gap-2 text-sm border px-3 py-1 rounded hover:bg-green-50 hover:text-black"
             title="Add a lecture to this chapter"
           >
             <PlusCircle size={16} />
@@ -252,132 +252,146 @@ export default function ViewChapter() {
   }
 
   return (
-    <main className="bg-[#F9FAFB] text-gray-800">
-      <PageHeader
-        title="View Chapter"
-        description="Manage your chapters"
-        buttonText="Add Chapter"
-        path="/add-chapter"
-      />
+<main className="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+  <PageHeader
+    title="View Chapter"
+    description="Manage your chapters"
+    buttonText="Add Chapter"
+    path="/add-chapter"
+  />
 
-      <div className="px-4 py-6">
-        {(infoMsg || errorMsg) && (
-          <div
-            className={`mb-3 text-sm px-3 py-2 rounded border ${
-              errorMsg
-                ? 'bg-red-50 border-red-200 text-red-700'
-                : 'bg-green-50 border-green-200 text-green-700'
-            }`}
-          >
-            {errorMsg || infoMsg}
-          </div>
-        )}
-
-        <div className="mb-3 text-sm text-gray-600">{loading ? 'Loading chapters…' : null}</div>
-
-        <TableComponent
-          columns={columns}
-          data={rows}
-          serverMode
-          searchTerm={searchTerm}
-          onSearchTermChange={(v) => {
-            setSearchTerm(v);
-            setCurrentPage(1);
-          }}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          itemsPerPage={itemsPerPage}
-          onItemsPerPageChange={(n) => {
-            setItemsPerPage(n);
-            setCurrentPage(1);
-          }}
-          totalItems={totalItems}
-          toolbarLeft={
-            <select
-              value={courseId ?? ''}
-              onChange={(e) => {
-                setCourseId(e.target.value || null);
-                setCurrentPage(1);
-              }}
-              className="border px-3 py-1 rounded text-sm"
-            >
-              <option value="">All Courses</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-          }
-        />
+  <div className="px-4 py-6">
+    {(infoMsg || errorMsg) && (
+      <div
+        className={`mb-3 text-sm px-3 py-2 rounded border ${
+          errorMsg
+            ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-400'
+            : 'bg-green-50 border-green-200 text-green-700 dark:bg-green-950/40 dark:border-green-900 dark:text-green-400'
+        }`}
+      >
+        {errorMsg || infoMsg}
       </div>
+    )}
 
-      {/* Image viewer */}
-      {showImageModal && imageSrc && (
-        <ImageModal
-          src={imageSrc}
-          onClose={() => {
-            setImageSrc(null);
-            setShowImageModal(false);
+    <div className="mb-3 text-sm text-slate-600 dark:text-slate-400">
+      {loading ? 'Loading chapters…' : null}
+    </div>
+
+    <TableComponent
+      columns={columns}
+      data={rows}
+      serverMode
+      searchTerm={searchTerm}
+      onSearchTermChange={(v) => {
+        setSearchTerm(v);
+        setCurrentPage(1);
+      }}
+      currentPage={currentPage}
+      onPageChange={setCurrentPage}
+      itemsPerPage={itemsPerPage}
+      onItemsPerPageChange={(n) => {
+        setItemsPerPage(n);
+        setCurrentPage(1);
+      }}
+      totalItems={totalItems}
+      toolbarLeft={
+        <select
+          value={courseId ?? ''}
+          onChange={(e) => {
+            setCourseId(e.target.value || null);
+            setCurrentPage(1);
           }}
-        />
-      )}
+          className="border rounded text-sm px-3 py-1
+                     border-slate-300 dark:border-slate-700
+                     bg-white dark:bg-slate-900
+                     text-slate-900 dark:text-slate-100
+                     focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+        >
+          <option value="">All Courses</option>
+          {courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </select>
+      }
+    />
+  </div>
 
-      {/* Delete confirmation */}
-      {showDeleteModal && (
-        <ConfirmationModal
-          title="Confirm Deletion"
-          description={`Are you sure you want to delete chapter: "${shortTitle(deleteRowTitle ?? '')}"?`}
-          onCancel={() => setShowDeleteModal(false)}
-          onConfirm={handleConfirmDelete}
-        />
-      )}
+  {/* Image viewer */}
+  {showImageModal && imageSrc && (
+    <ImageModal
+      src={imageSrc}
+      onClose={() => {
+        setImageSrc(null);
+        setShowImageModal(false);
+      }}
+    />
+  )}
 
-      {/* Copy chapter modal */}
-      {copyOpen && copySource && (
-        <Modal title="Copy Chapter" onClose={() => setCopyOpen(false)}>
-          <form onSubmit={handleCopySubmit} className="space-y-4">
-            <div className="text-sm">
-              <p className="text-gray-700">
-                <span className="font-medium">Chapter:</span> {copySource.title}
-              </p>
-            </div>
+  {/* Delete confirmation */}
+  {showDeleteModal && (
+    <ConfirmationModal
+      title="Confirm Deletion"
+      description={`Are you sure you want to delete chapter: "${shortTitle(deleteRowTitle ?? '')}"?`}
+      onCancel={() => setShowDeleteModal(false)}
+      onConfirm={handleConfirmDelete}
+    />
+  )}
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Copy to Course</label>
-              <select
-                value={copyTargetCourseId}
-                onChange={(e) => setCopyTargetCourseId(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-              >
-                {courses.map((c) => (
-                  <option key={c.id} value={c.id} disabled={c.id === copySource.courseId}>
-                    {c.title}{c.id === copySource.courseId ? ' (current)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
+  {/* Copy chapter modal */}
+  {copyOpen && copySource && (
+    <Modal title="Copy Chapter" onClose={() => setCopyOpen(false)} >
+      <form onSubmit={handleCopySubmit} className="space-y-4" >
+        <div className="text-sm">
+          <p className="text-slate-700 dark:text-slate-300">
+            <span className="font-medium text-slate-900 dark:text-slate-100">Chapter:</span> {copySource.title}
+          </p>
+        </div>
 
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setCopyOpen(false)}
-                className="px-4 py-1.5 border rounded"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                // disabled={  copyTargetCourseId === copySource.courseId}
-                className="px-4 py-1.5 rounded text-white bg-[#0B1537] disabled:opacity-50"
-              >
-                {copying ? 'Copying…' : 'Copy Chapter'}
-              </button>
-            </div>
-          </form>
-          
-        </Modal>
-      )}
-    </main>
+        <div>
+          <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">
+            Copy to Course
+          </label>
+          <select
+            value={copyTargetCourseId}
+            onChange={(e) => setCopyTargetCourseId(e.target.value)}
+            className="w-full border rounded px-3 py-2 text-sm
+                       border-slate-300 dark:border-slate-700
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100
+                       focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+          >
+            {courses.map((c) => (
+              <option key={c.id} value={c.id} disabled={c.id === copySource.courseId}>
+                {c.title}{c.id === copySource.courseId ? ' (current)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setCopyOpen(false)}
+            className="px-4 py-1.5 rounded border
+                       border-slate-300 dark:border-slate-700
+                       bg-white dark:bg-slate-900
+                       text-slate-900 dark:text-slate-100"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-1.5 rounded text-white bg-[#0B1537] dark:bg-[#0B1537] disabled:opacity-50"
+          >
+            {copying ? 'Copying…' : 'Copy Chapter'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )}
+</main>
+
   );
 }

@@ -26,111 +26,121 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-white">
       {/* Left: Login Form */}
-      <div className="flex flex-col justify-center px-8 sm:px-20">
-        <button className="text-sm text-gray-600 mb-8" onClick={() => router.push('/')}>&larr; Back to home</button>
+  <div className="flex flex-col justify-center px-8 sm:px-20 min-h-screen bg-white dark:bg-slate-950">
+  <button
+    className="text-sm text-slate-600 dark:text-slate-400 mb-8 hover:underline"
+    onClick={() => router.push('/')}
+  >
+    &larr; Back to home
+  </button>
 
-        <div className="flex flex-col items-center mb-6">
-            <div className="bg-gradient-to-tr from-indigo-500 from-10% to-blue-900 to-55% border p-3 shadow-md mb-4">
-
-          <Image src="/logo.webp" alt="Logo" width={100} height={100} />
-            </div>
-          <h2 className="text-xl font-bold mt-4 text-black">Login</h2>
-          <p className="text-gray-500 text-sm">Info related portal</p>
-        </div>
-
-        <form
-          className="space-y-5"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setError(null);
-            setLoading(true);
-            try {
-              // Replace path/body according to your login API
-              const result = await api.post<{
-                status: number;
-                success: boolean;
-                message: string;
-                accessToken: string;
-                userData: UserData;
-              }>(
-                '/users/login-user',
-                { email, password }
-              );
-              setAccessToken(result.accessToken);
-              if (result.userData) {
-                setUserData(result.userData);
-              }
-              if(result.userData.roleName === 'student') {
-                router.replace('/recorded-lectures');
-              }else  {
-                router.replace('/dashboard');
-              }
-              // router.replace('/dashboard');
-            } catch (err: any) {
-              const message = err?.message || 'Login failed';
-              setError(message);
-            } finally {
-              setLoading(false);
-            }
-          }}
-        >          <div>
-            <label className="text-sm text-black font-medium">Email*</label>
-            <div className="mt-1 border rounded-md overflow-hidden">
-              <input
-                type="email"
-                placeholder="mail@website.com"
-                className="w-full px-4 py-2 outline-none text-black placeholder:text-gray-400"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-          </div>
-
-         <div>
-  <label className="text-sm font-medium text-black">Password*</label>
-  <div className="mt-1 border rounded-md overflow-hidden flex items-center">
-    <input
-      type={showPassword ? 'text' : 'password'}
-      placeholder="Min. 8 character"
-      className="w-full px-4 py-2 outline-none text-black placeholder:text-gray-400"
-      value={password}
-      onChange={(e) => setPassword(e.target.value)}
-    />
-    <button
-      type="button"
-      onClick={() => setShowPassword(!showPassword)}
-      className="px-3 text-gray-400"
-    >
-      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-    </button>
+  <div className="flex flex-col items-center mb-6">
+    <div className="bg-gradient-to-tr from-indigo-500 from-10% to-blue-900 to-55% border border-slate-200 dark:border-slate-800 p-3 shadow-md mb-4 rounded-md">
+      <Image src="/logo.webp" alt="Logo" width={100} height={100} />
+    </div>
+    <h2 className="text-xl font-bold mt-4 text-slate-900 dark:text-slate-100">Login</h2>
+    <p className="text-slate-600 dark:text-slate-400 text-sm">Info related portal</p>
   </div>
+
+  <form
+    className="space-y-5"
+    onSubmit={async (e) => {
+      e.preventDefault();
+      setError(null);
+      setLoading(true);
+      try {
+        const result = await api.post<{
+          status: number;
+          success: boolean;
+          message: string;
+          accessToken: string;
+          userData: UserData;
+        }>('/users/login-user', { email, password });
+        setAccessToken(result.accessToken);
+        if (result.userData) {
+          setUserData(result.userData);
+        }
+        if (result.userData.roleName === 'student') {
+          router.replace('/recorded-lectures');
+        } else {
+          router.replace('/dashboard');
+        }
+      } catch (err: any) {
+        const message = err?.message || 'Login failed';
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    }}
+  >
+    <div>
+      <label className="text-sm text-slate-900 dark:text-slate-100 font-medium">Email*</label>
+      <div className="mt-1 border rounded-md overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <input
+          type="email"
+          placeholder="mail@website.com"
+          className="w-full px-4 py-2 outline-none bg-transparent
+                     text-slate-900 dark:text-slate-100
+                     placeholder:text-slate-400 dark:placeholder:text-slate-500"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+    </div>
+
+    <div>
+      <label className="text-sm font-medium text-slate-900 dark:text-slate-100">Password*</label>
+      <div className="mt-1 border rounded-md overflow-hidden flex items-center
+                      border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <input
+          type={showPassword ? 'text' : 'password'}
+          placeholder="Min. 8 character"
+          className="w-full px-4 py-2 outline-none bg-transparent
+                     text-slate-900 dark:text-slate-100
+                     placeholder:text-slate-400 dark:placeholder:text-slate-500"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="px-3 text-slate-400 dark:text-slate-500"
+        >
+          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
+    </div>
+
+    <div className="flex justify-between items-center text-sm">
+      <label className="flex items-center gap-2 text-slate-900 dark:text-slate-200">
+        <input type="checkbox" className="accent-blue-600 dark:accent-blue-500" /> Remember me
+      </label>
+      <a href="#" className="text-blue-600 dark:text-blue-400">Forget password?</a>
+    </div>
+
+    {error && (
+      <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+    )}
+
+    <button
+      type="submit"
+      disabled={loading}
+      className="w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-500
+                 text-white font-semibold rounded-md disabled:opacity-60"
+    >
+      {loading ? 'Logging in...' : 'Login'}
+    </button>
+
+    <p className="text-sm text-center text-slate-900 dark:text-slate-200">
+      Not registered yet? <a className="text-blue-600 dark:text-blue-400" href="#">Contact Coordinator</a>
+    </p>
+  </form>
+
+  <p className="text-xs text-center text-slate-400 dark:text-slate-500 mt-10">
+    &copy;2024 PapersDock. All rights reserved.
+  </p>
 </div>
 
-          <div className="flex justify-between items-center text-sm">
-            <label className="flex items-center gap-2 text-black">
-              <input type="checkbox" /> Remember me
-            </label>
-            <a href="#" className="text-blue-600">Forget password?</a>
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-md disabled:opacity-60"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-
-          <p className="text-sm text-center text-black">
-            Not registered yet? <a className="text-blue-600" href="#">Contact Coordinator</a>
-          </p>
-        </form>
-
-        <p className="text-xs text-center text-gray-400 mt-10">&copy;2024 PapersDock. All rights reserved.</p>
-      </div>
 
       {/* Right: Visual Banner */}
       <div className="hidden md:flex items-center justify-center relative bg-gradient-to-r from-[#2A3D7C] to-[#3C2376] text-white">
