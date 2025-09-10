@@ -132,16 +132,7 @@ export default function Footer() {
       </div>
 
       {/* Footer bottom */}
-      <div className="relative mt-10 border-t border-blue-300/70 dark:border-slate-800 pt-4 text-sm">
-        <div className="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto gap-4 text-slate-900 dark:text-slate-300">
-          <div className="flex gap-4">
-            <a className="hover:underline" href="#">Privacy Policy</a>
-            <a className="hover:underline" href="#">Terms and Conditions</a>
-          </div>
-          <div>&copy; 2024 PapersDock Learning Pty Ltd. All rights reserved.</div>
-          <div />
-        </div>
-      </div>
+    
     </footer>
   );
 }
