@@ -19,7 +19,7 @@ export default function AiLogicChecker() {
         </button>
 
         <p className="text-[13px] text-gray-400 mt-6">
-          ✨ No credit card required • 🚀 Instant setup • 🧩 Tailored for A-Level syllabus
+         Tailored for A-Level syllabus
         </p>
       </div>
 
