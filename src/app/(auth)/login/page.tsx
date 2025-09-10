@@ -283,10 +283,6 @@ export default function LoginPage() {
             From pseudocode to problem-solving, master A-Level Computer Science with expert guidance. Clear explanations, practice, and support every step of the way.
           </p>
 
-          <div className="flex justify-center gap-3 text-xs">
-            <span className="bg-white/20 text-white rounded-full px-3 py-1">⚡ #1 Platform</span>
-            <span className="bg-white/20 text-white rounded-full px-3 py-1">⭐ 4.9/5 Rating</span>
-          </div>
         </div>
       </div>
     </div>
