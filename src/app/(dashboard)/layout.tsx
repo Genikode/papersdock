@@ -23,6 +23,7 @@ import {
 import '../globals.css';
 import { clearAccessToken, clearUserData, getUserData, isLoggedIn } from '@/lib/auth';
 import { ThemeProvider, useTheme } from 'next-themes';
+import Image from 'next/image';
 
 /** Small helper so both sidebars (mobile + desktop) render the same list */
 function NavLinks({
@@ -167,8 +168,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke] dark:border-slate-800">
                 <div className="flex items-center gap-2">
-                  <div className="bg-blue-600 text-white font-bold p-2 rounded-md">PD</div>
-                  {!collapsed && <span className="font-semibold text-gray-700 dark:text-slate-200">PapersDock</span>}
+        <Link href="/" className="flex items-center gap-2">
+          <div className="border-1 text-white rounded-xl w-8 h-8 flex items-center justify-center text-sm font-bold">
+            <Image src="/logo4.png" alt="Logo" width={24} height={24} />
+          </div>
+          <span className="font-bold text-lg text-gray-900 dark:text-white">PapersDock</span>
+        </Link>
                 </div>
               </div>
 

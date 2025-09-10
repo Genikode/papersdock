@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+import Link from 'next/link';
 import { FaFacebookF, FaInstagram, FaTwitter, FaYoutube } from 'react-icons/fa';
 import { FiSend } from 'react-icons/fi';
 
@@ -21,12 +23,13 @@ export default function Footer() {
         {/* Logo + About */}
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <div className="bg-white text-blue-600 dark:bg-slate-900 dark:text-blue-400 shadow-md rounded-md px-3 py-1 font-bold">
-              PD
-            </div>
-            <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              PapersDock
-            </span>
+         <Link href="/" className="flex items-center gap-2">
+          <div className="border-1 text-white rounded-xl w-8 h-8 flex items-center justify-center text-sm font-bold">
+            <Image src="/logo4.png" alt="Logo" width={24} height={24} />
+          </div>
+          <span className="font-bold text-lg text-gray-900 dark:text-white">PapersDock</span>
+        </Link>
+         
           </div>
           <p className="text-sm text-slate-900/90 dark:text-slate-300">
             The kind of learning platform that makes you feel all accomplished inside!

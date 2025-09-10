@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import Image from 'next/image';
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -33,8 +34,8 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="bg-blue-600 text-white rounded-xl w-8 h-8 flex items-center justify-center text-sm font-bold">
-            PD
+          <div className="border-1 text-white rounded-xl w-8 h-8 flex items-center justify-center text-sm font-bold">
+            <Image src="/logo4.png" alt="Logo" width={24} height={24} />
           </div>
           <span className="font-bold text-lg text-gray-900 dark:text-white">PapersDock</span>
         </Link>
