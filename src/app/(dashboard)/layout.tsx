@@ -153,7 +153,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     router.replace('/login');
   }
 
-  return (
+return (
     // If this is used as a layout file, you can return a fragment. If you need to
     // render <html>/<body> here, keep suppressHydrationWarning to avoid theme flicker warnings.
     <html lang="en" suppressHydrationWarning>
@@ -168,9 +168,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke] dark:border-slate-800">
                 <div className="flex items-center gap-2">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="border-1 text-white rounded-xl w-8 h-8 flex items-center justify-center text-sm font-bold">
-            <Image src="/logo4.png" alt="Logo" width={50} height={50} />
+         <Link href="/" className="flex items-center gap-2">
+          <div className=" text-white rounded-xl flex items-center justify-center text-sm font-bold">
+            <Image src="/logo4.png" alt="Logo" width={40} height={40} className='rounded-2xl ' />
           </div>
           <span className="font-bold text-lg text-gray-900 dark:text-white">PapersDock</span>
         </Link>

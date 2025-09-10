@@ -34,8 +34,8 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="border-1 text-white rounded-xl w-8 h-8 flex items-center justify-center text-sm font-bold">
-            <Image src="/logo4.png" alt="Logo" width={80} height={80} className='rounded' />
+          <div className=" text-white rounded-xl flex items-center justify-center text-sm font-bold">
+            <Image src="/logo4.png" alt="Logo" width={40} height={40} className='rounded-2xl ' />
           </div>
           <span className="font-bold text-lg text-gray-900 dark:text-white">PapersDock</span>
         </Link>

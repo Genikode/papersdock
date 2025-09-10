@@ -23,9 +23,9 @@ export default function Footer() {
         {/* Logo + About */}
         <div>
           <div className="flex items-center gap-2 mb-4">
-         <Link href="/" className="flex items-center gap-2">
-          <div className="border-1 text-white rounded-xl w-8 h-8 flex items-center justify-center text-sm font-bold">
-            <Image src="/logo4.png" alt="Logo" width={80} height={80} className='rounded' />
+           <Link href="/" className="flex items-center gap-2">
+          <div className=" text-white rounded-xl flex items-center justify-center text-sm font-bold">
+            <Image src="/logo4.png" alt="Logo" width={40} height={40} className='rounded-2xl ' />
           </div>
           <span className="font-bold text-lg text-gray-900 dark:text-white">PapersDock</span>
         </Link>

@@ -1,11 +1,26 @@
 "use client";
 import Image from 'next/image';
-import { Eye, EyeOff } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Eye, EyeOff, FileText } from 'lucide-react';
+import { ReactNode, useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { getUserData, isLoggedIn, setAccessToken, setUserData, UserData } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
-
+import Link from 'next/link';
+import { FaEye, FaUser, FaVideo } from 'react-icons/fa';
+import clsx from 'clsx';
+type StatItem = {
+  value: string | number;
+  label: string;
+  icon: ReactNode; // ✅ no JSX namespace needed
+};
+type SkeletonStatProps = {
+  /** How many bottom stat cards to render (default 2) */
+  bottomCards?: number;
+  /** Show the top-left "Views" block skeleton (default true) */
+  showTopLeft?: boolean;
+  /** Pass extra classes if needed */
+  className?: string;
+};
 export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
@@ -14,6 +29,55 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+      const [stats, setStats] = useState<StatItem[] | null>(null);
+      const [viewCount, setViewCount] = useState(0);
+   
+    
+      useEffect(() => {
+        const controller = new AbortController();
+    
+        const fetchSubscriber = async () => {
+          try {
+            const response = await fetch(
+              'https://www.googleapis.com/youtube/v3/channels?part=statistics&id=UCbOwD2JG5N9DePz3xIw56pg&key=AIzaSyDHsu2C6n000D9UnbKADiClkh2RJTzhZx4',
+              { cache: 'no-store', signal: controller.signal }
+            );
+            const data = await response.json();
+    
+            if (!response.ok) {
+              throw new Error(data?.error?.message || 'Failed to fetch stats');
+            }
+    
+            const s = data?.items?.[0]?.statistics ?? {};
+            const fmt = (n: unknown) =>
+              new Intl.NumberFormat('en-US').format(Number(n ?? 0));
+            setViewCount(Number(s.viewCount));
+            const next: StatItem[] = [
+              // { value: fmt(s.viewCount), label: 'View Count', icon: <FaEye size={20} /> },
+              { value: fmt(s.subscriberCount), label: 'Subscribers', icon: <FaUser size={20} /> },
+              { value: fmt(s.videoCount), label: 'Videos', icon: <FaVideo size={20} /> },
+              // { value: 'Complete', label: 'Notes and Topical Past Papers', icon: <FileText size={20} /> },
+            ];
+    
+            setStats(next);
+          } catch (err) {
+            if ((err as any)?.name === 'AbortError') return;
+            console.error('Failed to fetch YouTube stats', err);
+            setError('Unable to load stats right now.');
+            // Fallback placeholders so the UI still renders
+            setStats([
+              // { value: '-', label: 'View Count', icon: <FaEye size={20} /> },
+              { value: '-', label: 'Subscribers', icon: <FaUser size={20} /> },
+              { value: '-', label: 'Videos', icon: <FaVideo size={20} /> },
+              // { value: 'Complete', label: 'Notes and Topical Past Papers', icon: <FileText size={20} /> },
+            ]);
+          }
+        };
+    
+        fetchSubscriber();
+        return () => controller.abort();
+      }, []);
+    
 
     useEffect(() => {
       if (isLoggedIn()  && currentUser?.roleName == 'student') {
@@ -35,9 +99,12 @@ export default function LoginPage() {
   </button>
 
   <div className="flex flex-col items-center mb-6">
-    <div className="bg-gradient-to-tr from-indigo-500 from-10% to-blue-900 to-55% border border-slate-200 dark:border-slate-800 p-3 shadow-md mb-4 rounded-md">
-      <Image src="/logo.webp" alt="Logo" width={100} height={100} />
-    </div>
+   <Link href="/" className="flex items-center gap-2">
+          <div className=" text-white rounded-xl flex items-center justify-center text-sm font-bold">
+            <Image src="/logo4.png" alt="Logo" width={100} height={100} className='rounded-2xl ' />
+          </div>
+       
+        </Link>
     <h2 className="text-xl font-bold mt-4 text-slate-900 dark:text-slate-100">Login</h2>
     <p className="text-slate-600 dark:text-slate-400 text-sm">Info related portal</p>
   </div>
@@ -153,13 +220,21 @@ export default function LoginPage() {
         />
 
         <div className="z-10 text-center max-w-md px-6">
+          {viewCount && stats ? (
+            
        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 w-full max-w-md text-white shadow-lg relative ">
   {/* Top section */}
   <div className="flex justify-between items-start">
-    <div>
+    {viewCount && (
+      <div>
+        <h2 className="text-4xl font-bold">{viewCount}</h2>
+        <p className="text-sm text-white/80 mt-1 text-left">Views</p>
+      </div>
+    )}
+    {/* <div>
       <h2 className="text-4xl font-bold">98.7%</h2>
       <p className="text-sm text-white/80 mt-1">Success Rate</p>
-    </div>
+    </div> */}
     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center shadow-md">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -180,39 +255,32 @@ export default function LoginPage() {
 
   {/* Bottom cards */}
   <div className="mt-6 flex gap-3">
-    {/* Students */}
+      {(stats ?? Array.from({ length: 2 })).map((item, i) =>
+            item ? (
     <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center gap-3">
       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A3 3 0 018 16h8a3 3 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
+     {item.icon}
       </div>
       <div>
-        <p className="text-white font-semibold text-sm">10,247</p>
-        <p className="text-xs text-white/80">Students</p>
+        <p className="text-white font-semibold text-sm">{item.value}</p>
+        <p className="text-xs text-white/80">{item.label}</p>
       </div>
     </div>
+   ) : (
+           null
+            )
+          )}
 
-    {/* A* Rate */}
-    <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center text-white shadow">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a5 5 0 00-10 0v2a5 5 0 0010 0zM6 13v7a2 2 0 002 2h8a2 2 0 002-2v-7" />
-        </svg>
-      </div>
-      <div>
-        <p className="text-white font-semibold text-sm">87.3%</p>
-        <p className="text-xs text-white/80">A* Rate</p>
-      </div>
-    </div>
   </div>
 </div>
+          ):
+          <SkeletonStat />
+          }
 
 
           <h2 className="text-2xl font-bold leading-snug m-6">Master Computer Science<br />With Excellence.</h2>
           <p className="text-sm mb-4">
-            Join thousands of students achieving A* grades through our
-            innovative learning platform and expert guidance.
+            From pseudocode to problem-solving, master A-Level Computer Science with expert guidance. Clear explanations, practice, and support every step of the way.
           </p>
 
           <div className="flex justify-center gap-3 text-xs">
@@ -220,6 +288,51 @@ export default function LoginPage() {
             <span className="bg-white/20 text-white rounded-full px-3 py-1">⭐ 4.9/5 Rating</span>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+function SkeletonStat({
+  bottomCards = 2,
+  showTopLeft = true,
+  className,
+}: SkeletonStatProps) {
+  return (
+    <div
+      aria-busy="true"
+      className={clsx(
+        'bg-white/10 backdrop-blur-sm rounded-2xl p-6 w-full max-w-md text-white shadow-lg relative',
+        className
+      )}
+    >
+      {/* Top section */}
+      <div className="flex justify-between items-start">
+        {showTopLeft ? (
+          <div className="animate-pulse space-y-2">
+            <div className="h-10 w-32 rounded-md bg-white/20" />
+            <div className="h-3 w-16 rounded bg-white/10" />
+          </div>
+        ) : (
+          <div />
+        )}
+
+        <div className="w-10 h-10 rounded-xl bg-white/20 shadow-md animate-pulse" />
+      </div>
+
+      {/* Bottom cards */}
+      <div className="mt-6 flex gap-3">
+        {Array.from({ length: bottomCards }).map((_, i) => (
+          <div
+            key={i}
+            className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center gap-3"
+          >
+            <div className="w-10 h-10 rounded-full bg-white/20 shadow animate-pulse" />
+            <div className="flex-1">
+              <div className="h-4 w-28 rounded bg-white/20 mb-2 animate-pulse" />
+              <div className="h-3 w-20 rounded bg-white/10 animate-pulse" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
