@@ -115,7 +115,7 @@ export default function FAQ() {
       <div className="text-center mt-10">
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Still have questions?</p>
         <Link
-          href="#"
+          href="/contact"
           className="inline-block bg-blue-600 dark:bg-blue-500 text-white px-6 py-2 rounded-md text-sm font-medium shadow hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
         >
           Contact Support

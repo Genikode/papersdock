@@ -7,60 +7,67 @@ import { useEffect, useState, useRef } from 'react';
 
 const testimonials = [
   {
-    name: 'Sarah Johnson',
+    name: 'Rehan Ali',
+    role: 'Composite (AS+A2) Retake Student',
+    grade: '9618',
+    photo: '/avatar.png',
+    quote: `love u hogaya sir ur crash course portal really saved my life, gave composite AS+A2 and only started studying in april but alhamdulilah jumped from a d in AS to a B in this retake. May allah bless you Sir taha`,
+    school: '',
+  },
+  {
+    name: 'Shafay Shaikh',
     role: 'A-Level Student',
-    grade: 'A*',
+    grade: '9618',
     photo: '/avatar.png',
-    quote:
-      'PapersDock transformed my understanding of Computer Science. The interactive coding challenges and expert feedback helped me achieve an A* grade!',
-    school: 'Cambridge International',
+    quote: `Sir, I love you. Aap to best se bhi best hain.
+Matlab, main woh bacha tha jisko pseudocode ka P bhi nahi aata tha.
+Ratta mujh se lagta nahi tha, lekin sirf aapki wajah se mera A aa gaya. Love you sir.`,
+    school: '',
   },
   {
-    name: 'Michael Chen',
-    role: 'A-Level Graduate',
-    grade: 'A*',
+    name: 'Essa Sheikh',
+    role: 'Retake Student',
+    grade: '9618',
     photo: '/avatar.png',
-    quote:
-      'The 24/7 support and personalized learning path made all the difference. I went from struggling with algorithms to mastering them completely.',
-    school: 'Oxford Academy',
+    quote: `Sir, thank you so much. Aap legend hain. Main retake de raha tha, last time U aya, lekin aapke sirf 3-month session se B aa gaya. Love you sir.`,
+    school: '',
   },
   {
-    name: 'Emma Rodriguez',
-    role: 'Current Student',
-    grade: 'A',
-    photo: '/avatar.png',
-    quote:
-      'Best investment I made for my A-Levels. The mock exams and detailed explanations prepared me perfectly for the real thing.',
-    school: 'International School',
-  },
-  {
-    name: 'Liam Smith',
+    name: 'Aeidan Qureshi',
     role: 'A-Level Student',
-    grade: 'A*',
+    grade: '9618',
     photo: '/avatar.png',
-    quote:
-      'I loved the interactive coding lab! It made learning so much fun and engaging. Highly recommend PapersDock to anyone serious about Computer Science.',
-    school: 'Global High School',
+    quote: `AOA sir, I got B in Computer Science just because of you. Thanks sir.
+Last year bhi diya tha Computer lekin U aya tha. Ye grade sirf aapki wajah se aya hai.`,
+    school: '',
   },
   {
-    name: 'Olivia Davis',
-    role: 'A-Level Graduate',
-    grade: 'A',
+    name: 'Afra Iqbal',
+    role: 'A2 Crash Course Student',
+    grade: '9618',
     photo: '/avatar.png',
-    quote:
-      'The AI-powered feedback and personalized study paths were a game-changer. I passed with flying colors!',
-    school: 'Tech Academy',
+    quote: `Hello sir, I was your student in the A2 batch crash course.
+I got an A grade in Computer Science, Alhamdulillah. Thank you so much for all the hard work, time, and effort you put into your classes and notes. They really helped me a lot to achieve my desired grade.`,
+    school: '',
   },
   {
-    name: 'Noah Brown',
-    role: 'Current Student',
-    grade: 'A*',
+    name: 'Salman Hassan',
+    role: 'AS Student',
+    grade: '9618',
     photo: '/avatar.png',
-    quote:
-      'PapersDock made complex topics easy to understand. The mentorship and resources were top-notch. I couldn’t have done it without them!',
-    school: 'Future Leaders School',
+    quote: `Sir, Alhamdulillah I got an "a" in AS Computer Science. Loved your way of teaching and your approach throughout the AS year. Jazakallah khairan. Allah aapko khush rakhay dono jahaanon mein.`,
+    school: '',
+  },
+  {
+    name: 'Maryam',
+    role: 'Student',
+    grade: '9618',
+    photo: '/avatar.png',
+    quote: `Aoa sir. Just wanted to say thank you for being such a great teacher. No one teaches CS better than you do. Your way of teaching and your mindset of “getting the concept” and not just memorizing everything is exactly how I prefer to study. I haven’t coded in quite a while now but I’m pretty sure I can still write all the ADT codes because my concepts are clear. Thank you for being so amazing and for being so supportive the entire time. I hope Allah rewards you with everything that is good for you.`,
+    school: '',
   },
 ];
+
 
 export default function Testimonials() {
   const [index, setIndex] = useState(0);
@@ -104,35 +111,15 @@ export default function Testimonials() {
 
   return (
     <section className="py-20 px-4 overflow-hidden bg-gradient-to-b from-[#EEF2FF] to-[#EFF6FF] dark:from-gray-900 dark:to-black">
-      <div className="max-w-6xl mx-auto flex items-start justify-between mb-8">
-        <div className="text-center md:text-left w-full md:w-auto">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">What Our Students Say</h2>
+      <div className="max-w-6xl mx-auto flex items-center justify-center mb-8">
+        <div className="text-center md:text-center w-full md:w-auto">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 ">What Our Students Say</h2>
           <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
             Join thousands of students who have transformed their A-Level Computer Science results with PapersDock
           </p>
         </div>
 
-        <div className="ml-4 flex items-center gap-3">
-          <div
-            className="bg-white dark:bg-gray-800 px-3 py-2 rounded-full shadow-sm flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
-            aria-hidden
-          >
-            <div className="flex text-yellow-400">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} fill="currentColor" stroke="currentColor" size={14} />
-              ))}
-            </div>
-            <span>4.9/5 from 2.8k+ students</span>
-          </div>
-
-          <button
-            onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-            aria-label="Toggle theme"
-            className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-sm text-gray-700 dark:text-gray-200 hover:opacity-90"
-          >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        </div>
+     
       </div>
 
       <div className="max-w-6xl mx-auto mb-10">

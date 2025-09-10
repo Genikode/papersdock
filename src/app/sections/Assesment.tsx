@@ -157,9 +157,10 @@ export default function AssessmentOverview() {
       <div className="text-center">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white rounded-xl px-8 py-10 max-w-xl mx-auto">
           <h3 className="text-xl font-semibold mb-2">Ready to Start Your Journey?</h3>
-          <p className="text-sm mb-4">Get full access to all modules, exercises, and expert support</p>
+          <p className="text-sm mb-4">Our currently running session is for the May–June 2026 exams, which started in August. Late-joining students are welcome, but please note that they will need to clear the fees for all previous months in order to access the class recordings and materials for those sessions.</p>
           <Link
-            href="#"
+            target="_blank"
+            href="https://docs.google.com/forms/d/e/1FAIpQLScoTIkG9tHQjF5PSfwbeH-M8qKMXLXILMWPH4aXTaVCBmdqUg/viewform"
             className="inline-block bg-white text-blue-600 font-semibold px-6 py-2 rounded-md text-sm"
           >
             Registration Form

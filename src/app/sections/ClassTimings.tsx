@@ -46,15 +46,7 @@ export default function ClassTimings() {
           ))}
         </div>
 
-        <div className="mt-10">
-          <p className="text-sm text-gray-500 dark:text-gray-300 mb-3">Need custom timings?</p>
-          <Link
-            href="#"
-            className="inline-block border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-5 py-2 rounded-md text-sm font-medium text-gray-800 dark:text-gray-100 hover:shadow"
-          >
-            Contact Coordinator
-          </Link>
-        </div>
+
       </div>
     </section>
   );
