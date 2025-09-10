@@ -11,7 +11,7 @@ export default function ContactPage() {
     <main className="bg-white text-gray-800">
     <Banner  title="Contact" title2="Us" description="Have questions about our courses or need help with your studies? We're here to support you every step of the way"/>
 <ContactSection />
-<FaqCardGrid/>
+
     </main>
   );
 }
