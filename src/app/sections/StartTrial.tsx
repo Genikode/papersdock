@@ -35,22 +35,21 @@ export default function StartTrial() {
 
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6">
           <Link
-            href="#"
+            href="https://docs.google.com/forms/d/e/1FAIpQLScoTIkG9tHQjF5PSfwbeH-M8qKMXLXILMWPH4aXTaVCBmdqUg/viewform"
+            target="_blank"
             className="bg-gradient-to-r from-[#FACC15] from-10% via-[#EAB308] via-30% to-[#F97316] to-90% text-black font-semibold px-6 py-3 rounded-md text-sm shadow hover:bg-yellow-500"
           >
-            Start Free Trial Now
-          </Link>
+            Join Now  </Link>
           <Link
-            href="#"
+            target="_blank"
+            href="https://www.youtube.com/@papersdock"
             className="bg-white text-blue-600 font-medium px-6 py-3 rounded-md text-sm shadow hover:bg-blue-50"
           >
-            Schedule Demo
+            Youtube Channel
           </Link>
         </div>
 
-        <p className="text-sm text-white/80">
-          No credit card required • Cancel anytime • Join 10,000+ successful students
-        </p>
+   
       </div>
     </section>
   );

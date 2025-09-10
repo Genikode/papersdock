@@ -8,9 +8,9 @@ export default function Contact() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
         {/* Left Side */}
         <div>
-          <h2 className="text-3xl font-bold mb-4">Ready to Start Your Journey?</h2>
+          <h2 className="text-3xl font-bold mb-4">Have Questions? Get in Touch </h2>
           <p className="text-gray-700 dark:text-gray-300 mb-6">
-            Join thousands of students who have transformed their A-Level Computer Science results with our expert guidance and comprehensive resources.
+            Whether it’s about syllabus coverage, sessions, or registration, feel free to reach out. We’re always ready to help. 
           </p>
 
           <ul className="space-y-4 text-sm text-gray-700 dark:text-gray-300 mb-8">
@@ -30,13 +30,14 @@ export default function Contact() {
 
           <div className="flex gap-4">
             <Link
-              href="#"
+              href="/contact"
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm font-medium"
             >
               Contact
             </Link>
             <Link
-              href="#"
+              target="_blank"
+              href="https://docs.google.com/forms/d/e/1FAIpQLScoTIkG9tHQjF5PSfwbeH-M8qKMXLXILMWPH4aXTaVCBmdqUg/viewform "
               className="bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 px-6 py-2 rounded-md text-sm font-medium"
             >
               Registration Link
