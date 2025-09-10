@@ -16,10 +16,13 @@ import {
   Lock,
   Code,
   Edit,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 import '../globals.css';
 import { clearAccessToken, clearUserData, getUserData, isLoggedIn } from '@/lib/auth';
+import { ThemeProvider, useTheme } from 'next-themes';
 
 /** Small helper so both sidebars (mobile + desktop) render the same list */
 function NavLinks({
@@ -61,6 +64,28 @@ function NavLinks({
   );
 }
 
+/** Hydration-safe theme toggle (avoids SSR mismatch for the icon) */
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  return (
+    <button
+      onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+      aria-label="Toggle theme"
+      className="rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors"
+      title="Toggle theme"
+    >
+      {mounted ? (
+        resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />
+      ) : (
+        <span className="inline-block h-[18px] w-[18px]" />
+      )}
+    </button>
+  );
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -70,7 +95,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     () => [
       { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { label: 'View Chapter', href: '/view-chapter', icon: Code },
-      // { label: 'View Lectures', href: '/view-lectures', icon: BookOpen },
       { label: 'Student Queries', href: '/student-query', icon: BookOpen },
       { label: 'View Assignments', href: '/view-assignments', icon: FileText },
       { label: 'View Notes', href: '/view-notes', icon: StickyNote },
@@ -129,119 +153,132 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <html lang="en">
-      <body className="antialiased bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        <div className="flex h-screen overflow-hidden">
-          {/* ========== Desktop Sidebar (md+) ========== */}
-          <aside
-            className={`hidden md:block bg-white dark:bg-slate-900 border-[1.5px] border-[whitesmoke] dark:border-slate-800 shadow-sm transition-all duration-300 ${
-              collapsed ? 'w-16' : 'w-64'
-            } overflow-y-auto`}
-          >
-            <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke] dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="bg-blue-600 text-white font-bold p-2 rounded-md">PD</div>
-                {!collapsed && <span className="font-semibold text-gray-700 dark:text-slate-200">PapersDock</span>}
-              </div>
-            </div>
-
-            <NavLinks items={navItems} collapsed={collapsed} pathname={pathname} />
-          </aside>
-
-          {/* ========== Mobile Drawer (sm and below) ========== */}
-          <div className={`md:hidden`} aria-hidden={!mobileOpen}>
-            {/* Overlay */}
-            <div
-              className={`fixed inset-0 z-40 bg-black/40 dark:bg-black/60 transition-opacity ${
-                mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              }`}
-              onClick={() => setMobileOpen(false)}
-            />
-
-            {/* Panel */}
-            <div
-              className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-slate-900 border-r border-[whitesmoke] dark:border-slate-800 shadow-lg transform transition-transform ${
-                mobileOpen ? 'translate-x-0' : '-translate-x-full'
-              }`}
-              role="dialog"
-              aria-modal="true"
+    // If this is used as a layout file, you can return a fragment. If you need to
+    // render <html>/<body> here, keep suppressHydrationWarning to avoid theme flicker warnings.
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <div className="flex h-screen overflow-hidden">
+            {/* ========== Desktop Sidebar (md+) ========== */}
+            <aside
+              className={`hidden md:block bg-white dark:bg-slate-900 border-[1.5px] border-[whitesmoke] dark:border-slate-800 shadow-sm transition-all duration-300 ${
+                collapsed ? 'w-16' : 'w-64'
+              } overflow-y-auto`}
             >
               <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke] dark:border-slate-800">
                 <div className="flex items-center gap-2">
                   <div className="bg-blue-600 text-white font-bold p-2 rounded-md">PD</div>
-                  <span className="font-semibold text-gray-700 dark:text-slate-200">PapersDock</span>
+                  {!collapsed && <span className="font-semibold text-gray-700 dark:text-slate-200">PapersDock</span>}
                 </div>
-                <button
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded p-2 text-gray-600 hover:bg-gray-100 hover:text-black dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-                  aria-label="Close navigation"
-                >
-                  <X size={20} />
-                </button>
               </div>
 
-              <div className="px-1">
-                <NavLinks items={navItems} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
-              </div>
+              <NavLinks items={navItems} collapsed={collapsed} pathname={pathname} />
+            </aside>
 
-              {/* Mobile footer actions */}
-              <div className="mt-auto border-t border-[whitesmoke] dark:border-slate-800 p-4">
-                <button
-                  onClick={handleLogout}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded border px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-slate-800"
-                >
-                  <LogOut size={18} /> Logout
-                </button>
+            {/* ========== Mobile Drawer (sm and below) ========== */}
+            <div className={`md:hidden`} aria-hidden={!mobileOpen}>
+              {/* Overlay */}
+              <div
+                className={`fixed inset-0 z-40 bg-black/40 dark:bg-black/60 transition-opacity ${
+                  mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+                onClick={() => setMobileOpen(false)}
+              />
+
+              {/* Panel */}
+              <div
+                className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white dark:bg-slate-900 border-r border-[whitesmoke] dark:border-slate-800 shadow-lg transform transition-transform ${
+                  mobileOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
+                role="dialog"
+                aria-modal="true"
+              >
+                <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke] dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-blue-600 text-white font-bold p-2 rounded-md">PD</div>
+                    <span className="font-semibold text-gray-700 dark:text-slate-200">PapersDock</span>
+                  </div>
+                  <button
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded p-2 text-gray-600 hover:bg-gray-100 hover:text-black dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                    aria-label="Close navigation"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="px-1">
+                  <NavLinks items={navItems} pathname={pathname} onNavigate={() => setMobileOpen(false)} />
+                </div>
+
+                {/* Mobile footer actions */}
+                <div className="mt-auto border-t border-[whitesmoke] dark:border-slate-800 p-4 flex items-center gap-2">
+                  <ThemeToggle />
+                  <button
+                    onClick={handleLogout}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded border px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-slate-800"
+                  >
+                    <LogOut size={18} /> Logout
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* ========== Main Content ========== */}
+            <div className="flex-1 flex flex-col">
+              {/* Topbar */}
+              <header className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-[whitesmoke] dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {/* Mobile burger (only on mobile) */}
+                  <button
+                    onClick={() => setMobileOpen(true)}
+                    className="md:hidden rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
+                    aria-label="Open navigation"
+                  >
+                    <Menu size={22} />
+                  </button>
+
+                  {/* Desktop collapse toggle (hidden on mobile) */}
+                  <button
+                    onClick={() => setCollapsed((c) => !c)}
+                    className="hidden md:inline-flex rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
+                    aria-label="Toggle sidebar"
+                  >
+                    <Menu size={22} />
+                  </button>
+
+                  <h1 className="font-semibold text-lg text-gray-800 dark:text-slate-100 hidden sm:block">Dashboard</h1>
+                </div>
+
+                {/* Right-side actions (desktop) */}
+                <div className="hidden md:flex items-center gap-2">
+                  <ThemeToggle />
+                  <div className="ml-2 flex items-center gap-4 text-sm text-gray-600 dark:text-slate-400">
+                    <span className="truncate max-w-[40ch]">
+                      Welcome back, {currentUser?.name || 'User'}
+                    </span>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-1 text-red-500 dark:text-red-400 hover:underline"
+                    >
+                      <LogOut size={18} /> Logout
+                    </button>
+                  </div>
+                </div>
+
+                {/* Compact right-side (mobile) */}
+                <div className="md:hidden flex items-center gap-2">
+                  <ThemeToggle />
+                  <span className="text-sm text-gray-600 dark:text-slate-400">
+                    Hi, {currentUser?.name?.split(' ')[0] || 'User'}
+                  </span>
+                </div>
+              </header>
+
+              <main className="flex-1 p-4 sm:p-6 bg-gray-50 dark:bg-slate-950 overflow-y-auto">{children}</main>
+            </div>
           </div>
-
-          {/* ========== Main Content ========== */}
-          <div className="flex-1 flex flex-col">
-            {/* Topbar */}
-            <header className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-[whitesmoke] dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-              <div className="flex items-center gap-3 sm:gap-4">
-                {/* Mobile burger (only on mobile) */}
-                <button
-                  onClick={() => setMobileOpen(true)}
-                  className="md:hidden rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
-                  aria-label="Open navigation"
-                >
-                  <Menu size={22} />
-                </button>
-
-                {/* Desktop collapse toggle (hidden on mobile) */}
-                <button
-                  onClick={() => setCollapsed((c) => !c)}
-                  className="hidden md:inline-flex rounded p-2 text-gray-600 hover:text-black hover:bg-gray-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
-                  aria-label="Toggle sidebar"
-                >
-                  <Menu size={22} />
-                </button>
-
-                <h1 className="font-semibold text-lg text-gray-800 dark:text-slate-100 hidden sm:block">Dashboard</h1>
-              </div>
-
-              <div className="hidden md:flex items-center gap-4 text-sm text-gray-600 dark:text-slate-400">
-                <span className="truncate max-w-[40ch]">
-                  Welcome back, {currentUser?.name || 'User'}
-                </span>
-                <button onClick={handleLogout} className="flex items-center gap-1 text-red-500 dark:text-red-400 hover:underline">
-                  <LogOut size={18} /> Logout
-                </button>
-              </div>
-
-              {/* Compact topbar actions for mobile */}
-              <div className="md:hidden flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-slate-400">
-                  Hi, {currentUser?.name?.split(' ')[0] || 'User'}
-                </span>
-              </div>
-            </header>
-
-            <main className="flex-1 p-4 sm:p-6 bg-gray-50 dark:bg-slate-950 overflow-y-auto">{children}</main>
-          </div>
-        </div>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,11 +1,10 @@
-// app/components/Header.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, Sun, Moon } from 'lucide-react';
-import Image from 'next/image';
+import { useTheme } from 'next-themes';
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -17,30 +16,17 @@ const navLinks = [
 export default function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Initialize theme from localStorage or OS preference
-  useEffect(() => {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null;
-    if (stored === 'dark' || (!stored && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-      setTheme('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      setTheme('light');
-    }
-  }, []);
+  // next-themes
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    if (next === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', next);
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   };
+
+  const isActive = (href: string) => pathname === href;
 
   return (
     <header className="w-full bg-white dark:bg-gray-900 shadow-sm fixed top-0 left-0 z-50 transition-colors">
@@ -60,7 +46,7 @@ export default function Header() {
               key={link.name}
               href={link.href}
               className={`text-sm font-medium transition-colors ${
-                pathname === link.href
+                isActive(link.href)
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
               }`}
@@ -71,14 +57,20 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* Theme toggle */}
+          {/* Theme toggle (hydration-safe icon) */}
           <button
             onClick={toggleTheme}
-            aria-label="Toggle dark mode"
-            title="Toggle dark mode"
+            aria-label="Toggle theme"
+            title="Toggle theme"
             className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            {/* Avoid SSR mismatch: render icon only after mount */}
+            {mounted ? (
+              resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />
+            ) : (
+              // placeholder to keep layout stable
+              <span className="inline-block h-[18px] w-[18px]" />
+            )}
           </button>
 
           {/* Sign In Button */}
@@ -92,7 +84,11 @@ export default function Header() {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <button
+            onClick={() => setMobileOpen((s) => !s)}
+            className="md:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="Open navigation menu"
+          >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -108,7 +104,7 @@ export default function Header() {
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
                 className={`text-base font-medium transition-colors ${
-                  pathname === link.href
+                  isActive(link.href)
                     ? 'text-blue-600 dark:text-blue-400'
                     : 'text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400'
                 }`}
@@ -128,14 +124,15 @@ export default function Header() {
 
               {/* Mobile theme toggle */}
               <button
-                onClick={() => {
-                  toggleTheme();
-                  // keep drawer open state; do not auto-close
-                }}
-                aria-label="Toggle dark mode"
+                onClick={toggleTheme}
+                aria-label="Toggle theme"
                 className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                {mounted ? (
+                  resolvedTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />
+                ) : (
+                  <span className="inline-block h-[18px] w-[18px]" />
+                )}
               </button>
             </div>
           </nav>

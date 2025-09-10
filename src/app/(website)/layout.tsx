@@ -3,7 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Script from 'next/script';
+import { ThemeProvider } from "next-themes";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -25,25 +26,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // Hydration-safe: allow client to change <html> class (dark) without warnings
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors`}
       >
- <Script id="theme-init" strategy="beforeInteractive">
-          {`
-            (function() {
-              try {
-                var pref = localStorage.getItem('theme') || 'system';
-                var dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                if (dark) document.documentElement.classList.add('dark');
-              } catch(e) {}
-            })();
-          `}
-        </Script>
-        <Header />
-        <div className="container mx-auto px-4 py-8"></div>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Header />
+          {/* spacer under fixed header if needed */}
+          <div className="h-16 md:h-[72px]" />
           <main className="min-h-screen">{children}</main>
-       <Footer />
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );
