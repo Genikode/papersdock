@@ -105,10 +105,9 @@ export default function AssessmentOverview() {
       <div className="max-w-6xl mx-auto mb-12">
         <div className="flex items-center justify-center gap-4 mb-6">
           <div className="text-center md:text-center">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Assessment Overview</h2>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Syllabus Overview </h2>
             <p className="text-gray-500 dark:text-gray-300 max-w-2xl">
-              Our comprehensive learning resources are designed to help you master every aspect of A-Level Computer Science,
-              from basic concepts to advanced programming.
+             This is the official syllabus for Cambridge International AS & A-Level Computer Science (9618). At the AS Level, Paper 1 focuses on the theory fundamentals of computer science, while Paper 2 develops essential problem-solving and programming skills. At the A2 Level, Paper 3 explores advanced theory in greater depth, and Paper 4 extends students’ abilities in problem-solving and programming. Together, these four papers provide a comprehensive foundation in both the theoretical and practical aspects of computer science, preparing students for further study and real-world application. 
             </p>
           </div>
 
@@ -144,8 +143,12 @@ export default function AssessmentOverview() {
               ))}
             </ul>
 
-            <button className="mt-auto bg-gray-900 text-white px-4 py-2 rounded-md text-sm w-full hover:opacity-95">
+            <button className="mt-auto bg-gray-900 text-white px-4 py-2 rounded-md text-sm w-full hover:opacity-95" >
+              <Link  href="https://www.cambridgeinternational.org/Images/697372-2026-syllabus.pdf"
+              target="_blank">
+              
               View Details
+              </Link>
             </button>
           </div>
         ))}

@@ -49,6 +49,7 @@ export default function Hero() {
           <div className="flex gap-4 mb-6 flex-wrap">
             <Link
               href="https://www.cambridgeinternational.org/Images/697372-2026-syllabus.pdf"
+              target="_blank"
               className="px-5 py-3 bg-gradient-to-r from-[#4F46E5] from-10% via-[#9333EA] via-30% to-[#2563EB] to-90% text-white rounded-md shadow text-sm font-semibold"
             >
               Syllabus Overview →
@@ -56,6 +57,7 @@ export default function Hero() {
             <Link
             
               href="https://www.youtube.com/@papersdock"
+              target="_blank"
               className="px-5 py-3 border border-gray-300 dark:border-gray-700 text-black dark:text-white bg-white dark:bg-gray-800 rounded-md shadow text-sm font-semibold flex items-center gap-2"
             >
               <Image src="/icons/youtube.png" alt="YouTube" width={20} height={20} />
