@@ -15,21 +15,23 @@ export default function StartTrial() {
           Join thousands of students who have transformed their Computer Science results. Start your journey to academic excellence today!
         </p>
 
-        <div className="flex flex-col md:flex-row justify-center items-center gap-10 mb-12">
-          <div className="flex flex-col items-center">
-            <CalendarClock size={28} className="mb-2" />
-            <p className="font-bold text-lg">10 Months</p>
-            <p className="text-sm">Session</p>
+   <div className="grid grid-cols-3 justify-items-center items-center gap-3 sm:gap-6 mb-12">
+          <div className="flex flex-col items-center min-w-0">
+            <CalendarClock className="w-5 h-5 sm:w-7 sm:h-7 mb-1 sm:mb-2" />
+            <p className="font-bold text-[12px] sm:text-base leading-tight">10 Months</p>
+            <p className="text-[10px] sm:text-sm opacity-90 leading-tight">Session</p>
           </div>
-          <div className="flex flex-col items-center">
-            <Trophy size={28} className="mb-2" />
-            <p className="font-bold text-lg">Weekly</p>
-            <p className="text-sm">Classes</p>
+
+          <div className="flex flex-col items-center min-w-0">
+            <Trophy className="w-5 h-5 sm:w-7 sm:h-7 mb-1 sm:mb-2" />
+            <p className="font-bold text-[12px] sm:text-base leading-tight">Weekly</p>
+            <p className="text-[10px] sm:text-sm opacity-90 leading-tight">Classes</p>
           </div>
-          <div className="flex flex-col items-center">
-            <HelpCircle size={28} className="mb-2" />
-            <p className="font-bold text-lg">Query</p>
-            <p className="text-sm">Support</p>
+
+          <div className="flex flex-col items-center min-w-0">
+            <HelpCircle className="w-5 h-5 sm:w-7 sm:h-7 mb-1 sm:mb-2" />
+            <p className="font-bold text-[12px] sm:text-base leading-tight">Query</p>
+            <p className="text-[10px] sm:text-sm opacity-90 leading-tight">Support</p>
           </div>
         </div>
 

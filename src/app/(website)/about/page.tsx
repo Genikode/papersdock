@@ -61,26 +61,7 @@ export default function AboutPage() {
       <Value />
 
       {/* CTA Section */}
-      <section className="py-20 text-center bg-white dark:bg-gray-800">
-        <h2 className="text-2xl font-bold mb-4">Ready to Start Your Journey?</h2>
-        <p className="text-gray-600 dark:text-gray-300 max-w-xl mx-auto mb-6">
-          Join thousands of students who have transformed their Computer Science studies with PapersDock.
-        </p>
-        <div className="flex justify-center gap-4">
-          <Link
-            href="#"
-            className="bg-blue-600 text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-          >
-            Get Started Now
-          </Link>
-          <Link
-            href="#"
-            className="border border-gray-300 px-6 py-3 rounded-md text-sm font-medium hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-700"
-          >
-            Contact Us
-          </Link>
-        </div>
-      </section>
+
     </main>
   );
 }
