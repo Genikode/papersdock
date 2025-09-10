@@ -25,7 +25,7 @@ export default function Hero() {
                   Science
                 </div>
               </h1>
-              <p className="md:flex xl:absolute left-[38%] top-[78%] xl:ml-0 md:ml-4 text-[20px] text-black dark:text-gray-200 whitespace-nowrap font-bold">
+              <p className="md:flex xl:absolute left-[40%] top-[78%] xl:ml-0 md:ml-4 text-[20px] text-black dark:text-gray-200 whitespace-nowrap font-bold">
                 Like Never Before
               </p>
             </div>
