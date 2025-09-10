@@ -23,7 +23,7 @@ export default function Contact() {
     const body = `Name: ${name}\nEmail: ${email}\n\n${message}`;
 
     const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto; // opens default email app with draft
+    
   }, []);
 
   return (
