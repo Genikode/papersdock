@@ -40,7 +40,7 @@ export default function CategoryTabs({
               // 💡 full-width on mobile, centered, capped width for nicer look
               'w-full sm:w-auto max-w-[22rem] mx-auto',
               // base styles
-              'text-left rounded-2xl px-5 py-2 border transition-all outline-none',
+              'text-left rounded-2xl px-2 py-2 border transition-all outline-none',
               'focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
               'dark:focus-visible:ring-offset-slate-950',
               selected

@@ -106,7 +106,7 @@ export default function ResourcesPage() {
           <option value="">All</option>
           <option value="light">Light Mode</option>
           <option value="dark">Dark Mode</option>
-        </select>
+      </select>
       </div>
     </div>
   );
