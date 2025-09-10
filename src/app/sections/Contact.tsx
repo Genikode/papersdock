@@ -105,26 +105,26 @@ export default function ContactSection() {
             icon={<Mail size={18} className="text-blue-600 dark:text-blue-400" />}
             title="Email Us"
             content="For general inquiries and support"
-            detail="info@papersdock.com"
+            detail="papersdockcoordinator@gmail.com "
           />
           <InfoCard
             icon={<PhoneCall size={18} className="text-green-600 dark:text-green-400" />}
             title="WhatsApp Support"
             content="Coordinator Number"
-            detail="+1 (234) 567-8900"
+            detail="+92 318 2248924"
             iconBg="bg-green-100 dark:bg-green-900/20"
           />
           <InfoCard
             icon={<MapPin size={18} className="text-purple-600 dark:text-purple-400" />}
             title="Zoom Meeting"
-            content={`123 Education Street\nLearning District\nKnowledge City, KC 12345`}
+            content={`Zoom link will be provided in portal`}
             detail="Join via Zoom link"
             iconBg="bg-purple-100 dark:bg-purple-900/20"
           />
           <InfoCard
             icon={<Clock size={18} className="text-orange-600 dark:text-orange-400" />}
             title="Office Hours"
-            content={`Call timings: 9:00 AM - 6:00 PM\nClass Timings: 10:00 AM - 4:00 PM\nSunday: Closed\n*Online support available`}
+            content={`Call timings: 12:00 PM - 6:00 PM\nOnline support available`}
             detail=""
             iconBg="bg-orange-100 dark:bg-orange-900/20"
           />

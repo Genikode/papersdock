@@ -133,7 +133,7 @@ export default function ResourcesPage() {
         </div>
 
         {/* Category tabs (centered) */}
-        <div className="flex flex-wrap justify-center align-baseline mb-8">
+        <div className="flex flex-wrap justify-center mb-8">
           <CategoryTabs
             categories={categories}
             selectedCategory={selectedPaper}
