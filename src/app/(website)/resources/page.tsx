@@ -127,8 +127,7 @@ export default function ResourcesPage() {
             Master Every Topic
           </h1>
           <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-            Comprehensive resources for all A-Level Computer Science papers. From theory fundamentals
-            to practical applications.
+           Comprehensive resources for all A-Level Computer Science papers, from theory fundamentals to practical applications. Each set of notes is paired with topical past papers and their corresponding marking schemes for complete preparation. 
           </p>
         </div>
 
