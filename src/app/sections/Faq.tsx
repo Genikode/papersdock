@@ -7,34 +7,61 @@ import Link from 'next/link';
 
 const faqs = [
   {
-    question: 'How does PapersDock guarantee A* results?',
-    answer:
-      "Our proven methodology combines interactive learning, expert mentorship, and AI-powered feedback. We track your progress continuously and adjust your learning path. If you don't achieve your target grade after completing our program, we offer additional support at no cost.",
+    question: "How can we register for the session?",
+    answer: `Below are the links for the following sessions that we offer currently. You can learn about the registration process in detail by watching the videos below. The registration form link is also provided so you can register directly.
+
+A2: https://www.youtube.com/watch?v=xBCXHiTaF70
+AS: https://www.youtube.com/watch?v=eLb_xlU1pkQ
+Form Link: https://docs.google.com/forms/d/e/1FAIpQLScoTIkG9tHQjF5PSfwbeH-M8qKMXLXILMWPH4aXTaVCBmdqUg/viewform`,
   },
   {
-    question: 'What makes PapersDock different from other platforms?',
-    answer:
-      "PapersDock uniquely blends technology and personal guidance. With real-time progress tracking, dedicated mentors, and tailored coding labs, our learning experience is unmatched in depth and personalization.",
+    question: "Is there an Oct/Nov intake that you guys offer?",
+    answer: "No, we do not offer Oct/Nov intake.",
   },
   {
-    question: 'How much time do I need to commit weekly?',
+    question: "Can we buy the recordings?",
     answer:
-      "We recommend dedicating 6–8 hours per week. Our flexible schedule allows you to learn at your own pace, while still making steady progress.",
+      "No, you cannot; you would have to join the session to get the recordings.",
   },
   {
-    question: 'Do you cover all A-Level Computer Science exam boards?',
+    question: "What are the dues per session?",
     answer:
-      "Yes, we align our curriculum with all major A-Level Computer Science boards, including Cambridge, Edexcel, and OCR.",
+      "The fee is Rs. 5,000 per month for AS and A2 students and Rs. 10,000 per month for composite students.",
   },
   {
-    question: 'Can I get help with coursework and projects?',
+    question:
+      "What about the classes that we have missed, how can we cover that content?",
     answer:
-      "Absolutely! Our mentors provide project feedback, code reviews, and practical guidance to help you ace both coursework and final assessments.",
+      "Each live class is recorded and then posted on the portal for students to access, ensuring that students don't fall behind.",
   },
   {
-    question: "What if I'm completely new to programming?",
+    question: "I want to join now, do I have to pay for the previous months?",
     answer:
-      "No worries! Our beginner-friendly modules and one-on-one mentoring are designed to help you build confidence from Day 1. You'll be writing your first program in no time!",
+      "Yes, since the session started in August and all recorded lectures are available, students who join later still need to clear the fees for the previous months. This policy ensures fairness to all students who have been paying regularly since August while receiving the same content.",
+  },
+  {
+    question: "Can I start the session after Oct/Nov Intake?",
+    answer:
+      "Yes, you can, but you would have to clear the dues for the previous months as you will receive the recordings of those months. This policy ensures fairness to all students who have been paying regularly since August while receiving the same content. Therefore, we cannot allow anyone to access previous months' recordings without clearing the fee for those months.",
+  },
+  {
+    question: "Is there another session or batch?",
+    answer:
+      "No, there’s only one batch and its session started in August. There will be a crash course around February, but that will only cover CS Paper 4 and Paper 2. The classes in the crash course will be relatively fast-paced compared to the regular session.",
+  },
+  {
+    question: "Does PapersDock offer O Level classes?",
+    answer: "No, we only offer A Level Computer Science classes for now.",
+  },
+  {
+    question: "Do you offer discounts on fees?",
+    answer:
+      "No, we don’t offer discounts. Fee concession is only considered in cases of genuine financial difficulty, which you will need to explain to us.",
+  },
+  {
+    question: "Do you offer any past papers sessions?",
+    answer:
+      "No, we don’t offer a separate yearly past paper session. We believe yearly past papers should be completed by students for preparation. However, by the end of the session, we conduct a 10-day topical past paper session.",
   },
 ];
 

@@ -103,8 +103,8 @@ export default function AssessmentOverview() {
   return (
     <section className="bg-[#F9FAFB] dark:bg-gray-900 py-20 px-4">
       <div className="max-w-6xl mx-auto mb-12">
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <div className="text-center md:text-left">
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="text-center md:text-center">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Assessment Overview</h2>
             <p className="text-gray-500 dark:text-gray-300 max-w-2xl">
               Our comprehensive learning resources are designed to help you master every aspect of A-Level Computer Science,
@@ -112,16 +112,7 @@ export default function AssessmentOverview() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleTheme}
-              aria-label="Toggle dark mode"
-              className="flex items-center gap-2 px-3 py-2 rounded-md border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-200"
-            >
-              {isDark ? <Sun size={16} /> : <Moon size={16} />}
-              <span>{isDark ? 'Light' : 'Dark'}</span>
-            </button>
-          </div>
+         
         </div>
       </div>
 
