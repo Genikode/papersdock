@@ -3,6 +3,25 @@ import { Mail, MessageCircle, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Contact() {
+    const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget as typeof e.currentTarget & {
+      name: { value: string };
+      email: { value: string };
+      message: { value: string };
+    };
+
+    const name = form.name.value.trim();
+    const email = form.email.value.trim();
+    const message = form.message.value.trim();
+
+    const to = 'papersdockcoordinator@gmail.com';
+    const subject = `New message from ${name}`;
+    const body = `Name: ${name}\nEmail: ${email}\n\n${message}`;
+
+    const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto; // opens default email app with draft
+  }, []);
   return (
     <section className="bg-white text-gray-900 dark:bg-[#0D1117] dark:text-white transition-colors py-20 px-4">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
@@ -48,7 +67,7 @@ export default function Contact() {
         {/* Right Side */}
         <div className="bg-gray-50 dark:bg-[#161B22] p-6 rounded-xl w-full transition-colors border border-transparent dark:border-transparent">
           <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Quick Contact</h3>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={onSubmit}>
             <input
               type="text"
               placeholder="Your Name"
