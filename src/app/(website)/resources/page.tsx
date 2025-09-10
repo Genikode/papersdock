@@ -93,13 +93,13 @@ export default function ResourcesPage() {
   }, [page, limit, selectedPaper, mode]);
 
   const headingRight = (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-      <div className="flex items-center gap-2">
+    <div className="w-full sm:w-auto flex flex-col sm:flex-row sm:items-center gap-3 justify-center">
+      <div className="w-full sm:w-auto flex items-center gap-2 justify-center">
         <label className="text-sm text-slate-600 dark:text-slate-400">Mode</label>
         <select
           value={mode}
           onChange={(e) => setMode(e.target.value as 'dark' | 'light' | '')}
-          className="border border-slate-300 dark:border-slate-700 rounded-md text-sm px-3 py-2
+          className="w-full sm:w-44 border border-slate-300 dark:border-slate-700 rounded-md text-sm px-3 py-2
                      bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200
                      focus:outline-none focus:ring-2 focus:ring-blue-500/50"
         >
@@ -113,12 +113,14 @@ export default function ResourcesPage() {
 
   return (
     <div className="bg-slate-50 dark:bg-slate-950 min-h-screen">
-      <div className="px-4 py-12 sm:py-16 max-w-7xl mx-auto">
+      <div className="px-3 sm:px-4 py-10 sm:py-16 max-w-7xl mx-auto">
         {/* Hero */}
-        <div className="text-center mb-10 sm:mb-12">
-          <div className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-medium
-                          bg-slate-100 text-slate-600
-                          dark:bg-slate-800/70 dark:text-slate-300 mb-4">
+        <div className="text-center mb-8 sm:mb-12">
+          <div
+            className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full text-sm font-medium
+                       bg-slate-100 text-slate-600
+                       dark:bg-slate-800/70 dark:text-slate-300 mb-4"
+          >
             🚀 <span>Complete Learning Resources</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">
@@ -130,8 +132,8 @@ export default function ResourcesPage() {
           </p>
         </div>
 
-        {/* Category tabs */}
-        <div className="flex flex-wrap justify-center mb-8">
+        {/* Category tabs (centered) */}
+        <div className="flex flex-wrap justify-center align-baseline mb-8">
           <CategoryTabs
             categories={categories}
             selectedCategory={selectedPaper}
@@ -143,8 +145,8 @@ export default function ResourcesPage() {
         </div>
 
         {/* Heading + controls */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6 text-center sm:text-left">
+          <div className="w-full sm:w-auto">
             <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
               {selectedPaper
                 ? `Resources for ${categories.find((c) => c.id === selectedPaper)?.title ?? selectedPaper}`
@@ -157,9 +159,11 @@ export default function ResourcesPage() {
 
         {/* Error / loading states */}
         {error && (
-          <div className="mb-4 text-sm text-red-700 dark:text-red-400
-                          border border-red-200 dark:border-red-800
-                          rounded p-3 bg-red-50 dark:bg-red-950/40">
+          <div
+            className="mx-auto max-w-xl mb-6 text-sm text-red-700 dark:text-red-400
+                        border border-red-200 dark:border-red-800
+                        rounded p-3 bg-red-50 dark:bg-red-950/40 text-center"
+          >
             {error}
           </div>
         )}
@@ -169,7 +173,7 @@ export default function ResourcesPage() {
             {Array.from({ length: Math.min(limit, 8) }).map((_, i) => (
               <div
                 key={i}
-                className="border rounded shadow-sm p-4 animate-pulse
+                className="w-full max-w-[20rem] mx-auto border rounded shadow-sm p-4 animate-pulse
                            bg-white border-slate-200
                            dark:bg-slate-900 dark:border-slate-800"
               >
@@ -182,7 +186,7 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        {/* Cards grid */}
+        {/* Cards grid (mobile centered) */}
         {!loading && rows.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {rows.map((note) => {
@@ -197,11 +201,12 @@ export default function ResourcesPage() {
                   key={note.id}
                   {...wrapperProps}
                   className={clsx(
-                    'block text-left transition',
+                    'block text-left transition mx-auto w-full max-w-[20rem]',
                     !clickable && 'opacity-90'
                   )}
                   title={clickable ? 'Open note' : 'No attachment'}
                   aria-label={clickable ? `Open ${note.title}` : `${note.title} (no file)`}
+                  tabIndex={0}
                 >
                   <FilteredResourceBox
                     tag={note.paper || ''}
@@ -223,18 +228,18 @@ export default function ResourcesPage() {
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Pagination (centered; buttons full-width on mobile) */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
-          <span className="text-sm text-slate-600 dark:text-slate-400">
+          <span className="text-sm text-slate-600 dark:text-slate-400 text-center">
             Showing {(page - 1) * limit + (rows.length ? 1 : 0)} – {Math.min(page * limit, total)} of {total}
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               className={clsx(
-                'px-3 py-1.5 rounded-md border text-sm transition',
+                'w-full sm:w-auto px-3 py-2 rounded-md border text-sm transition',
                 page === 1
                   ? 'cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border-slate-200 dark:border-slate-800'
                   : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -268,7 +273,7 @@ export default function ResourcesPage() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className={clsx(
-                'px-3 py-1.5 rounded-md border text-sm transition',
+                'w-full sm:w-auto px-3 py-2 rounded-md border text-sm transition',
                 page === totalPages
                   ? 'cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border-slate-200 dark:border-slate-800'
                   : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -280,6 +285,7 @@ export default function ResourcesPage() {
         </div>
       </div>
 
+      {/* Keep it full width; it already adapts to theme */}
       <AiLogicChecker />
     </div>
   );

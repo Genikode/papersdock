@@ -22,7 +22,7 @@ export default function CategoryTabs({
 }: CategoryTabsProps) {
   return (
     <div
-      className="flex flex-wrap gap-4"
+      className="w-full flex flex-wrap justify-center gap-4"
       role="tablist"
       aria-label="Resource categories"
     >
@@ -37,6 +37,9 @@ export default function CategoryTabs({
             aria-selected={selected}
             aria-controls={`panel-${cat.id}`}
             className={clsx(
+              // 💡 full-width on mobile, centered, capped width for nicer look
+              'w-full sm:w-auto max-w-[22rem] mx-auto',
+              // base styles
               'text-left rounded-2xl px-5 py-2 border transition-all outline-none',
               'focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
               'dark:focus-visible:ring-offset-slate-950',
@@ -58,14 +61,18 @@ export default function CategoryTabs({
               </div>
 
               <div>
-                <span className="text-[11px] font-semibold px-2 py-1 rounded-full
-                                  bg-slate-100 text-slate-600
-                                  dark:bg-slate-800/70 dark:text-slate-300">
+                <span
+                  className="text-[11px] font-semibold px-2 py-1 rounded-full
+                             bg-slate-100 text-slate-600
+                             dark:bg-slate-800/70 dark:text-slate-300"
+                >
                   {cat.id}
                 </span>
 
-                <div className="text-[12px] font-medium mt-1
-                                text-slate-900 dark:text-slate-100">
+                <div
+                  className="text-[12px] font-medium mt-1
+                             text-slate-900 dark:text-slate-100"
+                >
                   {cat.title}
                 </div>
               </div>
