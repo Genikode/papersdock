@@ -1,6 +1,7 @@
 // app/components/Contact.tsx
 import { Mail, MessageCircle, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { useCallback } from 'react';
 
 export default function Contact() {
     const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
