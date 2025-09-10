@@ -170,7 +170,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <div className="flex items-center gap-2">
         <Link href="/" className="flex items-center gap-2">
           <div className="border-1 text-white rounded-xl w-8 h-8 flex items-center justify-center text-sm font-bold">
-            <Image src="/logo4.png" alt="Logo" width={24} height={24} />
+            <Image src="/logo4.png" alt="Logo" width={50} height={50} />
           </div>
           <span className="font-bold text-lg text-gray-900 dark:text-white">PapersDock</span>
         </Link>

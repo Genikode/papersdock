@@ -25,7 +25,7 @@ export default function Footer() {
           <div className="flex items-center gap-2 mb-4">
          <Link href="/" className="flex items-center gap-2">
           <div className="border-1 text-white rounded-xl w-8 h-8 flex items-center justify-center text-sm font-bold">
-            <Image src="/logo4.png" alt="Logo" width={24} height={24} />
+            <Image src="/logo4.png" alt="Logo" width={80} height={80} className='rounded' />
           </div>
           <span className="font-bold text-lg text-gray-900 dark:text-white">PapersDock</span>
         </Link>
