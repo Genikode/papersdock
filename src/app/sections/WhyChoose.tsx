@@ -46,7 +46,9 @@ export default function WhyChoose() {
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Why Choose PapersDock?</h2>
         <p className="text-gray-500 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
-          Our cutting-edge platform combines the best of technology and education to deliver unmatched results
+           
+
+Our platform blends technology and education to deliver unmatched results all at an affordable cost. With a focus on improving problem-solving skills, we empower students to think critically, master concepts, and achieve success without breaking the bank.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -32,8 +32,7 @@ export default function Hero() {
           </div>
 
           <p className="text-gray-600 dark:text-gray-300 text-lg mb-6">
-            Join 10,000+ students achieving A* grades with our revolutionary learning platform. Interactive coding challenges,
-            expert mentorship, and AI-powered feedback.
+     From pseudocode to problem-solving, master A-Level Computer Science with expert guidance. Clear explanations, practice, and support every step of the way. 
           </p>
 
           {/* Ratings */}
@@ -49,13 +48,14 @@ export default function Hero() {
           {/* Buttons */}
           <div className="flex gap-4 mb-6 flex-wrap">
             <Link
-              href="#"
+              href="https://www.cambridgeinternational.org/Images/697372-2026-syllabus.pdf"
               className="px-5 py-3 bg-gradient-to-r from-[#4F46E5] from-10% via-[#9333EA] via-30% to-[#2563EB] to-90% text-white rounded-md shadow text-sm font-semibold"
             >
               Syllabus Overview →
             </Link>
             <Link
-              href="#"
+            
+              href="https://www.youtube.com/@papersdock"
               className="px-5 py-3 border border-gray-300 dark:border-gray-700 text-black dark:text-white bg-white dark:bg-gray-800 rounded-md shadow text-sm font-semibold flex items-center gap-2"
             >
               <Image src="/icons/youtube.png" alt="YouTube" width={20} height={20} />
@@ -92,19 +92,19 @@ export default function Hero() {
             <div className="bg-white dark:bg-gray-800 p-3 md:p-4 rounded-lg shadow-sm dark:shadow-none">
               <div className="flex items-center gap-2 mb-2">
                 <Image src="/icons/icon2.png" alt="Practice" width={36} height={20} className="md:w-[44px] md:h-[24px]" />
-                <h4 className="font-semibold text-xs md:text-sm text-black dark:text-gray-100">Interactive Practice</h4>
+                <h4 className="font-semibold text-xs md:text-sm text-black dark:text-gray-100">Problem-Solving Skills</h4>
               </div>
               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-300">
-                Learn by doing with real coding excurses and instant feedback.
+              Sharpen your logic with guided exercises, coding tasks, and step-by-step solutions.
               </p>
             </div>
             <div className="bg-white dark:bg-gray-800 p-3 md:p-4 rounded-lg shadow-sm dark:shadow-none">
               <div className="flex items-center gap-2 mb-2">
                 <Image src="/icons/icon1.png" alt="Practice" width={36} height={20} className="md:w-[44px] md:h-[24px]" />
-                <h4 className="font-semibold text-xs md:text-sm text-black dark:text-gray-100">Exam-Ready Content</h4>
+                <h4 className="font-semibold text-xs md:text-sm text-black dark:text-gray-100">Compiled Resources</h4>
               </div>
               <p className="text-xs md:text-sm text-gray-500 dark:text-gray-300">
-                Study materials and mock content aligned with your goals.
+                Structured notes and past papers organized by topic to target exactly what exams test.
               </p>
             </div>
           </div>
@@ -119,9 +119,9 @@ export default function Hero() {
             </div>
             <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow">
               <div className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-tl from-[#DB2777] to-[#9333EA]">
-                500+
+                5+
               </div>
-              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-300">Learning Resources</p>
+              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-300">Years Experience</p>
             </div>
           </div>
 
@@ -130,7 +130,7 @@ export default function Hero() {
             <div className="w-2 h-2 mt-1 bg-green-500 dark:bg-green-400 rounded-full"></div>
             <p>
               <strong>Why Learn with Us?</strong> <br />
-              Your success is at the core of everything.
+              Because we make Computer Science interesting and easy to understand. 
             </p>
           </div>
         </div>

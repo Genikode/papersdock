@@ -26,8 +26,8 @@ export default function Stats() {
             <div className="bg-blue-100 dark:bg-blue-900/20 p-4 rounded-full mb-3">
               <BookOpen className="text-blue-600 dark:text-blue-400" size={28} />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">500+</h3>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Learning Resources</p>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">5+</h3>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Years of Experience</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Compiled Resources</p>
           </div>
 
