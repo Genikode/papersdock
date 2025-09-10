@@ -1,10 +1,12 @@
 // app/components/Contact.tsx
+'use client';
+
 import { Mail, MessageCircle, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback } from 'react';
 
 export default function Contact() {
-    const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as typeof e.currentTarget & {
       name: { value: string };
@@ -23,14 +25,15 @@ export default function Contact() {
     const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto; // opens default email app with draft
   }, []);
+
   return (
     <section className="bg-white text-gray-900 dark:bg-[#0D1117] dark:text-white transition-colors py-20 px-4">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
         {/* Left Side */}
         <div>
-          <h2 className="text-3xl font-bold mb-4">Have Questions? Get in Touch </h2>
+          <h2 className="text-3xl font-bold mb-4">Have Questions? Get in Touch</h2>
           <p className="text-gray-700 dark:text-gray-300 mb-6">
-            Whether it’s about syllabus coverage, sessions, or registration, feel free to reach out. We’re always ready to help. 
+            Whether it’s about syllabus coverage, sessions, or registration, feel free to reach out. We’re always ready to help.
           </p>
 
           <ul className="space-y-4 text-sm text-gray-700 dark:text-gray-300 mb-8">
@@ -57,7 +60,8 @@ export default function Contact() {
             </Link>
             <Link
               target="_blank"
-              href="https://docs.google.com/forms/d/e/1FAIpQLScoTIkG9tHQjF5PSfwbeH-M8qKMXLXILMWPH4aXTaVCBmdqUg/viewform "
+              rel="noopener noreferrer"
+              href="https://docs.google.com/forms/d/e/1FAIpQLScoTIkG9tHQjF5PSfwbeH-M8qKMXLXILMWPH4aXTaVCBmdqUg/viewform"
               className="bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 px-6 py-2 rounded-md text-sm font-medium"
             >
               Registration Link
@@ -70,18 +74,24 @@ export default function Contact() {
           <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Quick Contact</h3>
           <form className="space-y-4" onSubmit={onSubmit}>
             <input
+              name="name"
               type="text"
               placeholder="Your Name"
+              required
               className="w-full px-4 py-2 rounded-md bg-gray-100 dark:bg-[#20262E] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border border-gray-200 dark:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <input
+              name="email"
               type="email"
               placeholder="Email Address"
+              required
               className="w-full px-4 py-2 rounded-md bg-gray-100 dark:bg-[#20262E] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border border-gray-200 dark:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <textarea
+              name="message"
               rows={4}
               placeholder="Your Message"
+              required
               className="w-full px-4 py-2 rounded-md bg-gray-100 dark:bg-[#20262E] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border border-gray-200 dark:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
             ></textarea>
             <button
