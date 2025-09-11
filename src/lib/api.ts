@@ -1,6 +1,6 @@
 /* Minimal API client built on fetch with base URL, x-api-key, and bearer token support. */
 
-export const API_BASE_URL = "https://lms-dev.ddns.net"; // {{baseUrl}}
+export const API_BASE_URL = "https://lms-prod.ddns.net"; // {{baseUrl}}
 export const API_KEY_HEADER_NAME = "x-api-key";
 
 /**
