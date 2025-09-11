@@ -276,14 +276,26 @@ export default function AuthPage() {
               icon={<Lock size={16} />}
               input={
                 <input
-                  type="password"
+                   type={showPw ? 'text' : 'password'}
+                 
                   className="bg-transparent outline-none w-full text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   placeholder="At least 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+               
               }
+                  trailing={
+                <button
+                  type="button"
+                  onClick={() => setShowPw((s) => !s)}
+                  className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                >
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+                   }
             />
 
             <Field
