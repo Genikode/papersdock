@@ -169,9 +169,9 @@ return (
               <div className="flex items-center justify-between px-4 py-4 border-b border-[whitesmoke] dark:border-slate-800">
                 <div className="flex items-center gap-2">
          <Link href="/" className="flex items-center gap-2">
-          <div className=" text-white rounded-xl flex items-center justify-center text-sm font-bold">
-            <Image src="/logo4.png" alt="Logo" width={40} height={40} className='rounded-2xl ' />
-          </div>
+    
+            <Image src="/logo4.png" alt="Logo" width={40} height={40} className='rounded-2xl '  />
+          
           <span className="font-bold text-lg text-gray-900 dark:text-white">PapersDock</span>
         </Link>
                 </div>
