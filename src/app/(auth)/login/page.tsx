@@ -79,14 +79,7 @@ export default function LoginPage() {
       }, []);
     
 
-    useEffect(() => {
-      if (isLoggedIn()  && currentUser?.roleName == 'student') {
-        router.replace('/recorded-lectures');
-      }
-      else if (isLoggedIn()  && currentUser?.roleName == 'admin') {
-        router.replace('/dashboard');
-      }
-    }, [router]);
+  
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2 bg-white">
       {/* Left: Login Form */}
