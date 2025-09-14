@@ -97,6 +97,7 @@ export default function LoginPage() {
             <Image src="/logo4.png" alt="Logo" width={100} height={100} className='rounded-2xl ' />
           </div>
        
+       
         </Link>
     <h2 className="text-xl font-bold mt-4 text-slate-900 dark:text-slate-100">Login</h2>
     <p className="text-slate-600 dark:text-slate-400 text-sm">Info related portal</p>
