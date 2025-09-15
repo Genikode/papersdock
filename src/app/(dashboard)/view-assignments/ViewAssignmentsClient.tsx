@@ -89,7 +89,7 @@ export default function ViewAssignments({
   const [totalItems, setTotalItems] = useState<number>(0);
   const [courseId, setCourseId] = useState<string | null>(initialSearchParams.courseId);
 
-  // ✅ Missing before: courses state
+  // courses
   const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
 
   // delete
@@ -102,10 +102,11 @@ export default function ViewAssignments({
   const debouncedPage = useDebounced(currentPage, 0); // no delay when paging
   const debouncedLimit = useDebounced(itemsPerPage, 0);
 
-  // prevent race conditions
+  // prevent race conditions / duplicate fetches
   const fetchIdRef = useRef(0);
+  const lastQueryRef = useRef<string>('');
 
-  // keep URL in sync (shareable & persistent) — no useSearchParams needed
+  // keep URL in sync WITHOUT triggering Next.js navigation/remount
   useEffect(() => {
     const sp = new URLSearchParams();
     if (debouncedSearch) sp.set('q', debouncedSearch);
@@ -113,8 +114,12 @@ export default function ViewAssignments({
     if (debouncedPage > 1) sp.set('page', String(debouncedPage));
     if (debouncedLimit !== 10) sp.set('limit', String(debouncedLimit));
     const qs = sp.toString();
-    router.replace(qs ? `${basePath}?${qs}` : basePath, { scroll: false });
-  }, [debouncedSearch, debouncedCourseId, debouncedPage, debouncedLimit, basePath, router]);
+    const next = qs ? `${basePath}?${qs}` : basePath;
+    const current = window.location.pathname + window.location.search;
+    if (next !== current) {
+      window.history.replaceState(window.history.state, '', next);
+    }
+  }, [debouncedSearch, debouncedCourseId, debouncedPage, debouncedLimit, basePath]);
 
   const columns: TableColumn[] = useMemo(
     () => [
@@ -216,6 +221,17 @@ export default function ViewAssignments({
   );
 
   const fetchAssignments = useCallback(async () => {
+    const key = JSON.stringify({
+      page: debouncedPage,
+      limit: debouncedLimit,
+      search: debouncedSearch || '',
+      courseId: debouncedCourseId || '',
+    });
+    if (key === lastQueryRef.current) {
+      return; // nothing changed; skip
+    }
+    lastQueryRef.current = key;
+
     setLoading(true);
     setErrorMsg(null);
     const reqId = ++fetchIdRef.current;
@@ -281,7 +297,7 @@ export default function ViewAssignments({
   }
 
   return (
-    <main className="text-gray-800 min-h-screen">
+    <main className="text-gray-800 min-h-[100dvh]">
       <PageHeader
         title="All Assignments"
         description="Track all assignment activities"
@@ -290,7 +306,11 @@ export default function ViewAssignments({
       />
 
       <div className="px-4 py-6">
-        {loading && <p className="text-sm text-gray-500 mb-2">Loading assignments…</p>}
+        {/* Reserve height so layout doesn't jump */}
+        <div className="h-5 mb-2">
+          {loading && <p className="text-sm text-gray-500">Loading assignments…</p>}
+        </div>
+
         {errorMsg && (
           <div className="mb-3 text-sm px-3 py-2 rounded border bg-red-50 border-red-200 text-red-700">
             {errorMsg}
@@ -373,11 +393,17 @@ export default function ViewAssignments({
               }
               if (kind === 'image') {
                 // eslint-disable-next-line @next/next/no-img-element
-                return <img src={fileUrl} alt="Attachment" className="max-h-[70vh] mx-auto rounded border" />;
+                return (
+                  <img
+                    src={fileUrl}
+                    alt="Attachment"
+                    className="max-h-[70vh] mx-auto rounded border block w-auto h-auto"
+                  />
+                );
               }
               if (kind === 'video') {
                 return (
-                  <video className="w-full rounded border" controls>
+                  <video className="w-full rounded border aspect-video" controls>
                     <source src={fileUrl} />
                   </video>
                 );
