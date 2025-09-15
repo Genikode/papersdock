@@ -34,7 +34,7 @@ interface GetAllAssignmentsResponse {
 }
 
 type InitialSearchParams = {
-  q: string;
+  q?: string;
   page: number;
   limit: number;
   courseId: string | null;
@@ -83,7 +83,7 @@ export default function ViewAssignments({
   const [fileUrl, setFileUrl] = useState<string | null>(null);
 
   // server-driven table state (initialized from server)
-  const [searchTerm, setSearchTerm] = useState<string>(initialSearchParams.q);
+  const [searchTerm, setSearchTerm] = useState<string|undefined>(initialSearchParams.q);
   const [currentPage, setCurrentPage] = useState<number>(initialSearchParams.page || 1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(initialSearchParams.limit || 10);
   const [totalItems, setTotalItems] = useState<number>(0);
