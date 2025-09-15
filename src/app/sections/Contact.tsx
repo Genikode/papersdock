@@ -111,7 +111,7 @@ export default function ContactSection() {
             icon={<PhoneCall size={18} className="text-green-600 dark:text-green-400" />}
             title="WhatsApp Support"
             content="Coordinator Number"
-            detail="+92 318 2248924"
+            detail="+923182248934"
             iconBg="bg-green-100 dark:bg-green-900/20"
           />
           <InfoCard

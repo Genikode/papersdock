@@ -39,7 +39,7 @@ export default function Contact() {
           <ul className="space-y-4 text-sm text-gray-700 dark:text-gray-300 mb-8">
             <li className="flex items-center gap-2">
               <MessageCircle size={18} className="text-blue-600 dark:text-blue-400" />
-              <span className="text-gray-800 dark:text-gray-200">WhatsApp: +92 318 2248934</span>
+              <span className="text-gray-800 dark:text-gray-200">WhatsApp: +923182248934</span>
             </li>
             <li className="flex items-center gap-2">
               <Mail size={18} className="text-blue-600 dark:text-blue-400" />
