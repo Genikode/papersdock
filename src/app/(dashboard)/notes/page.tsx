@@ -191,12 +191,12 @@ export default function StudyNotesPage() {
     {filteredItems.map((note) => (
       <div key={note.id} className="bg-white dark:bg-slate-900 rounded shadow border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col">
         {/* Image header */}
-        <div className="w-full h-36 bg-gray-100 dark:bg-slate-800">
+        <div className="w-full h-48 sm:h-56 bg-gray-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
           {note.backgroundImageUrl ? (
             <img
               src={note.backgroundImageUrl}
               alt={note.title}
-              className="w-full h-full object-cover"
+                 className="max-h-full max-w-full object-contain"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-xs text-gray-400 dark:text-slate-500">
