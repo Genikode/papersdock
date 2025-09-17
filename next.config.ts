@@ -14,13 +14,49 @@ const nextConfig: NextConfig = {
         hostname: "s3.amazonaws.com",
         pathname: "/**", // allow all buckets under this host
       },
-      // If you want to allow *all* AWS S3 bucket hostnames:
-      // {
-      //   protocol: "https",
-      //   hostname: "*.s3.amazonaws.com",
-      //   pathname: "/**",
-      // },
     ],
+  },
+
+  async headers() {
+    return [
+      // Disable cache for HTML pages (always fetch fresh)
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
+          },
+        ],
+      },
+      // Cache static assets aggressively (safe because Next.js uses hashed filenames)
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
   },
 };
 
