@@ -284,7 +284,7 @@ export default function StudentApprovalPage() {
 
   async function deleteUser(id: string) {
     try {
-      await api.post(`/users/delete-user/${id}`);
+      await api.delete(`/users/delete-user/${id}`);
       setDeleteUserId(null);
       setDeleteUserName('');
       // If the deletion removed the last item on the current page, go back a page
