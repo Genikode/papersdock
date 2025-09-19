@@ -51,6 +51,16 @@ export async function apiRequest<T = unknown>(options: RequestOptions): Promise<
     ...(token ? { accessToken: `Bearer ${token}` } : {}),
     ...headers,
   };
+  console.log(path, initHeaders);
+  if (path === "/users/login-user") {
+    console.log("Adding x-forwarded-for header for /users/login");
+    // Example: you may want to detect IP dynamically in future
+    const res = await fetch("https://api.ipify.org?format=json");
+  const data = await res.json();
+    initHeaders["x-forwarded-for"] = data.ip;
+  }
+  // Always attach x-forwarded-for for /users/login
+
 
   if (body !== undefined && !isFormData) {
     initHeaders["Content-Type"] = "application/json";
