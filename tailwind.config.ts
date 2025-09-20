@@ -10,7 +10,13 @@ export default {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        // helpful aliases for this UI
+        panel: '#121621',
+        border: '#262B36',
+      }
+    },
   },
   plugins: [],
 } satisfies Config
