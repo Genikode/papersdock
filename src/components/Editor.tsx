@@ -1,34 +1,57 @@
-import React, { useEffect, useState } from "react";
-import Editor, { useMonaco } from "@monaco-editor/react";
+import React, { useEffect, useState, useRef } from "react";
+import Editor, { useMonaco, OnMount } from "@monaco-editor/react";
+import type * as monaco from "monaco-editor";
 
 interface EditorProps {
   code: string;
   setCode: (value: string) => void;
 }
 
+type MonacoTheme = "pseudocode-dark" | "pseudocode-light";
+
 export default function CodeEditor({ code, setCode }: EditorProps) {
-  const monaco = useMonaco();
-  const [theme, setTheme] = useState<"vs-dark" | "vs-light">("vs-light");
+  const monacoInstance = useMonaco();
+  const [theme, setTheme] = useState<MonacoTheme | null>(null);
+  const [mounted, setMounted] = useState(false);
 
+  // zoom state
+  const [fontSize, setFontSize] = useState(14);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+
+  /* ---------------------------
+     Detect initial theme
+  --------------------------- */
   useEffect(() => {
-    if (!monaco) return;
+    setMounted(true);
+    if (typeof window !== "undefined") {
+      setTheme(
+        document.documentElement.classList.contains("dark")
+          ? "pseudocode-dark"
+          : "pseudocode-light"
+      );
+    }
+  }, []);
 
-    if (!monaco.languages.getLanguages().some((l) => l.id === "pseudocode")) {
-      // 1️⃣ Register custom pseudocode language
-      monaco.languages.register({ id: "pseudocode" });
+  /* ---------------------------
+     Register language + themes
+  --------------------------- */
+  useEffect(() => {
+    if (!monacoInstance) return;
 
-      // 2️⃣ Define tokens
-      monaco.languages.setMonarchTokensProvider("pseudocode", {
+    if (!monacoInstance.languages.getLanguages().some((l) => l.id === "pseudocode")) {
+      monacoInstance.languages.register({ id: "pseudocode" });
+
+      monacoInstance.languages.setMonarchTokensProvider("pseudocode", {
         keywords: [
-          "BEGIN", "END", "IF", "ELSE", "ENDIF", "WHILE", "ENDWHILE",
-          "REPEAT", "UNTIL", "FOR", "NEXT", "CASE", "FUNCTION", "PROCEDURE",
-          "RETURN", "DECLARE", "CONSTANT", "INPUT", "OUTPUT"
+          "BEGIN", "END", "IF", "ELSE", "ENDIF", "WHILE", "ENDWHILE", "REPEAT", "UNTIL",
+          "FOR", "NEXT", "CASE", "FUNCTION", "PROCEDURE", "RETURN", "DECLARE", "CONSTANT",
+          "INPUT", "OUTPUT"
         ],
         tokenizer: {
           root: [
             [/\b(BEGIN|END|IF|ELSE|ENDIF|WHILE|ENDWHILE|REPEAT|UNTIL|FOR|NEXT|CASE|FUNCTION|PROCEDURE|RETURN|DECLARE|CONSTANT|INPUT|OUTPUT)\b/, "keyword"],
             [/[a-zA-Z_]\w*(?=\()/, "function"], // function calls
-            [/[a-zA-Z_]\w*/, "identifier"],     // identifiers/variables
+            [/[a-zA-Z_]\w*/, "identifier"],     // variables/identifiers
             [/\d+/, "number"],
             [/".*?"/, "string"],
             [/'.*?'/, "string"],
@@ -36,8 +59,7 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
         },
       });
 
-      // 3️⃣ Define a light theme
-      monaco.editor.defineTheme("pseudocode-light", {
+      monacoInstance.editor.defineTheme("pseudocode-light", {
         base: "vs",
         inherit: true,
         rules: [
@@ -47,13 +69,10 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
           { token: "number", foreground: "098658" },
           { token: "string", foreground: "a31515" },
         ],
-        colors: {
-          "editor.background": "#ffffff",
-        },
+        colors: { "editor.background": "#ffffff" },
       });
 
-      // 4️⃣ Define a dark theme
-      monaco.editor.defineTheme("pseudocode-dark", {
+      monacoInstance.editor.defineTheme("pseudocode-dark", {
         base: "vs-dark",
         inherit: true,
         rules: [
@@ -63,13 +82,13 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
           { token: "number", foreground: "b5cea8" },
           { token: "string", foreground: "ce9178" },
         ],
-        colors: {
-          "editor.background": "#1e1e1e",
-        },
+        colors: { "editor.background": "#1e1e1e" },
       });
 
-      // 5️⃣ Autocomplete provider
-      monaco.languages.registerCompletionItemProvider("pseudocode", {
+      /* ---------------------------
+         Register Autocomplete Provider
+      --------------------------- */
+      monacoInstance.languages.registerCompletionItemProvider("pseudocode", {
         provideCompletionItems: (model, position) => {
           const text = model.getValue();
           const word = model.getWordUntilPosition(position);
@@ -80,38 +99,38 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
             endColumn: word.endColumn,
           };
 
-          // Variables from DECLARE
+          // Extract variables declared with DECLARE
           const vars = Array.from(
             text.matchAll(/\bDECLARE\s+([a-zA-Z_]\w*)/g)
           ).map((m) => m[1]);
 
-          // Functions/Procedures
+          // Extract custom functions/procedures
           const funcs = Array.from(
             text.matchAll(/\b(?:FUNCTION|PROCEDURE)\s+([a-zA-Z_]\w*)/g)
           ).map((m) => m[1]);
 
           const keywords = [
-            "BEGIN", "END", "IF", "ELSE", "ENDIF", "WHILE", "ENDWHILE",
-            "REPEAT", "UNTIL", "FOR", "NEXT", "CASE", "FUNCTION", "PROCEDURE",
-            "RETURN", "DECLARE", "CONSTANT", "INPUT", "OUTPUT"
+            "BEGIN", "END", "IF", "ELSE", "ENDIF", "WHILE", "ENDWHILE", "REPEAT",
+            "UNTIL", "FOR", "NEXT", "CASE", "FUNCTION", "PROCEDURE", "RETURN",
+            "DECLARE", "CONSTANT", "INPUT", "OUTPUT"
           ];
 
           const suggestions = [
             ...keywords.map((k) => ({
               label: k,
-              kind: monaco.languages.CompletionItemKind.Keyword,
+              kind: monacoInstance.languages.CompletionItemKind.Keyword,
               insertText: k,
               range,
             })),
             ...vars.map((v) => ({
               label: v,
-              kind: monaco.languages.CompletionItemKind.Variable,
+              kind: monacoInstance.languages.CompletionItemKind.Variable,
               insertText: v,
               range,
             })),
             ...funcs.map((f) => ({
               label: f,
-              kind: monaco.languages.CompletionItemKind.Function,
+              kind: monacoInstance.languages.CompletionItemKind.Function,
               insertText: f + "()",
               range,
             })),
@@ -121,15 +140,18 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
         },
       });
     }
-  }, [monaco]);
+  }, [monacoInstance]);
 
-  // SSR-safe Tailwind theme sync
+  /* ---------------------------
+     Theme sync with Tailwind
+  --------------------------- */
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!mounted) return;
     const getTheme = () =>
       document.documentElement.classList.contains("dark")
         ? "pseudocode-dark"
         : "pseudocode-light";
+
     setTheme(getTheme());
 
     const observer = new MutationObserver(() => setTheme(getTheme()));
@@ -137,18 +159,72 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
       attributes: true,
       attributeFilter: ["class"],
     });
+
     return () => observer.disconnect();
+  }, [mounted]);
+
+  /* ---------------------------
+     Zoom shortcuts
+  --------------------------- */
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        setFontSize((prev) => {
+          let next = prev + (e.deltaY < 0 ? 1 : -1);
+          if (next < 8) next = 8;
+          if (next > 40) next = 40;
+          return next;
+        });
+      }
+    };
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    return () => window.removeEventListener("wheel", handleWheel);
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
+        e.preventDefault();
+        setFontSize((prev) => Math.min(prev + 1, 40));
+      }
+      if (e.ctrlKey && e.key === "-") {
+        e.preventDefault();
+        setFontSize((prev) => Math.max(prev - 1, 8));
+      }
+      if (e.ctrlKey && e.key === "0") {
+        e.preventDefault();
+        setFontSize(14);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // apply font size
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.updateOptions({ fontSize });
+    }
+  }, [fontSize]);
+
+  const handleEditorMount: OnMount = (editor) => {
+    editorRef.current = editor;
+  };
+
+  if (!theme)
+    return <div className="h-[400px] w-full bg-gray-100 dark:bg-[#1e1e1e]" />;
 
   return (
     <Editor
-      height="300px"
+      height="400px"
       language="pseudocode"
       theme={theme}
       value={code}
       onChange={(value) => setCode(value || "")}
+      onMount={handleEditorMount}
       options={{
-        fontSize: 14,
+        fontSize,
         tabSize: 4,
         insertSpaces: true,
         detectIndentation: false,

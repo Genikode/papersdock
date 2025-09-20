@@ -4,7 +4,7 @@ import Editor from "@/components/Editor";
 import { tokenize } from "@/core/tokenizer";
 import { parse } from "@/core/parser";
 import { transpile } from "@/core/transpiler";
-
+import { useFullScreen } from "@/context/FullScreenContext";
 export default function App() {
   const [code, setCode] = useState(
     `DECLARE total : INTEGER
@@ -16,14 +16,15 @@ OUTPUT total`
   );
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
-  const [fileName, setFileName] = useState("main.pseudo");
-  const [theme, setTheme] = useState<"dark" | "light">("dark"); // ✅ theme state
+  const [fileName, setFileName] = useState("main");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [uploadedFiles, setUploadedFiles] = useState<
     { id: number; name: string; content: string; type: string; modified: boolean }[]
   >([]);
   const [virtualFiles, setVirtualFiles] = useState<Map<string, string>>(new Map());
 
-  /** apply theme on html root */
+
+  /** Apply theme on html root */
   useEffect(() => {
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
@@ -31,7 +32,7 @@ OUTPUT total`
       document.documentElement.classList.remove("dark");
     }
   }, [theme]);
-
+  const { isFullScreen, setIsFullScreen } = useFullScreen();
   const isPseudocode = (filename: string) => {
     const ext = filename.split(".").pop()?.toLowerCase();
     return ext === "pseudo" || ext === "ps";
@@ -51,42 +52,39 @@ OUTPUT total`
     }
   };
 
-const runCode = (jsCode: string) => {
-  const out: string[] = [];
-  const originalLog = console.log;
-  const originalPrompt = window.prompt;
+  const runCode = (jsCode: string) => {
+    const out: string[] = [];
+    const originalLog = console.log;
+    const originalPrompt = window.prompt;
 
-  // ⚡ Replace any transpiler-declared const with safe var
-  jsCode = jsCode.replace("const __files = new Map();", "");
+    jsCode = jsCode.replace("const __files = new Map();", "");
+    let preload = 'var __files = (typeof __files !== "undefined" ? __files : new Map());\n';
 
-  let preload = 'var __files = (typeof __files !== "undefined" ? __files : new Map());\n';
+    uploadedFiles.forEach((file) => {
+      const lines = file.content.split("\n").map((line) => JSON.stringify(line)).join(",");
+      preload += `__files.set(${JSON.stringify(file.name)}, {content:[${lines}], position:0, modified:false});\n`;
+    });
+    virtualFiles.forEach((content, filename) => {
+      const lines = content.split("\n").map((line) => JSON.stringify(line)).join(",");
+      preload += `__files.set(${JSON.stringify(filename)}, {content:[${lines}], position:0, modified:false});\n`;
+    });
 
-  uploadedFiles.forEach((file) => {
-    const lines = file.content.split("\n").map((line) => JSON.stringify(line)).join(",");
-    preload += `__files.set(${JSON.stringify(file.name)}, {content:[${lines}], position:0, modified:false});\n`;
-  });
-  virtualFiles.forEach((content, filename) => {
-    const lines = content.split("\n").map((line) => JSON.stringify(line)).join(",");
-    preload += `__files.set(${JSON.stringify(filename)}, {content:[${lines}], position:0, modified:false});\n`;
-  });
+    console.log = (msg?: any) => out.push(String(msg ?? ""));
+    window.prompt = (msg?: string) => {
+      const v = originalPrompt?.(msg ?? "") ?? "";
+      out.push(`[Input: ${v}]`);
+      return v;
+    };
 
-  console.log = (msg?: any) => out.push(String(msg ?? ""));
-  window.prompt = (msg?: string) => {
-    const v = originalPrompt?.(msg ?? "") ?? "";
-    out.push(`[Input: ${v}]`);
-    return v;
+    try {
+      // eslint-disable-next-line no-new-func
+      new Function(`${preload}\n${jsCode}`)();
+    } finally {
+      console.log = originalLog;
+      window.prompt = originalPrompt;
+    }
+    return out.join("\n");
   };
-
-  try {
-    // eslint-disable-next-line no-new-func
-    new Function(`${preload}\n${jsCode}`)();
-  } finally {
-    console.log = originalLog;
-    window.prompt = originalPrompt;
-  }
-  return out.join("\n");
-};
-
 
   const handleClear = () => {
     setCode("");
@@ -136,25 +134,29 @@ const runCode = (jsCode: string) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-900 dark:bg-[#0F1117] dark:text-gray-200 transition-colors">
-      {/* Header */}
-      <header className="px-6 py-4 border-b border-gray-300 dark:border-gray-800 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-semibold flex items-center gap-2">
-            <span className="text-green-500">{"</>"}</span> Pseudocode Compiler
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Write, compile and execute pseudocode online
-          </p>
-        </div>
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="px-3 py-1.5 rounded bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm"
-        >
-          {theme === "dark" ? "☀ Light Mode" : "🌙 Dark Mode"}
-        </button>
-      </header>
+      {/* Header (hidden in fullscreen) */}
+   
+        <header className="px-6 py-4 border-b border-gray-300 dark:border-gray-800 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-semibold flex items-center gap-2">
+              <span className="text-green-500">{"</>"}</span> Pseudocode Compiler
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Write, compile and execute pseudocode online
+            </p>
+          </div>
+          {isFullScreen && (
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="px-3 py-1.5 rounded bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm"
+          >
+            {theme === "dark" ? "☀ Light Mode" : "🌙 Dark Mode"}
+          </button>
+          )}
+        </header>
 
-      {/* Main */}
+
+      {/* Main compiler layout (always visible) */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3">
         {/* Editor Panel */}
         <div className="md:col-span-2 flex flex-col border-b md:border-b-0 md:border-r border-gray-300 dark:border-gray-800">
@@ -163,12 +165,12 @@ const runCode = (jsCode: string) => {
             <div className="text-sm text-gray-700 dark:text-gray-300">
               {fileName} <span className="text-gray-400">• Pseudocode</span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <button
                 onClick={handleRun}
                 className="bg-green-600 hover:bg-green-700 px-4 py-1.5 rounded text-sm text-white"
               >
-               Run
+                Run
               </button>
               <button
                 onClick={handleClear}
@@ -176,38 +178,54 @@ const runCode = (jsCode: string) => {
               >
                 Clear
               </button>
+               <button
+        onClick={() => setIsFullScreen(!isFullScreen)}
+        className="px-3 py-1.5 bg-gray-300 dark:bg-gray-700 rounded"
+      >
+        {isFullScreen ? "Exit" : "Full Screen"}
+      </button>
             </div>
           </div>
 
           {/* Editor */}
-          <div className="flex-1">
-          <Editor code={code} setCode={setCode}  />
-
+          <div className="flex">
+            <Editor code={code} setCode={setCode} />
           </div>
 
-          {/* Bottom bar */}
-          <div className="flex justify-end items-center gap-2 bg-gray-100 dark:bg-[#121621] px-4 py-2 border-t border-gray-300 dark:border-gray-800">
-            <label className="cursor-pointer bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1.5 rounded text-sm">
-              ⬆ Upload
-              <input type="file" className="hidden" accept=".txt,.pseudo,.ps" onChange={handleFileUpload} />
-            </label>
-            <button
-              onClick={handleDownload}
-              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1.5 rounded text-sm"
-            >
-              ⬇ Export
-            </button>
-          </div>
+          {/* Footer (hidden in fullscreen) */}
+       
+            <div className="flex justify-end items-center gap-2 bg-gray-100 dark:bg-[#121621] px-4 py-2 border-t border-gray-300 dark:border-gray-800">
+              <label className="cursor-pointer bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1.5 rounded text-sm">
+                ⬆ Upload
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".txt,.pseudo,.ps"
+                  onChange={handleFileUpload}
+                />
+              </label>
+              <button
+                onClick={handleDownload}
+                className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1.5 rounded text-sm"
+              >
+                ⬇ Export
+              </button>
+            </div>
+          
         </div>
 
-        {/* Terminal & Files */}
+        {/* Terminal & Files (always visible) */}
         <div className="flex flex-col">
           {/* Terminal */}
           <div className="bg-gray-100 dark:bg-[#121621] px-4 py-2 border-b border-gray-300 dark:border-gray-800">
             Terminal
           </div>
-          <div className="flex-1 bg-gray-50 dark:bg-black text-green-600 dark:text-green-400 p-3 overflow-auto whitespace-pre-wrap">
-            {error ? <span className="text-red-600 dark:text-red-400">{error}</span> : output || "Output"}
+          <div className="h-40 bg-gray-50 dark:bg-black text-green-600 dark:text-green-400 p-3 overflow-auto whitespace-pre-wrap">
+            {error ? (
+              <span className="text-red-600 dark:text-red-400">{error}</span>
+            ) : (
+              output || "Output"
+            )}
           </div>
 
           {/* Files */}
@@ -216,7 +234,7 @@ const runCode = (jsCode: string) => {
               <div className="bg-gray-100 dark:bg-[#121621] px-3 py-2 border-b border-gray-300 dark:border-gray-800">
                 Uploaded Files
               </div>
-              <div className="p-2 space-y-2 max-h-40 overflow-auto">
+              <div className="p-2 space-y-2 max-h-32 overflow-auto">
                 {uploadedFiles.map((f) => (
                   <div
                     key={f.id}
@@ -244,7 +262,7 @@ const runCode = (jsCode: string) => {
               <div className="bg-gray-100 dark:bg-[#121621] px-3 py-2 border-b border-gray-300 dark:border-gray-800">
                 Created File
               </div>
-              <div className="p-2 space-y-2 max-h-40 overflow-auto">
+              <div className="p-2 space-y-2 max-h-32 overflow-auto">
                 {Array.from(virtualFiles.entries()).map(([name]) => (
                   <div
                     key={name}
