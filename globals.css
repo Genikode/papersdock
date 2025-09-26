@@ -14,7 +14,7 @@
 [data-theme="dark"] {
   --background: #0a0a0a;
   --foreground: #ededed;
-  color-scheme: dark;
+ 
 }
 
 /* 4) Expose tokens as Tailwind colors so you can use bg-background/text-foreground */
