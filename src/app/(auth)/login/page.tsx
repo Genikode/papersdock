@@ -121,11 +121,11 @@ export default function LoginPage() {
         if (result.userData) {
           setUserData(result.userData);
         }
-        // if (result.userData.roleName === 'student') {
-        //   router.replace('/recorded-lectures');
-        // } else {
-        //   router.replace('/dashboard');
-        // }
+        if (result.userData.roleName === 'student') {
+          router.replace('/recorded-lectures');
+        } else {
+          router.replace('/dashboard');
+        }
       } catch (err: any) {
         const message = err?.message || 'Login failed';
         setError(message);
