@@ -24,12 +24,9 @@ import '../globals.css';
 import { clearAccessToken, clearUserData, getUserData, isLoggedIn } from '@/lib/auth';
 import { ThemeProvider, useTheme } from 'next-themes';
 import Image from 'next/image';
-import { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: "Papersdock",
-  description: "A-Level Computer Science Platform",
-};
+
+
 
 /** Small helper so both sidebars (mobile + desktop) render the same list */
 function NavLinks({
