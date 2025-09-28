@@ -12,7 +12,7 @@ const navLinks = [
   { name: 'About', href: '/about' },
   { name: 'Resources', href: '/resources' },
   { name: 'Contact', href: '/contact' },
-  // { name: 'Pseudocode', href: '/pseudocode' },
+ { name: 'Pseudocode', href: '/pseudocode' },
 ];
 
 export default function Header() {
