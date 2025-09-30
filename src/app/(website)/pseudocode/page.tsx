@@ -5,6 +5,9 @@ import { tokenize } from "@/core/tokenizer";
 import { parse } from "@/core/parser";
 import { transpile } from "@/core/transpiler";
 import { useFullScreen } from "@/context/FullScreenContext";
+import { Delete, DeleteIcon, Play, PlayIcon } from "lucide-react";
+import { MdOutlineDelete, MdOutlineFullscreen, MdOutlineFileUpload, MdOutlineFileDownload } from "react-icons/md";
+import { FileCode, Download, X } from "lucide-react";
 export default function App() {
   const [code, setCode] = useState(
     `DECLARE total : INTEGER
@@ -102,6 +105,21 @@ OUTPUT total`
     a.click();
     a.remove();
   };
+const toggleFullScreen = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().then(() => {
+      setIsFullScreen(true); // sync context
+    }).catch((err) => {
+      console.error("Error enabling fullscreen:", err);
+    });
+  } else {
+    document.exitFullscreen().then(() => {
+      setIsFullScreen(false); // sync context
+    }).catch((err) => {
+      console.error("Error exiting fullscreen:", err);
+    });
+  }
+};
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -133,7 +151,7 @@ OUTPUT total`
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-gray-900 dark:bg-[#0F1117] dark:text-gray-200 transition-colors">
+    <div className="min-h-screen flex flex-col bg-white text-gray-900 dark:bg-[#0F1117] dark:text-gray-200 transition-colors p-7">
       {/* Header (hidden in fullscreen) */}
    
         <header className="px-6 py-4 border-b border-gray-300 dark:border-gray-800 flex justify-between items-center">
@@ -145,14 +163,27 @@ OUTPUT total`
               Write, compile and execute pseudocode online
             </p>
           </div>
-          {isFullScreen && (
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="px-3 py-1.5 rounded bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-sm"
-          >
-            {theme === "dark" ? "☀ Light Mode" : "🌙 Dark Mode"}
-          </button>
-          )}
+        <div className="flex gap-2 items-center">
+           <button
+                onClick={handleDownload}
+                className="bg-gray-200 dark:bg-white hover:bg-gray-300 dark:hover:bg-gray-100 dark:text-gray-900 px-3 py-1.5 rounded text-sm"
+              >
+                <MdOutlineFileDownload size={16} className="inline-block mr-1" />
+                Export
+              </button>
+  <label className="cursor-pointer bg-gray-200 dark:bg-white hover:bg-gray-300 dark:hover:bg-gray-100 px-3 py-1.5 rounded text-sm dark:text-gray-900">
+                 <MdOutlineFileUpload size={16} className="inline-block mr-1" />
+                 Upload
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".txt,.pseudo,.ps"
+                  onChange={handleFileUpload}
+                />
+              </label>
+             
+        </div>
+              
         </header>
 
 
@@ -168,122 +199,139 @@ OUTPUT total`
             <div className="flex gap-2 items-center">
               <button
                 onClick={handleRun}
-                className="bg-green-600 hover:bg-green-700 px-4 py-1.5 rounded text-sm text-white"
+                className="bg-[#16A34A] hover:bg-[#15803D] px-4 py-1.5 rounded text-sm text-white"
               >
+                <PlayIcon size={16} className="inline-block mr-1" />
                 Run
               </button>
               <button
                 onClick={handleClear}
-                className="bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded text-sm text-white"
+                className="bg-white hover:bg-gray-100 px-4 py-1.5 rounded text-sm text-red-500 border border-red-300 hover:border-red-400"
               >
+                <MdOutlineDelete size={16} className="inline-block mr-1" />
                 Clear
               </button>
-               <button
-        onClick={() => setIsFullScreen(!isFullScreen)}
-        className="px-3 py-1.5 bg-gray-300 dark:bg-gray-700 rounded"
+               {/* <button
+        onClick={() =>  
+          toggleFullScreen()
+         // setIsFullScreen(!isFullScreen)
+        }
+        className="px-3 py-1.5 bg-gray-300 dark:bg-[#2D2D30] rounded"
       >
         {isFullScreen ? "Exit" : "Full Screen"}
-      </button>
+        <MdOutlineFullscreen size={16} className="inline-block ml-1" />
+      </button> */}
             </div>
           </div>
 
           {/* Editor */}
           <div className="flex">
             <Editor code={code} setCode={setCode} />
+            
           </div>
-
+ 
           {/* Footer (hidden in fullscreen) */}
        
-            <div className="flex justify-end items-center gap-2 bg-gray-100 dark:bg-[#121621] px-4 py-2 border-t border-gray-300 dark:border-gray-800">
-              <label className="cursor-pointer bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1.5 rounded text-sm">
-                ⬆ Upload
-                <input
-                  type="file"
-                  className="hidden"
-                  accept=".txt,.pseudo,.ps"
-                  onChange={handleFileUpload}
-                />
-              </label>
-              <button
-                onClick={handleDownload}
-                className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1.5 rounded text-sm"
-              >
-                ⬇ Export
-              </button>
-            </div>
+        
           
         </div>
 
         {/* Terminal & Files (always visible) */}
-        <div className="flex flex-col">
-          {/* Terminal */}
-          <div className="bg-gray-100 dark:bg-[#121621] px-4 py-2 border-b border-gray-300 dark:border-gray-800">
-            Terminal
-          </div>
-          <div className="h-40 bg-gray-50 dark:bg-black text-green-600 dark:text-green-400 p-3 overflow-auto whitespace-pre-wrap">
-            {error ? (
-              <span className="text-red-600 dark:text-red-400">{error}</span>
-            ) : (
-              output || "Output"
-            )}
-          </div>
+    <div className="flex flex-col space-y-3 pl-3.5">
+  {/* Terminal */}
+  <div className="rounded-md overflow-hidden border border-gray-300 dark:border-gray-700">
+    <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#101828] px-4 py-2 border-b border-gray-300 dark:border-gray-700">
+      <span className="text-green-600 dark:text-green-400">▸</span>
+      <span className="font-medium">Terminal</span>
+    </div>
+    <div className="h-40 bg-gray-50 dark:bg-[#1C2433] text-green-600 dark:text-green-400 p-3 overflow-auto whitespace-pre-wrap text-sm">
+      {error ? (
+        <span className="text-red-600 dark:text-red-400">{error}</span>
+      ) : (
+        <span className="block">› {output || "Output"}</span>
+      )}
+    </div>
+  </div>
 
-          {/* Files */}
-          <div className="grid grid-cols-2 border-t border-gray-300 dark:border-gray-800 text-sm">
-            <div className="border-r border-gray-300 dark:border-gray-800">
-              <div className="bg-gray-100 dark:bg-[#121621] px-3 py-2 border-b border-gray-300 dark:border-gray-800">
-                Uploaded Files
-              </div>
-              <div className="p-2 space-y-2 max-h-32 overflow-auto">
-                {uploadedFiles.map((f) => (
-                  <div
-                    key={f.id}
-                    className="flex justify-between items-center bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded cursor-pointer"
-                    onClick={() => isPseudocode(f.name) && setCode(f.content)}
-                  >
-                    <span className="truncate">📄 {f.name}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFile(f.id);
-                      }}
-                      className="text-gray-500 hover:text-red-500"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {uploadedFiles.length === 0 && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400">No files</div>
-                )}
-              </div>
-            </div>
-            <div>
-              <div className="bg-gray-100 dark:bg-[#121621] px-3 py-2 border-b border-gray-300 dark:border-gray-800">
-                Created File
-              </div>
-              <div className="p-2 space-y-2 max-h-32 overflow-auto">
-                {Array.from(virtualFiles.entries()).map(([name]) => (
-                  <div
-                    key={name}
-                    className="flex justify-between items-center bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded"
-                  >
-                    <span className="truncate">📝 {name}</span>
-                    <button
-                      onClick={() => removeVirtualFile(name)}
-                      className="text-gray-500 hover:text-red-500"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {virtualFiles.size === 0 && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400">No files</div>
-                )}
-              </div>
-            </div>
+  {/* Files */}
+  <div className="grid grid-cols-2 gap-3 text-sm">
+    {/* Uploaded Files */}
+    <div className="rounded-md overflow-hidden border border-gray-300 dark:border-gray-700">
+      <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#101828] px-3 py-2 border-b border-gray-300 dark:border-gray-700">
+        <span className="text-green-600 dark:text-green-400">▸</span>
+        <span className="font-medium">Uploaded Files</span>
+      </div>
+ <div className="p-2 space-y-2 max-h-32 overflow-auto">
+  {uploadedFiles.map((f) => (
+    <div
+      key={f.id}
+      className="relative flex items-center justify-between bg-[#1C2433] rounded-lg px-4 py-3 text-white cursor-pointer"
+      onClick={() => isPseudocode(f.name) && setCode(f.content)}
+    >
+      {/* File info */}
+      <div className="flex items-center gap-3">
+        <FileCode className="w-5 h-5 text-white" />
+        <span className="truncate">{f.name}</span>
+      </div>
+
+      {/* Download button */}
+      <button
+        onClick={(e) => e.stopPropagation()}
+        className="w-5 h-5 flex items-center justify-center rounded-full bg-green-600 hover:bg-green-500"
+      >
+        <Download className="w-3 h-3 text-white" />
+      </button>
+
+      {/* Delete button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          removeFile(f.id);
+        }}
+        className="absolute -top-1 -right-1 w-3 h-3 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-500"
+      >
+        <X className="w-2 h-2 text-white" />
+      </button>
+    </div>
+  ))}
+
+  {uploadedFiles.length === 0 && (
+    <div className="text-xs text-gray-500 dark:text-gray-400">No files</div>
+  )}
+</div>
+    </div>
+
+    {/* Created File */}
+    <div className="rounded-md overflow-hidden border border-gray-300 dark:border-gray-700">
+      <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#101828] px-3 py-2 border-b border-gray-300 dark:border-gray-700">
+        <span className="text-green-600 dark:text-green-400">▸</span>
+        <span className="font-medium">Created File</span>
+      </div>
+      <div className="p-2 space-y-2 max-h-32 overflow-auto">
+        {Array.from(virtualFiles.entries()).map(([name]) => (
+          <div
+            key={name}
+            className="flex justify-between items-center bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded"
+          >
+            <span className="truncate flex items-center gap-2">
+              📝 {name}
+            </span>
+            <button
+              onClick={() => removeVirtualFile(name)}
+              className="text-gray-500 hover:text-red-500"
+            >
+              ×
+            </button>
           </div>
-        </div>
+        ))}
+        {virtualFiles.size === 0 && (
+          <div className="text-xs text-gray-500 dark:text-gray-400">No files</div>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+
       </div>
     </div>
   );

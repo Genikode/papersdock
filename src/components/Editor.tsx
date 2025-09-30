@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import Editor, { useMonaco, OnMount } from "@monaco-editor/react";
 import type * as monaco from "monaco-editor";
+import { MdOutlineFullscreen } from "react-icons/md";
+import { useFullScreen } from "@/context/FullScreenContext";
 
 interface EditorProps {
   code: string;
@@ -11,25 +13,27 @@ type MonacoTheme = "pseudocode-dark" | "pseudocode-light";
 
 export default function CodeEditor({ code, setCode }: EditorProps) {
   const monacoInstance = useMonaco();
-  const [theme, setTheme] = useState<MonacoTheme | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const { isFullScreen, setIsFullScreen } = useFullScreen();
 
-  // zoom state
+  const [mounted, setMounted] = useState(false);
   const [fontSize, setFontSize] = useState(14);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [theme, setTheme] = useState<MonacoTheme | null>(null);
 
   /* ---------------------------
      Detect initial theme
   --------------------------- */
   useEffect(() => {
     setMounted(true);
-    if (typeof window !== "undefined") {
-      setTheme(
-        document.documentElement.classList.contains("dark")
+    const getInitialTheme = (): MonacoTheme => {
+      if (typeof window !== "undefined") {
+        return document.documentElement.classList.contains("dark")
           ? "pseudocode-dark"
-          : "pseudocode-light"
-      );
-    }
+          : "pseudocode-light";
+      }
+      return "pseudocode-light";
+    };
+    setTheme(getInitialTheme());
   }, []);
 
   /* ---------------------------
@@ -50,8 +54,8 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
         tokenizer: {
           root: [
             [/\b(BEGIN|END|IF|ELSE|ENDIF|WHILE|ENDWHILE|REPEAT|UNTIL|FOR|NEXT|CASE|FUNCTION|PROCEDURE|RETURN|DECLARE|CONSTANT|INPUT|OUTPUT)\b/, "keyword"],
-            [/[a-zA-Z_]\w*(?=\()/, "function"], // function calls
-            [/[a-zA-Z_]\w*/, "identifier"],     // variables/identifiers
+            [/[a-zA-Z_]\w*(?=\()/, "function"],
+            [/[a-zA-Z_]\w*/, "identifier"],
             [/\d+/, "number"],
             [/".*?"/, "string"],
             [/'.*?'/, "string"],
@@ -82,61 +86,9 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
           { token: "number", foreground: "b5cea8" },
           { token: "string", foreground: "ce9178" },
         ],
-        colors: { "editor.background": "#1e1e1e" },
-      });
-
-      /* ---------------------------
-         Register Autocomplete Provider
-      --------------------------- */
-      monacoInstance.languages.registerCompletionItemProvider("pseudocode", {
-        provideCompletionItems: (model, position) => {
-          const text = model.getValue();
-          const word = model.getWordUntilPosition(position);
-          const range = {
-            startLineNumber: position.lineNumber,
-            endLineNumber: position.lineNumber,
-            startColumn: word.startColumn,
-            endColumn: word.endColumn,
-          };
-
-          // Extract variables declared with DECLARE
-          const vars = Array.from(
-            text.matchAll(/\bDECLARE\s+([a-zA-Z_]\w*)/g)
-          ).map((m) => m[1]);
-
-          // Extract custom functions/procedures
-          const funcs = Array.from(
-            text.matchAll(/\b(?:FUNCTION|PROCEDURE)\s+([a-zA-Z_]\w*)/g)
-          ).map((m) => m[1]);
-
-          const keywords = [
-            "BEGIN", "END", "IF", "ELSE", "ENDIF", "WHILE", "ENDWHILE", "REPEAT",
-            "UNTIL", "FOR", "NEXT", "CASE", "FUNCTION", "PROCEDURE", "RETURN",
-            "DECLARE", "CONSTANT", "INPUT", "OUTPUT"
-          ];
-
-          const suggestions = [
-            ...keywords.map((k) => ({
-              label: k,
-              kind: monacoInstance.languages.CompletionItemKind.Keyword,
-              insertText: k,
-              range,
-            })),
-            ...vars.map((v) => ({
-              label: v,
-              kind: monacoInstance.languages.CompletionItemKind.Variable,
-              insertText: v,
-              range,
-            })),
-            ...funcs.map((f) => ({
-              label: f,
-              kind: monacoInstance.languages.CompletionItemKind.Function,
-              insertText: f + "()",
-              range,
-            })),
-          ];
-
-          return { suggestions };
+        colors: {
+          "editor.background": "#1C2433",
+          "editorGutter.background": "#1E1E1E",
         },
       });
     }
@@ -164,78 +116,97 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
   }, [mounted]);
 
   /* ---------------------------
-     Zoom shortcuts
+     Font size update
   --------------------------- */
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        setFontSize((prev) => {
-          let next = prev + (e.deltaY < 0 ? 1 : -1);
-          if (next < 8) next = 8;
-          if (next > 40) next = 40;
-          return next;
-        });
-      }
-    };
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    return () => window.removeEventListener("wheel", handleWheel);
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
-        e.preventDefault();
-        setFontSize((prev) => Math.min(prev + 1, 40));
-      }
-      if (e.ctrlKey && e.key === "-") {
-        e.preventDefault();
-        setFontSize((prev) => Math.max(prev - 1, 8));
-      }
-      if (e.ctrlKey && e.key === "0") {
-        e.preventDefault();
-        setFontSize(14);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  // apply font size
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.updateOptions({ fontSize });
     }
   }, [fontSize]);
 
+  /* ---------------------------
+     Mount handler
+  --------------------------- */
   const handleEditorMount: OnMount = (editor) => {
     editorRef.current = editor;
+
+    // attach zoom inside editor only
+    const domNode = editor.getDomNode();
+    if (domNode) {
+      const handleWheel = (e: WheelEvent) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          setFontSize((prev) => {
+            let next = prev + (e.deltaY < 0 ? 1 : -1);
+            if (next < 8) next = 8;
+            if (next > 40) next = 40;
+            return next;
+          });
+        }
+      };
+      domNode.addEventListener("wheel", handleWheel, { passive: false });
+    }
+  };
+
+  /* ---------------------------
+     Fullscreen toggle
+  --------------------------- */
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullScreen(true);
+      }).catch((err) => {
+        console.error("Error enabling fullscreen:", err);
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullScreen(false);
+      }).catch((err) => {
+        console.error("Error exiting fullscreen:", err);
+      });
+    }
   };
 
   if (!theme)
     return <div className="h-[400px] w-full bg-gray-100 dark:bg-[#1e1e1e]" />;
 
   return (
-    <Editor
-      height="400px"
-      language="pseudocode"
-      theme={theme}
-      value={code}
-      onChange={(value) => setCode(value || "")}
-      onMount={handleEditorMount}
-      options={{
-        fontSize,
-        tabSize: 4,
-        insertSpaces: true,
-        detectIndentation: false,
-        lineNumbers: "on",
-        minimap: { enabled: false },
-        scrollBeyondLastLine: false,
-        smoothScrolling: true,
-        automaticLayout: true,
-        renderLineHighlight: "line",
-        cursorBlinking: "smooth",
-      }}
-    />
+    <div className="relative h-[400px] w-full bg-gray-100 dark:bg-[#1e1e1e]">
+      <Editor
+        height="400px"
+        language="pseudocode"
+        theme={theme}
+        value={code}
+        onChange={(value) => setCode(value || "")}
+        onMount={handleEditorMount}
+        options={{
+          fontSize,
+          padding: { top: 10, bottom: 10 },
+          tabSize: 4,
+          insertSpaces: true,
+          lineNumbersMinChars: 3,
+          lineDecorationsWidth: 10,
+          glyphMargin: false,
+          lineNumbers: "on",
+          folding: true,
+          wordWrap: "on",
+          detectIndentation: true,
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          smoothScrolling: true,
+          automaticLayout: true,
+          renderLineHighlight: "line",
+          cursorBlinking: "smooth",
+        }}
+      />
+
+      <button
+        onClick={toggleFullScreen}
+        className="absolute bottom-3 right-3 px-3 py-1.5 bg-gray-300 dark:bg-[#2D2D30] rounded flex items-center"
+      >
+        {isFullScreen ? "Exit" : "Full Screen"}
+        <MdOutlineFullscreen size={16} className="ml-1" />
+      </button>
+    </div>
   );
 }

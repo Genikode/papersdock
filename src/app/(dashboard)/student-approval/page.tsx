@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
+import { useDebounce } from 'use-debounce';
 import TableComponent, { TableColumn } from '@/components/TableComponent';
 import Modal from '@/components/Modal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { api } from '@/lib/api';
+import page from '../payfail/page';
 
 /* =========================
    API Types
@@ -59,15 +61,17 @@ function parseAllowedCourses(jsonStr?: string): string[] {
 ========================= */
 export default function StudentApprovalPage() {
   // filters
+  
   const [approvedFilter, setApprovedFilter] = useState<'' | 'Y' | 'N'>('');
   const [feesFilter, setFeesFilter] = useState<'' | 'Y' | 'N'>('');
   const [courseFilter, setCourseFilter] = useState<string>(''); // courseId
-
-  // search + pagination
   const [searchTerm, setSearchTerm] = useState<string>('');
+    const [debouncedSearch] = useDebounce(searchTerm, 700); // ✅ debounce added here
+  // search + pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [totalItems, setTotalItems] = useState<number>(0);
+
 
   // data (master list from server; we'll apply course filter client-side)
   const [serverRows, setServerRows] = useState<UserApiItem[]>([]);
@@ -111,7 +115,7 @@ export default function StudentApprovalPage() {
     (async () => {
       setLoadingCourses(true);
       try {
-        const LIMIT = 2;
+        const LIMIT = 50;
         const first = await api.get<CoursesResponse>('/courses/get-all-courses', {
           page: 1,
           limit: LIMIT,
@@ -138,25 +142,21 @@ export default function StudentApprovalPage() {
   }, []);
 
   /* Fetch users from server (no courseId filter here; backend likely ignores it) */
-  async function fetchUsers() {
+ async function fetchUsers() {
     setLoading(true);
     try {
       const res = await api.get<UsersResponse>('/users/get-all-users', {
         isBlocked: 'N',
         page: currentPage,
-        limit: itemsPerPage,
-        search: searchTerm || undefined,
+        limit: itemsPerPage, // ✅ respects selected page limit
+        search: debouncedSearch || undefined, // ✅ debounce applied
         isApproved: approvedFilter || undefined,
         isFeesPaid: feesFilter || undefined,
       });
 
-      const list = res.data || [];
-      // set master list of role of students 
-      const students = list.filter((u) => u.roleName.toLowerCase() === 'student');
+      const students = (res.data || []).filter((u) => u.roleName.toLowerCase() === 'student');
       setServerRows(students);
-
-      // total from server (before our local course filter)
-      setTotalItems(res.pagination?.total ?? list.length);
+      setTotalItems(res.pagination?.total ?? students.length);
     } catch {
       setServerRows([]);
       setTotalItems(0);
@@ -168,7 +168,8 @@ export default function StudentApprovalPage() {
   useEffect(() => {
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [approvedFilter, feesFilter, searchTerm, currentPage, itemsPerPage]);
+  }, [approvedFilter, feesFilter, debouncedSearch, currentPage, itemsPerPage]); // ✅ debounce included
+
 
   /* Apply course filter CLIENT-SIDE */
   const filteredByCourse = useMemo(() => {
