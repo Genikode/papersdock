@@ -8,6 +8,11 @@ import { useFullScreen } from "@/context/FullScreenContext";
 import { Delete, DeleteIcon, Play, PlayIcon } from "lucide-react";
 import { MdOutlineDelete, MdOutlineFullscreen, MdOutlineFileUpload, MdOutlineFileDownload } from "react-icons/md";
 import { FileCode, Download, X } from "lucide-react";
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+} from "react-resizable-panels"
 export default function App() {
   const [code, setCode] = useState(
     `DECLARE total : INTEGER
@@ -188,151 +193,146 @@ const toggleFullScreen = () => {
 
 
       {/* Main compiler layout (always visible) */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3">
-        {/* Editor Panel */}
-        <div className="md:col-span-2 flex flex-col border-b md:border-b-0 md:border-r border-gray-300 dark:border-gray-800">
-          {/* Top bar */}
-          <div className="flex justify-between items-center bg-gray-100 dark:bg-[#121621] px-4 py-2 border-b border-gray-300 dark:border-gray-800">
-            <div className="text-sm text-gray-700 dark:text-gray-300">
-              {fileName} <span className="text-gray-400">• Pseudocode</span>
-            </div>
-            <div className="flex gap-2 items-center">
-              <button
-                onClick={handleRun}
-                className="bg-[#16A34A] hover:bg-[#15803D] px-4 py-1.5 rounded text-sm text-white"
-              >
-                <PlayIcon size={16} className="inline-block mr-1" />
-                Run
-              </button>
-              <button
-                onClick={handleClear}
-                className="bg-white hover:bg-gray-100 px-4 py-1.5 rounded text-sm text-red-500 border border-red-300 hover:border-red-400"
-              >
-                <MdOutlineDelete size={16} className="inline-block mr-1" />
-                Clear
-              </button>
-               {/* <button
-        onClick={() =>  
-          toggleFullScreen()
-         // setIsFullScreen(!isFullScreen)
-        }
-        className="px-3 py-1.5 bg-gray-300 dark:bg-[#2D2D30] rounded"
-      >
-        {isFullScreen ? "Exit" : "Full Screen"}
-        <MdOutlineFullscreen size={16} className="inline-block ml-1" />
-      </button> */}
-            </div>
+
+<div className="flex-1">
+  <PanelGroup direction="horizontal">
+    {/* Left: Editor Panel */}
+    <Panel defaultSize={66} minSize={40}>
+      <div className="flex flex-col border-b md:border-b-0 md:border-r border-gray-300 dark:border-gray-800 h-full">
+        {/* Top bar */}
+        <div className="flex justify-between items-center bg-gray-100 dark:bg-[#121621] px-4 py-2 border-b border-gray-300 dark:border-gray-800">
+          <div className="text-sm text-gray-700 dark:text-gray-300">
+            {fileName} <span className="text-gray-400">• Pseudocode</span>
           </div>
-
-          {/* Editor */}
-          <div className="flex">
-            <Editor code={code} setCode={setCode} />
-            
-          </div>
- 
-          {/* Footer (hidden in fullscreen) */}
-       
-        
-          
-        </div>
-
-        {/* Terminal & Files (always visible) */}
-    <div className="flex flex-col space-y-3 pl-3.5">
-  {/* Terminal */}
-  <div className="rounded-md overflow-hidden border border-gray-300 dark:border-gray-700">
-    <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#101828] px-4 py-2 border-b border-gray-300 dark:border-gray-700">
-      <span className="text-green-600 dark:text-green-400">▸</span>
-      <span className="font-medium">Terminal</span>
-    </div>
-    <div className="h-40 bg-gray-50 dark:bg-[#1C2433] text-green-600 dark:text-green-400 p-3 overflow-auto whitespace-pre-wrap text-sm">
-      {error ? (
-        <span className="text-red-600 dark:text-red-400">{error}</span>
-      ) : (
-        <span className="block">› {output || "Output"}</span>
-      )}
-    </div>
-  </div>
-
-  {/* Files */}
-  <div className="grid grid-cols-2 gap-3 text-sm">
-    {/* Uploaded Files */}
-    <div className="rounded-md overflow-hidden border border-gray-300 dark:border-gray-700">
-      <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#101828] px-3 py-2 border-b border-gray-300 dark:border-gray-700">
-        <span className="text-green-600 dark:text-green-400">▸</span>
-        <span className="font-medium">Uploaded Files</span>
-      </div>
- <div className="p-2 space-y-2 max-h-32 overflow-auto">
-  {uploadedFiles.map((f) => (
-    <div
-      key={f.id}
-      className="relative flex items-center justify-between bg-[#1C2433] rounded-lg px-4 py-3 text-white cursor-pointer"
-      onClick={() => isPseudocode(f.name) && setCode(f.content)}
-    >
-      {/* File info */}
-      <div className="flex items-center gap-3">
-        <FileCode className="w-5 h-5 text-white" />
-        <span className="truncate">{f.name}</span>
-      </div>
-
-      {/* Download button */}
-      <button
-        onClick={(e) => e.stopPropagation()}
-        className="w-5 h-5 flex items-center justify-center rounded-full bg-green-600 hover:bg-green-500"
-      >
-        <Download className="w-3 h-3 text-white" />
-      </button>
-
-      {/* Delete button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          removeFile(f.id);
-        }}
-        className="absolute -top-1 -right-1 w-3 h-3 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-500"
-      >
-        <X className="w-2 h-2 text-white" />
-      </button>
-    </div>
-  ))}
-
-  {uploadedFiles.length === 0 && (
-    <div className="text-xs text-gray-500 dark:text-gray-400">No files</div>
-  )}
-</div>
-    </div>
-
-    {/* Created File */}
-    <div className="rounded-md overflow-hidden border border-gray-300 dark:border-gray-700">
-      <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#101828] px-3 py-2 border-b border-gray-300 dark:border-gray-700">
-        <span className="text-green-600 dark:text-green-400">▸</span>
-        <span className="font-medium">Created File</span>
-      </div>
-      <div className="p-2 space-y-2 max-h-32 overflow-auto">
-        {Array.from(virtualFiles.entries()).map(([name]) => (
-          <div
-            key={name}
-            className="flex justify-between items-center bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded"
-          >
-            <span className="truncate flex items-center gap-2">
-              📝 {name}
-            </span>
+          <div className="flex gap-2 items-center">
             <button
-              onClick={() => removeVirtualFile(name)}
-              className="text-gray-500 hover:text-red-500"
+              onClick={handleRun}
+              className="bg-[#16A34A] hover:bg-[#15803D] px-4 py-1.5 rounded text-sm text-white"
             >
-              ×
+              <PlayIcon size={16} className="inline-block mr-1" />
+              Run
+            </button>
+            <button
+              onClick={handleClear}
+              className="bg-white hover:bg-gray-100 px-4 py-1.5 rounded text-sm text-red-500 border border-red-300 hover:border-red-400"
+            >
+              <MdOutlineDelete size={16} className="inline-block mr-1" />
+              Clear
             </button>
           </div>
-        ))}
-        {virtualFiles.size === 0 && (
-          <div className="text-xs text-gray-500 dark:text-gray-400">No files</div>
-        )}
+        </div>
+
+        {/* Editor */}
+        <div className="flex flex-1">
+          <Editor code={code} setCode={setCode} />
+        </div>
       </div>
-    </div>
-  </div>
+    </Panel>
+
+    <PanelResizeHandle className="w-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors cursor-col-resize" />
+
+    {/* Right: Terminal + Files */}
+    <Panel defaultSize={34} minSize={25}>
+      <PanelGroup direction="vertical">
+        {/* Terminal */}
+        <Panel defaultSize={50} minSize={20}>
+          <div className="rounded-md overflow-hidden border border-gray-300 dark:border-gray-700 h-full flex flex-col">
+            <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#101828] px-4 py-2 border-b border-gray-300 dark:border-gray-700">
+              <span className="text-green-600 dark:text-green-400">▸</span>
+              <span className="font-medium">Terminal</span>
+            </div>
+            <div className="flex-1 bg-gray-50 dark:bg-[#1C2433] text-green-600 dark:text-green-400 p-3 overflow-auto whitespace-pre-wrap text-sm">
+              {error ? (
+                <span className="text-red-600 dark:text-red-400">{error}</span>
+              ) : (
+                <span className="block">› {output || "Output"}</span>
+              )}
+            </div>
+          </div>
+        </Panel>
+
+        <PanelResizeHandle className="h-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors cursor-row-resize" />
+
+        {/* Files */}
+        <Panel defaultSize={50} minSize={20}>
+          <div className="grid grid-cols-2 gap-3 text-sm h-full">
+            {/* Uploaded Files */}
+            <div className="rounded-md overflow-hidden border border-gray-300 dark:border-gray-700 flex flex-col">
+              <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#101828] px-3 py-2 border-b border-gray-300 dark:border-gray-700">
+                <span className="text-green-600 dark:text-green-400">▸</span>
+                <span className="font-medium">Uploaded Files</span>
+              </div>
+              <div className="p-2 space-y-2 overflow-auto">
+                {uploadedFiles.map((f) => (
+                  <div
+                    key={f.id}
+                    className="relative flex items-center justify-between bg-[#1C2433] rounded-lg px-4 py-3 text-white cursor-pointer"
+                    onClick={() => isPseudocode(f.name) && setCode(f.content)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileCode className="w-5 h-5 text-white" />
+                      <span className="truncate">{f.name}</span>
+                    </div>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-5 h-5 flex items-center justify-center rounded-full bg-green-600 hover:bg-green-500"
+                    >
+                      <Download className="w-3 h-3 text-white" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFile(f.id);
+                      }}
+                      className="absolute -top-1 -right-1 w-3 h-3 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-500"
+                    >
+                      <X className="w-2 h-2 text-white" />
+                    </button>
+                  </div>
+                ))}
+                {uploadedFiles.length === 0 && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    No files
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Created File */}
+            <div className="rounded-md overflow-hidden border border-gray-300 dark:border-gray-700 flex flex-col">
+              <div className="flex items-center gap-2 bg-gray-100 dark:bg-[#101828] px-3 py-2 border-b border-gray-300 dark:border-gray-700">
+                <span className="text-green-600 dark:text-green-400">▸</span>
+                <span className="font-medium">Created File</span>
+              </div>
+              <div className="p-2 space-y-2 overflow-auto">
+                {Array.from(virtualFiles.entries()).map(([name]) => (
+                  <div
+                    key={name}
+                    className="flex justify-between items-center bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded"
+                  >
+                    <span className="truncate flex items-center gap-2">📝 {name}</span>
+                    <button
+                      onClick={() => removeVirtualFile(name)}
+                      className="text-gray-500 hover:text-red-500"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {virtualFiles.size === 0 && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    No files
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Panel>
+      </PanelGroup>
+    </Panel>
+  </PanelGroup>
 </div>
 
-      </div>
     </div>
   );
 }

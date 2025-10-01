@@ -3,7 +3,7 @@ import Editor, { useMonaco, OnMount } from "@monaco-editor/react";
 import type * as monaco from "monaco-editor";
 import { MdOutlineFullscreen } from "react-icons/md";
 import { useFullScreen } from "@/context/FullScreenContext";
-
+import { Rnd } from "react-rnd";
 interface EditorProps {
   code: string;
   setCode: (value: string) => void;
@@ -15,26 +15,23 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
   const monacoInstance = useMonaco();
   const { isFullScreen, setIsFullScreen } = useFullScreen();
 
-  const [mounted, setMounted] = useState(false);
-  const [fontSize, setFontSize] = useState(14);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const [theme, setTheme] = useState<MonacoTheme | null>(null);
+  const [fontSize, setFontSize] = useState(14);
 
-  /* ---------------------------
-     Detect initial theme
-  --------------------------- */
-  useEffect(() => {
-    setMounted(true);
-    const getInitialTheme = (): MonacoTheme => {
-      if (typeof window !== "undefined") {
-        return document.documentElement.classList.contains("dark")
-          ? "pseudocode-dark"
-          : "pseudocode-light";
-      }
-      return "pseudocode-light";
-    };
-    setTheme(getInitialTheme());
-  }, []);
+  // compute initial theme BEFORE first paint to avoid white flash
+  const getInitialTheme = (): MonacoTheme => {
+    if (typeof window === "undefined") return "pseudocode-light";
+    const html = document.documentElement;
+    if (html.classList.contains("dark")) return "pseudocode-dark";
+    if (html.classList.contains("light")) return "pseudocode-light";
+    // fallback to system preference if you use Tailwind's 'media' strategy
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "pseudocode-dark"
+      : "pseudocode-light";
+  };
+
+  const [theme, setTheme] = useState<MonacoTheme>(getInitialTheme);
+  const [themesReady, setThemesReady] = useState(false);
 
   /* ---------------------------
      Register language + themes
@@ -42,14 +39,14 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
   useEffect(() => {
     if (!monacoInstance) return;
 
+    // register language (once)
     if (!monacoInstance.languages.getLanguages().some((l) => l.id === "pseudocode")) {
       monacoInstance.languages.register({ id: "pseudocode" });
-
       monacoInstance.languages.setMonarchTokensProvider("pseudocode", {
         keywords: [
-          "BEGIN", "END", "IF", "ELSE", "ENDIF", "WHILE", "ENDWHILE", "REPEAT", "UNTIL",
-          "FOR", "NEXT", "CASE", "FUNCTION", "PROCEDURE", "RETURN", "DECLARE", "CONSTANT",
-          "INPUT", "OUTPUT"
+          "BEGIN","END","IF","ELSE","ENDIF","WHILE","ENDWHILE","REPEAT","UNTIL",
+          "FOR","NEXT","CASE","FUNCTION","PROCEDURE","RETURN","DECLARE","CONSTANT",
+          "INPUT","OUTPUT"
         ],
         tokenizer: {
           root: [
@@ -63,89 +60,110 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
         },
       });
 
+      // LIGHT THEME
       monacoInstance.editor.defineTheme("pseudocode-light", {
         base: "vs",
         inherit: true,
         rules: [
-          { token: "keyword", foreground: "0000ff", fontStyle: "bold" },
+          { token: "keyword", foreground: "0000FF", fontStyle: "bold" },
           { token: "function", foreground: "795E26" },
           { token: "identifier", foreground: "001080" },
           { token: "number", foreground: "098658" },
-          { token: "string", foreground: "a31515" },
+          { token: "string", foreground: "A31515" },
         ],
-        colors: { "editor.background": "#ffffff" },
+        colors: {
+          "editor.background": "#FFFFFF",
+          "editorGutter.background": "#FFFFFF",
+          "editorLineNumber.foreground": "#6B7280",
+          "editorLineNumber.activeForeground": "#111827",
+        },
       });
 
+      // DARK THEME — both editor & gutter #1E1E1E
       monacoInstance.editor.defineTheme("pseudocode-dark", {
         base: "vs-dark",
         inherit: true,
         rules: [
-          { token: "keyword", foreground: "569cd6", fontStyle: "bold" },
-          { token: "function", foreground: "dcdcaa" },
-          { token: "identifier", foreground: "9cdcfe" },
-          { token: "number", foreground: "b5cea8" },
-          { token: "string", foreground: "ce9178" },
+          { token: "keyword", foreground: "569CD6", fontStyle: "bold" },
+          { token: "function", foreground: "DCDCAA" },
+          { token: "identifier", foreground: "9CDCFE" },
+          { token: "number", foreground: "B5CEA8" },
+          { token: "string", foreground: "CE9178" },
         ],
         colors: {
-          "editor.background": "#1C2433",
+          "editor.background": "#1E1E1E",
           "editorGutter.background": "#1E1E1E",
+          "editorLineNumber.foreground": "#9CA3AF",
+          "editorLineNumber.activeForeground": "#FFFFFF",
         },
       });
     }
+
+    setThemesReady(true);
   }, [monacoInstance]);
 
   /* ---------------------------
-     Theme sync with Tailwind
+     Keep theme in sync with Tailwind + system
   --------------------------- */
   useEffect(() => {
-    if (!mounted) return;
-    const getTheme = () =>
-      document.documentElement.classList.contains("dark")
+    const computeTheme = (): MonacoTheme => {
+      const html = document.documentElement;
+      if (html.classList.contains("dark")) return "pseudocode-dark";
+      if (html.classList.contains("light")) return "pseudocode-light";
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "pseudocode-dark"
         : "pseudocode-light";
+    };
 
-    setTheme(getTheme());
+    // sync with <html class="dark">
+    const observer = new MutationObserver(() => setTheme(computeTheme()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
-    const observer = new MutationObserver(() => setTheme(getTheme()));
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
+    // also sync with OS scheme if you use Tailwind's 'media'
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleMedia = () => setTheme(computeTheme());
+    mql.addEventListener?.("change", handleMedia);
 
-    return () => observer.disconnect();
-  }, [mounted]);
+    return () => {
+      observer.disconnect();
+      mql.removeEventListener?.("change", handleMedia);
+    };
+  }, []);
 
   /* ---------------------------
-     Font size update
+     Apply font size on change
   --------------------------- */
   useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.updateOptions({ fontSize });
-    }
+    editorRef.current?.updateOptions({ fontSize });
   }, [fontSize]);
 
   /* ---------------------------
-     Mount handler
+     Mount handler (scope zoom to editor)
   --------------------------- */
   const handleEditorMount: OnMount = (editor) => {
     editorRef.current = editor;
 
-    // attach zoom inside editor only
-    const domNode = editor.getDomNode();
-    if (domNode) {
-      const handleWheel = (e: WheelEvent) => {
-        if (e.ctrlKey) {
-          e.preventDefault();
-          setFontSize((prev) => {
-            let next = prev + (e.deltaY < 0 ? 1 : -1);
-            if (next < 8) next = 8;
-            if (next > 40) next = 40;
-            return next;
-          });
-        }
-      };
-      domNode.addEventListener("wheel", handleWheel, { passive: false });
-    }
+    const node = editor.getDomNode();
+    if (!node) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        setFontSize((prev) => {
+          let next = prev + (e.deltaY < 0 ? 1 : -1);
+          if (next < 8) next = 8;
+          if (next > 40) next = 40;
+          return next;
+        });
+      }
+    };
+
+    node.addEventListener("wheel", handleWheel, { passive: false });
+
+    // cleanup when editor disposes
+    editor.onDidDispose(() => {
+      node.removeEventListener("wheel", handleWheel);
+    });
   };
 
   /* ---------------------------
@@ -153,44 +171,39 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
   --------------------------- */
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => {
-        setIsFullScreen(true);
-      }).catch((err) => {
-        console.error("Error enabling fullscreen:", err);
-      });
+      document.documentElement.requestFullscreen().then(() => setIsFullScreen(true)).catch(console.error);
     } else {
-      document.exitFullscreen().then(() => {
-        setIsFullScreen(false);
-      }).catch((err) => {
-        console.error("Error exiting fullscreen:", err);
-      });
+      document.exitFullscreen().then(() => setIsFullScreen(false)).catch(console.error);
     }
   };
 
-  if (!theme)
-    return <div className="h-[400px] w-full bg-gray-100 dark:bg-[#1e1e1e]" />;
+  // Wait until themes are defined to avoid flashing default 'vs'
+  if (!themesReady) {
+    return <div className="h-[400px] w-full bg-gray-100 dark:bg-[#1E1E1E]" />;
+  }
 
   return (
-    <div className="relative h-[400px] w-full bg-gray-100 dark:bg-[#1e1e1e]">
+    <div className="relative h-[400px] w-full bg-gray-100 dark:bg-[#1E1E1E]">
+      
       <Editor
         height="400px"
         language="pseudocode"
         theme={theme}
         value={code}
-        onChange={(value) => setCode(value || "")}
+        onChange={(v) => setCode(v || "")}
         onMount={handleEditorMount}
         options={{
           fontSize,
           padding: { top: 10, bottom: 10 },
           tabSize: 4,
           insertSpaces: true,
-          lineNumbersMinChars: 3,
-          lineDecorationsWidth: 10,
-          glyphMargin: false,
+          detectIndentation: true,
           lineNumbers: "on",
+          lineNumbersMinChars: 3,
+          lineDecorationsWidth: 16, // extra gap between gutter and text
+          glyphMargin: false,
           folding: true,
           wordWrap: "on",
-          detectIndentation: true,
           minimap: { enabled: false },
           scrollBeyondLastLine: false,
           smoothScrolling: true,
