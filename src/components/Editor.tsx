@@ -3,7 +3,7 @@ import Editor, { useMonaco, OnMount } from "@monaco-editor/react";
 import type * as monaco from "monaco-editor";
 import { MdOutlineFullscreen } from "react-icons/md";
 import { useFullScreen } from "@/context/FullScreenContext";
-import { Rnd } from "react-rnd";
+
 interface EditorProps {
   code: string;
   setCode: (value: string) => void;
@@ -14,9 +14,21 @@ type MonacoTheme = "pseudocode-dark" | "pseudocode-light";
 export default function CodeEditor({ code, setCode }: EditorProps) {
   const monacoInstance = useMonaco();
   const { isFullScreen, setIsFullScreen } = useFullScreen();
-
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [fontSize, setFontSize] = useState(14);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // compute initial theme BEFORE first paint to avoid white flash
   const getInitialTheme = (): MonacoTheme => {
@@ -91,8 +103,8 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
           { token: "string", foreground: "CE9178" },
         ],
         colors: {
-          "editor.background": "#1E1E1E",
-          "editorGutter.background": "#1E1E1E",
+            "editor.background": "#1C2433",
+            "editorGutter.background": "#1C2433",
           "editorLineNumber.foreground": "#9CA3AF",
           "editorLineNumber.activeForeground": "#FFFFFF",
         },
@@ -138,6 +150,18 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
   }, [fontSize]);
 
   /* ---------------------------
+     Force editor layout on fullscreen change
+  --------------------------- */
+  useEffect(() => {
+    // Force the editor to recalculate its layout when fullscreen changes
+    if (editorRef.current) {
+      setTimeout(() => {
+        editorRef.current?.layout();
+      }, 100);
+    }
+  }, [isFullScreen]);
+
+  /* ---------------------------
      Mount handler (scope zoom to editor)
   --------------------------- */
   const handleEditorMount: OnMount = (editor) => {
@@ -179,14 +203,20 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
 
   // Wait until themes are defined to avoid flashing default 'vs'
   if (!themesReady) {
-    return <div className="h-[400px] w-full bg-gray-100 dark:bg-[#1E1E1E]" />;
+    return <div className={isFullScreen ? "h-full w-full bg-gray-100 dark:bg-[#1E1E1E]" : "h-[400px] w-full bg-gray-100 dark:bg-[#1E1E1E]"} />;
   }
 
+  // Dynamic container and height based on fullscreen state
+  const containerClass = isFullScreen 
+    ? "relative h-full w-full bg-gray-100 dark:bg-[#1E1E1E]"
+    : "relative h-[400px] w-full bg-gray-100 dark:bg-[#1E1E1E]";
+  
+  const editorHeight = isFullScreen ? "100%" : "400px";
+
   return (
-    <div className="relative h-[400px] w-full bg-gray-100 dark:bg-[#1E1E1E]">
-      
+    <div className={containerClass}>
       <Editor
-        height="400px"
+        height={editorHeight}
         language="pseudocode"
         theme={theme}
         value={code}
@@ -213,13 +243,16 @@ export default function CodeEditor({ code, setCode }: EditorProps) {
         }}
       />
 
-      <button
-        onClick={toggleFullScreen}
-        className="absolute bottom-3 right-3 px-3 py-1.5 bg-gray-300 dark:bg-[#2D2D30] rounded flex items-center"
-      >
-        {isFullScreen ? "Exit" : "Full Screen"}
-        <MdOutlineFullscreen size={16} className="ml-1" />
-      </button>
+      {/* Only show fullscreen button on desktop */}
+      {!isMobile && (
+        <button
+          onClick={toggleFullScreen}
+          className="absolute bottom-3 right-3 px-3 py-1.5 bg-gray-300 dark:bg-[#2D2D30] rounded flex items-center z-10"
+        >
+          {isFullScreen ? "Exit" : "Full Screen"}
+          <MdOutlineFullscreen size={16} className="ml-1" />
+        </button>
+      )}
     </div>
   );
 }
