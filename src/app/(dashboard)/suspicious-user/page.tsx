@@ -19,6 +19,7 @@ import {
   ChevronRight,
   CheckCircle2,
   RotateCcw,
+  Trash2,
 } from 'lucide-react';
 
 /* =========================
@@ -97,9 +98,8 @@ function toCSV(rows: SuspiciousItem[]) {
 async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text);
-    alert('Copied!');
   } catch {
-    alert('Copy failed');
+    // noop
   }
 }
 
@@ -125,6 +125,10 @@ export default function SuspiciousActivitiesPage() {
 
   // Details modal
   const [active, setActive] = useState<SuspiciousItem | null>(null);
+
+  // Delete confirmation modal
+  const [confirmDelete, setConfirmDelete] = useState<SuspiciousItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -186,7 +190,6 @@ export default function SuspiciousActivitiesPage() {
   // ===== Compact pagination window: ← 1 2 3 → (centered around current when possible) =====
   function pageWindow(current: number, totalP: number, size = 3): number[] {
     if (totalP <= size) return Array.from({ length: totalP }, (_, i) => i + 1);
-    // try to center current; clamp to bounds
     let start = Math.max(1, current - Math.floor(size / 2));
     let end = start + size - 1;
     if (end > totalP) {
@@ -200,23 +203,58 @@ export default function SuspiciousActivitiesPage() {
   // ===== Review toggle =====
   async function setReviewed(id: string, reviewedBool: boolean) {
     setRowBusy(id);
+    setError(null);
     try {
-      // API expects string "TRUE" | "FALSE"
       await api.put(`/suspicious-activities/${id}`, {
         reviewed: reviewedBool ? 'TRUE' : 'FALSE',
       });
-
-      // Optimistic local update
       setRows((prev) =>
         prev.map((r) => (r.id === id ? { ...r, reviewed: reviewedBool ? 1 : 0 } : r))
       );
-
-      // Also update active modal (if the same record is open)
       setActive((cur) => (cur && cur.id === id ? { ...cur, reviewed: reviewedBool ? 1 : 0 } : cur));
     } catch (e: any) {
-      alert(e?.message || 'Failed to update review status');
+      setError(e?.message || 'Failed to update review status');
     } finally {
       setRowBusy(null);
+    }
+  }
+
+  // ===== Delete (with modal) =====
+  function openDeleteModal(item: SuspiciousItem) {
+    setConfirmDelete(item);
+    setError(null);
+  }
+
+  async function confirmDeleteActivity() {
+    if (!confirmDelete) return;
+    const { id } = confirmDelete;
+
+    setDeleting(true);
+    setError(null);
+    try {
+      await api.delete(`/suspicious-activities/${id}`);
+
+      // Optimistic local removal
+      setRows((prev) => prev.filter((r) => r.id !== id));
+      setTotal((t) => Math.max(0, t - 1));
+
+      // If we removed the last item on this page, adjust page
+      const newTotal = total - 1;
+      const newTotalPages = Math.max(1, Math.ceil(newTotal / limit));
+      if (page > newTotalPages) {
+        setPage(newTotalPages);
+      } else {
+        // Refresh to sync server pagination/meta
+        fetchList();
+      }
+
+      // Close modals related to this record
+      setConfirmDelete(null);
+      setActive((cur) => (cur && cur.id === id ? null : cur));
+    } catch (e: any) {
+      setError(e?.message || 'Failed to delete record');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -226,6 +264,13 @@ export default function SuspiciousActivitiesPage() {
         title="Suspicious Activities"
         description="Investigate unusual access patterns and potential account sharing."
       />
+
+      {/* Top inline error (for actions) */}
+      {error && (
+        <div className="mb-3 text-sm text-red-600 border border-red-200 dark:border-red-900/40 rounded bg-red-50 dark:bg-red-950/20 p-3">
+          {error}
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-3 sm:p-4 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
@@ -270,7 +315,18 @@ export default function SuspiciousActivitiesPage() {
         </div>
 
         <button
-          onClick={exportCSV}
+          onClick={() => {
+            const csv = toCSV(displayRows);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `suspicious-activities-page-${page}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+          }}
           className="inline-flex items-center gap-2 border rounded px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-800
                      bg-white dark:bg-slate-900
                      border-slate-300 dark:border-slate-700
@@ -280,15 +336,10 @@ export default function SuspiciousActivitiesPage() {
         </button>
       </div>
 
-      {/* Loading / Error */}
+      {/* Loading note */}
       {loading && <p className="text-sm text-gray-500 dark:text-slate-400 mb-3">Loading suspicious activities…</p>}
-      {error && (
-        <div className="mb-3 text-sm text-red-600 border border-red-200 dark:border-red-900/40 rounded bg-red-50 dark:bg-red-950/20 p-3">
-          {error}
-        </div>
-      )}
 
-      {/* Mobile cards (also used for tablet) */}
+      {/* Cards list */}
       <div className="space-y-3">
         {displayRows.map((r) => {
           const reviewed = r.reviewed === 1;
@@ -355,7 +406,7 @@ export default function SuspiciousActivitiesPage() {
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                {/* Review / Unreview action */}
+                {/* Review / Unreview */}
                 <button
                   disabled={busy}
                   onClick={() => setReviewed(r.id, !reviewed)}
@@ -367,6 +418,20 @@ export default function SuspiciousActivitiesPage() {
                 >
                   {reviewed ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
                   {reviewed ? 'Mark Unreviewed' : 'Mark Reviewed'}
+                </button>
+
+                {/* Delete (opens confirmation modal) */}
+                <button
+                  disabled={busy}
+                  onClick={() => openDeleteModal(r)}
+                  className="inline-flex items-center gap-1 border rounded px-3 py-1.5 text-xs
+                             hover:bg-red-50 dark:hover:bg-red-950/30
+                             bg-white dark:bg-slate-900
+                             border-red-300 dark:border-red-700
+                             text-red-600 dark:text-red-400 disabled:opacity-60"
+                  title="Delete record"
+                >
+                  <Trash2 size={14} /> Delete
                 </button>
 
                 {/* Call */}
@@ -408,72 +473,6 @@ export default function SuspiciousActivitiesPage() {
           <div className="text-center text-sm text-gray-500 dark:text-slate-400 py-10">No suspicious activity found.</div>
         )}
       </div>
-
-      {/* Optional: Desktop table (if you want the classic table view back, uncomment) */}
-      {/*
-      <div className="hidden md:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-x-auto mt-4">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800">
-              <th className="text-left font-medium px-4 py-3 text-gray-600 dark:text-slate-300">S.No</th>
-              <th className="text-left font-medium px-4 py-3 text-gray-600 dark:text-slate-300">Student</th>
-              <th className="text-left font-medium px-4 py-3 text-gray-600 dark:text-slate-300">Reason</th>
-              <th className="text-left font-medium px-4 py-3 text-gray-600 dark:text-slate-300">Cities</th>
-              <th className="text-left font-medium px-4 py-3 text-gray-600 dark:text-slate-300">Countries</th>
-              <th className="text-left font-medium px-4 py-3 text-gray-600 dark:text-slate-300">IPs</th>
-              <th className="text-left font-medium px-4 py-3 text-gray-600 dark:text-slate-300">Status</th>
-              <th className="text-left font-medium px-4 py-3 text-gray-600 dark:text-slate-300">Created</th>
-              <th className="text-left font-medium px-4 py-3 text-gray-600 dark:text-slate-300">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayRows.map((r) => {
-              const reviewed = r.reviewed === 1;
-              const busy = rowBusy === r.id;
-              return (
-                <tr key={r.id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/40">
-                  <td className="px-4 py-2 text-gray-800 dark:text-slate-200">{r.sNo}</td>
-                  <td className="px-4 py-2">
-                    <div className="font-medium text-gray-900 dark:text-slate-100">{r.studentName || 'Unknown'}</div>
-                    <div className="text-xs text-gray-500 dark:text-slate-400">User: {r.userId}</div>
-                  </td>
-                  <td className="px-4 py-2 text-gray-700 dark:text-slate-300">{r.reason || '—'}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-slate-400">{joinList(r.cities)}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-slate-400">{joinList(r.countries)}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-slate-400">{joinList(r.ipAddresses)}</td>
-                  <td className="px-4 py-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${reviewed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {reviewed ? 'Reviewed' : 'Unreviewed'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-slate-400">{fmtDate(r.createdAt)}</td>
-                  <td className="px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      <button
-                        disabled={busy}
-                        onClick={() => setReviewed(r.id, !reviewed)}
-                        className="inline-flex items-center gap-1 border rounded px-2 py-1 text-xs hover:bg-gray-50 dark:hover:bg-slate-800
-                                   bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 disabled:opacity-60"
-                      >
-                        {reviewed ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
-                        {reviewed ? 'Unreview' : 'Review'}
-                      </button>
-                      <button
-                        onClick={() => setActive(r)}
-                        className="border rounded px-2 py-1 text-xs hover:bg-gray-50 dark:hover:bg-slate-800
-                                   bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200"
-                      >
-                        Details
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      */}
 
       {/* Pagination (compact: ← 1 2 3 →) */}
       <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-gray-600 dark:text-slate-400">
@@ -610,6 +609,19 @@ export default function SuspiciousActivitiesPage() {
                 {active.reviewed ? 'Mark Unreviewed' : 'Mark Reviewed'}
               </button>
 
+              {/* Delete in modal (opens confirm) */}
+              <button
+                onClick={() => setConfirmDelete(active)}
+                disabled={rowBusy === active.id}
+                className="inline-flex items-center gap-1 border rounded px-3 py-1.5 text-xs
+                           hover:bg-red-50 dark:hover:bg-red-950/30
+                           bg-white dark:bg-slate-900
+                           border-red-300 dark:border-red-700
+                           text-red-600 dark:text-red-400 disabled:opacity-60"
+              >
+                <Trash2 size={14} /> Delete
+              </button>
+
               {active.ipAddresses?.length ? (
                 <button
                   onClick={() => copyToClipboard(active.ipAddresses.join(', '))}
@@ -632,6 +644,40 @@ export default function SuspiciousActivitiesPage() {
                   <Phone size={14} /> Call
                 </a>
               ) : null}
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDelete && (
+        <Modal title="Delete suspicious activity?" onClose={() => !deleting && setConfirmDelete(null)}>
+          <div className="space-y-3 text-sm text-slate-800 dark:text-slate-200">
+            <p>
+              You are about to delete the suspicious record for{' '}
+              <span className="font-medium">{confirmDelete.studentName || 'Unknown user'}</span>.
+            </p>
+            <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded p-3 text-xs">
+              <div><span className="text-slate-500 dark:text-slate-400">Reason:</span> {confirmDelete.reason || '—'}</div>
+              <div><span className="text-slate-500 dark:text-slate-400">IPs:</span> {joinList(confirmDelete.ipAddresses)}</div>
+              <div><span className="text-slate-500 dark:text-slate-400">Created:</span> {fmtDate(confirmDelete.createdAt)}</div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                className="px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 disabled:opacity-60"
+                onClick={() => setConfirmDelete(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-3 py-1.5 rounded border border-red-600 bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                onClick={confirmDeleteActivity}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
             </div>
           </div>
         </Modal>
