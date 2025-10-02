@@ -18,6 +18,7 @@ import {
   Edit,
   Sun,
   Moon,
+  NotebookPen,
 } from 'lucide-react';
 
 import '../globals.css';
@@ -111,7 +112,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       { label: 'Authentication', href: '/authentication', icon: Lock },
       { label: 'View Courses', href: '/view-course', icon: BookOpen },
       { label: 'Zoom Meeting', href: '/create-link', icon: Edit },
-      { label: 'Suspicious User', href: 'suspicious-user', icon: Sun },
+      { label: 'Suspicious User', href: '/suspicious-user', icon: Sun },
+      {label: 'Login Activity', href : "/login-activity", icon: NotebookPen}
     ],
     []
   );
