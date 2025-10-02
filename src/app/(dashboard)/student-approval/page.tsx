@@ -7,7 +7,6 @@ import TableComponent, { TableColumn } from '@/components/TableComponent';
 import Modal from '@/components/Modal';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { api } from '@/lib/api';
-import page from '../payfail/page';
 
 /* =========================
    API Types
@@ -61,23 +60,22 @@ function parseAllowedCourses(jsonStr?: string): string[] {
 ========================= */
 export default function StudentApprovalPage() {
   // filters
-  
   const [approvedFilter, setApprovedFilter] = useState<'' | 'Y' | 'N'>('');
   const [feesFilter, setFeesFilter] = useState<'' | 'Y' | 'N'>('');
   const [courseFilter, setCourseFilter] = useState<string>(''); // courseId
   const [searchTerm, setSearchTerm] = useState<string>('');
-    const [debouncedSearch] = useDebounce(searchTerm, 700); // ✅ debounce added here
-  // search + pagination
+  const [debouncedSearch] = useDebounce(searchTerm, 700); // ✅ single debounce source
+
+  // pagination (server-mode)
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
-  const [totalItems, setTotalItems] = useState<number>(0);
+  const [totalItems, setTotalItems] = useState<number>(0); // ✅ always from server
 
-
-  // data (master list from server; we'll apply course filter client-side)
+  // data (master list from server; we’ll apply course filter client-side for the current page only)
   const [serverRows, setServerRows] = useState<UserApiItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // courses (fetch all pages with page=1&limit=2)
+  // courses
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
 
@@ -89,18 +87,17 @@ export default function StudentApprovalPage() {
   const [accessSelections, setAccessSelections] = useState<string[]>([]);
   const [savingAccess, setSavingAccess] = useState(false);
 
-  // NEW: Edit User modal
+  // Edit User modal
   const [editUser, setEditUser] = useState<UserApiItem | null>(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPassword, setEditPassword] = useState(''); // optional; send only if non-empty
   const [editContact, setEditContact] = useState('');
   const [editParentsContact, setEditParentsContact] = useState('');
-  const [editRoleId, setEditRoleId] = useState('');     // text input; replace with roles dropdown if available
   const [editCourseIds, setEditCourseIds] = useState<string[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
 
-  // NEW: Delete user confirmation modal
+  // Delete user confirmation modal
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [deleteUserName, setDeleteUserName] = useState<string>('');
 
@@ -110,7 +107,7 @@ export default function StudentApprovalPage() {
     [courses]
   );
 
-  /* Load ALL courses using page=1&limit=2 (iterate totalPages) */
+  /* Load ALL courses (iterate total pages) */
   useEffect(() => {
     (async () => {
       setLoadingCourses(true);
@@ -141,21 +138,25 @@ export default function StudentApprovalPage() {
     })();
   }, []);
 
-  /* Fetch users from server (no courseId filter here; backend likely ignores it) */
- async function fetchUsers() {
+  /* Fetch users from server (server pagination + server search) */
+  async function fetchUsers() {
     setLoading(true);
     try {
       const res = await api.get<UsersResponse>('/users/get-all-users', {
         isBlocked: 'N',
         page: currentPage,
-        limit: itemsPerPage, // ✅ respects selected page limit
-        search: debouncedSearch || undefined, // ✅ debounce applied
+        limit: itemsPerPage,          // ✅ uses selected per-page
+        search: debouncedSearch || undefined, // ✅ debounced search
         isApproved: approvedFilter || undefined,
         isFeesPaid: feesFilter || undefined,
       });
 
-      const students = (res.data || []).filter((u) => u.roleName.toLowerCase() === 'student');
+      const students = (res.data || []).filter(
+        (u) => (u.roleName || '').toLowerCase() === 'student'
+      );
       setServerRows(students);
+
+      // ✅ ALWAYS use server total for pagination — not the filtered length
       setTotalItems(res.pagination?.total ?? students.length);
     } catch {
       setServerRows([]);
@@ -168,10 +169,9 @@ export default function StudentApprovalPage() {
   useEffect(() => {
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [approvedFilter, feesFilter, debouncedSearch, currentPage, itemsPerPage]); // ✅ debounce included
+  }, [approvedFilter, feesFilter, debouncedSearch, currentPage, itemsPerPage]);
 
-
-  /* Apply course filter CLIENT-SIDE */
+  /* Apply course filter CLIENT-SIDE on current page rows */
   const filteredByCourse = useMemo(() => {
     if (!courseFilter) return serverRows;
     return serverRows.filter((u) => {
@@ -180,7 +180,7 @@ export default function StudentApprovalPage() {
     });
   }, [serverRows, courseFilter]);
 
-  /* Derive table data with S.No AFTER local course filter */
+  /* Derive table data with S.No AFTER local course filter (for current page view) */
   const tableData = useMemo(
     () =>
       filteredByCourse.map((u, idx) => ({
@@ -189,9 +189,6 @@ export default function StudentApprovalPage() {
       })),
     [filteredByCourse, currentPage, itemsPerPage]
   );
-
-  /* Adjust the visible total to reflect local course filter */
-  const visibleTotal = filteredByCourse.length;
 
   /* Actions */
   async function makeStudentFree(id: string) {
@@ -237,10 +234,9 @@ export default function StudentApprovalPage() {
     setEditUser(user);
     setEditName(user.name || '');
     setEditEmail(user.email || '');
-    setEditPassword(''); // blank by default; send only if changed
+    setEditPassword(''); // blank by default
     setEditContact(user.contact || '');
     setEditParentsContact(user.parentsContact || '');
-    setEditRoleId('');   // no roleId available in list; keep editable text
     setEditCourseIds(parseAllowedCourses(user.allowedCourses));
   }
 
@@ -254,18 +250,14 @@ export default function StudentApprovalPage() {
     if (!editUser) return;
     setSavingEdit(true);
     try {
-      // Build body with required keys; include password only if provided
       const body: any = {
         name: editName.trim(),
         email: editEmail.trim(),
         contact: editContact.trim(),
-        roleId: '72820b17-a80f-4707-9ed8-e15d92902a2b', // keep as free text unless you have a roles API
         courseIds: editCourseIds,
         parentsContact: editParentsContact.trim(),
       };
-      if (editPassword.trim()) {
-        body.password = editPassword.trim();
-      }
+      if (editPassword.trim()) body.password = editPassword.trim();
 
       await api.patch(`/users/update-user/${editUser.id}`, body);
       setEditUser(null);
@@ -273,7 +265,6 @@ export default function StudentApprovalPage() {
       fetchUsers();
     } catch {
       setSavingEdit(false);
-      // keep modal open on error
     }
   }
 
@@ -288,15 +279,12 @@ export default function StudentApprovalPage() {
       await api.delete(`/users/delete-user/${id}`);
       setDeleteUserId(null);
       setDeleteUserName('');
-      // If the deletion removed the last item on the current page, go back a page
       if (serverRows.length === 1 && currentPage > 1) {
         setCurrentPage((p) => p - 1);
       } else {
-        // refresh in-place
         fetchUsers();
       }
     } catch {
-      // close anyway; you can toast an error if you have a toaster
       setDeleteUserId(null);
       setDeleteUserName('');
     }
@@ -315,7 +303,6 @@ export default function StudentApprovalPage() {
         render: (v: string) =>
           v ? v : <span className="text-xs text-gray-400 dark:text-slate-500">—</span>,
       },
-
       {
         header: 'Courses',
         accessor: 'allowedCourses',
@@ -385,7 +372,7 @@ export default function StudentApprovalPage() {
     [courseMap]
   );
 
-  /* Toolbar with filters + search */
+  /* Toolbar with course filter + our own debounced search */
   const toolbarLeft = (
     <div className="flex flex-wrap items-center gap-2">
       <label className="text-sm text-gray-600 dark:text-slate-400 ml-1">Course</label>
@@ -437,6 +424,7 @@ export default function StudentApprovalPage() {
           columns={columns}
           data={tableData}
           serverMode
+          /* server-side pagination (limit works now because totalItems is server total) */
           currentPage={currentPage}
           onPageChange={setCurrentPage}
           itemsPerPage={itemsPerPage}
@@ -444,14 +432,10 @@ export default function StudentApprovalPage() {
             setItemsPerPage(n);
             setCurrentPage(1);
           }}
-          totalItems={visibleTotal}
+          totalItems={totalItems}            // ✅ server total
+          /* custom toolbar (filters + our own search) */
           toolbarLeft={toolbarLeft}
-          hideSearch
-          searchTerm={searchTerm}
-          onSearchTermChange={(v) => {
-            setSearchTerm(v);
-            setCurrentPage(1);
-          }}
+          hideSearch                       // ✅ use our own debounced search input
         />
       </div>
 
