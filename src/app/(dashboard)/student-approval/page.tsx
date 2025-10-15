@@ -23,6 +23,7 @@ type UserApiItem = {
   isBlocked: 'Y' | 'N';
   allowedCourses: string; // JSON string array of courseIds
   roleName: string;
+  remarks: string;
 };
 
 type UsersResponse = {
@@ -34,6 +35,7 @@ type UsersResponse = {
 };
 
 type CourseItem = { id: string; title: string };
+type ReasonItem = { id: string; title: string };
 type CoursesResponse = {
   status: number;
   success: boolean;
@@ -77,7 +79,15 @@ export default function StudentApprovalPage() {
 
   // courses
   const [courses, setCourses] = useState<CourseItem[]>([]);
+  const [reason, setReason] = useState<ReasonItem[]>([
+    { id: '1', title: 'Fees Not Paid, Kindly Contact Coordinator +923182248934' },
+    { id: '2', title: 'Assignment Not Submitted on time, Kindly Contact Coordinator +923182248934' },
+
+  ]);
+
   const [loadingCourses, setLoadingCourses] = useState(false);
+  const [loadingReason, setLoadingReason] = useState(false);
+  const [removeReason, setRemoveReason] = useState(false);
 
   // modals (Make Free)
   const [makeFreeId, setMakeFreeId] = useState<string | null>(null);
@@ -95,6 +105,7 @@ export default function StudentApprovalPage() {
   const [editContact, setEditContact] = useState('');
   const [editParentsContact, setEditParentsContact] = useState('');
   const [editCourseIds, setEditCourseIds] = useState<string[]>([]);
+  const [reasonSelection, setReasonSelection] = useState<string[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Delete user confirmation modal
@@ -143,7 +154,8 @@ export default function StudentApprovalPage() {
     setLoading(true);
     try {
       const res = await api.get<UsersResponse>('/users/get-all-users', {
-        isBlocked: 'N',
+        
+         
         page: currentPage,
         limit: itemsPerPage,          // ✅ uses selected per-page
         search: debouncedSearch || undefined, // ✅ debounced search
@@ -151,8 +163,7 @@ export default function StudentApprovalPage() {
         isFeesPaid: feesFilter || undefined,
       });
 
-      const students = (res.data || []).filter(
-        (u) => (u.roleName || '').toLowerCase() === 'student'
+      const students = (res.data || []).filter((u) => u.roleName === 'student'
       );
       setServerRows(students);
 
@@ -245,7 +256,11 @@ export default function StudentApprovalPage() {
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   }
-
+function toggleReason(title: string) {
+   setReasonSelection((prev) =>
+      prev.includes(title) ? prev.filter((x) => x !== title) : [...prev, title]
+    );
+  }
   async function saveEditedUser() {
     if (!editUser) return;
     setSavingEdit(true);
@@ -274,6 +289,27 @@ export default function StudentApprovalPage() {
     setDeleteUserName(user.name || user.email || 'this user');
   }
 
+  async function handleGiveAccess(id: string) {
+     try {
+      await api.patch(`/users/give-user-access/${id}`,{"reason":"Approved by Admin"});
+
+    } catch {
+      console.log('error in access');
+
+    }
+  }
+  async function handleRemoveAccess(id: string,reason: string[]) {
+     try {
+      const res = await api.patch(`/users/revoke-user-access/${id}`,
+        {"reason":reason[0]});
+      setReasonSelection([])
+     setRemoveReason(false)
+      
+    } catch {
+      console.log('error in access');
+
+    }
+  }
   async function deleteUser(id: string) {
     try {
       await api.delete(`/users/delete-user/${id}`);
@@ -494,7 +530,7 @@ export default function StudentApprovalPage() {
 
       {/* Edit User Modal */}
       {editUser && (
-        <Modal title={`Edit User — ${editUser.name}`} onClose={() => setEditUser(null)}>
+        <Modal title={`Edit User — ${editUser.name}`} statusUser={editUser.isBlocked} onClose={() => setEditUser(null)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Name</label>
@@ -552,7 +588,50 @@ export default function StudentApprovalPage() {
                 placeholder="9876543210"
               />
             </div>
-
+    <div className="md:col-span-2">
+              <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Access Permision</label>
+              <div className="max-h-56 overflow-auto border rounded p-3 border-gray-200 dark:border-slate-700">
+                   <button
+              className="px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
+                         dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60"
+              onClick={() => handleGiveAccess(editUser.id)}
+            >
+              Give Access
+            </button>
+                  <button
+              className="px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
+                         dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60"
+              onClick={() => setRemoveReason(true)}
+            >
+              Remove Access
+            </button>
+            {loadingReason && <p className="text-sm text-gray-500 dark:text-slate-400">Loading reasons…</p>}
+            {removeReason && (
+              <div className="mt-2 mb-4 ">
+                <p>Reason for removal:</p>
+                {reason.map((c) => {
+                  const checked = reasonSelection.includes(c.title);
+                  return (
+                    <label key={c.id} className="flex items-center gap-2 py-1">
+                      <input type="checkbox" checked={checked} onChange={() => toggleReason(c.title)} />
+                      <span className="text-sm text-gray-800 dark:text-slate-100">{c.title}</span>
+                    </label>
+                  );
+                })}
+              <div className="flex justify-end gap-2 mt-2">
+        
+            <button
+              className="px-3 py-1 rounded text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60
+                         dark:bg-indigo-600 dark:hover:bg-indigo-500"
+              onClick={() => handleRemoveAccess(editUser.id,reasonSelection)}
+            >
+              Remove Access
+            </button>
+          </div>
+              </div>
+            )}
+              </div>
+            </div>
             <div className="md:col-span-2">
               <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Course Access</label>
               <div className="max-h-56 overflow-auto border rounded p-3 border-gray-200 dark:border-slate-700">
@@ -607,3 +686,4 @@ export default function StudentApprovalPage() {
     </main>
   );
 }
+

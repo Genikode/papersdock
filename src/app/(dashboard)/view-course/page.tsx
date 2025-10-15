@@ -9,13 +9,26 @@ import { api } from '@/lib/api';
 import { PlusCircle, Edit2, Trash2, Save } from 'lucide-react';
 
 /* =========================
-   Types (match your API)
+   Month Name Helper
+========================= */
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const getMonthName = (num?: number) =>
+  num && num >= 1 && num <= 12 ? monthNames[num - 1] : '—';
+
+/* =========================
+   Types
 ========================= */
 type CourseItem = {
   id: string;
   title: string;
   fees?: string;
   createdAt?: string;
+  startMonth?: number;
+  endMonth?: number;
 };
 
 type CoursesResponse = {
@@ -30,14 +43,14 @@ type CoursesResponse = {
            Page
 ========================= */
 export default function CoursesPage() {
-  // table state (server-driven)
+  // table state
   const [rows, setRows] = useState<CourseItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
-  const [totalItems, setTotalItems] = useState<number>(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
   // modals
   const [showAdd, setShowAdd] = useState(false);
@@ -47,12 +60,16 @@ export default function CoursesPage() {
   // add form
   const [addTitle, setAddTitle] = useState('');
   const [addFees, setAddFees] = useState('');
+  const [startMonth, setStartMonth] = useState<number>(1);
+  const [endMonth, setEndMonth] = useState<number>(12);
   const [savingAdd, setSavingAdd] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
   // edit form
   const [editTitle, setEditTitle] = useState('');
   const [editFees, setEditFees] = useState('');
+  const [editStartMonth, setEditStartMonth] = useState<number>(1);
+  const [editEndMonth, setEditEndMonth] = useState<number>(12);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
@@ -62,7 +79,7 @@ export default function CoursesPage() {
     try {
       const res = await api.get<CoursesResponse>('/courses/get-all-courses', {
         page: currentPage,
-        limit: itemsPerPage, // the sample shows limit=2; we pass the actual per-page the user selects
+        limit: itemsPerPage,
         search: searchTerm || '',
       });
       setRows(res.data || []);
@@ -77,10 +94,9 @@ export default function CoursesPage() {
 
   useEffect(() => {
     fetchCourses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, itemsPerPage, searchTerm]);
 
-  /* table rows with S.No (do not show ID) */
+  /* table rows */
   const tableData = useMemo(
     () =>
       rows.map((r, idx) => ({
@@ -98,7 +114,17 @@ export default function CoursesPage() {
       {
         header: 'Fees',
         accessor: 'fees',
-        render: (v?: string) => (v ? `PKR${v}` : '—'),
+        render: (v?: string) => (v ? `PKR ${v}` : '—'),
+      },
+      {
+        header: 'Start Month',
+        accessor: 'startMonth',
+        render: (v?: number) => getMonthName(v),
+      },
+      {
+        header: 'End Month',
+        accessor: 'endMonth',
+        render: (v?: number) => getMonthName(v),
       },
       {
         header: 'Actions',
@@ -109,9 +135,12 @@ export default function CoursesPage() {
               className="hover:text-blue-600"
               title="Update"
               onClick={() => {
-                setShowEdit(row as CourseItem);
-                setEditTitle((row as CourseItem).title || '');
-                setEditFees((row as CourseItem).fees || '');
+                const item = row as CourseItem;
+                setShowEdit(item);
+                setEditTitle(item.title || '');
+                setEditFees(item.fees || '');
+                setEditStartMonth(item.startMonth || 1);
+                setEditEndMonth(item.endMonth || 12);
                 setEditError(null);
               }}
             >
@@ -143,12 +172,15 @@ export default function CoursesPage() {
     try {
       await api.post('/courses/create-course', {
         title: addTitle.trim(),
-        fees: (addFees || '').trim() || undefined,
+        fees: addFees ? addFees.trim() : undefined,
+        startMonth,
+        endMonth,
       });
       setShowAdd(false);
       setAddTitle('');
       setAddFees('');
-      // refresh (back to page 1 to show newly added on top if backend orders that way)
+      setStartMonth(1);
+      setEndMonth(12);
       setCurrentPage(1);
       fetchCourses();
     } catch (err: any) {
@@ -158,7 +190,7 @@ export default function CoursesPage() {
     }
   }
 
-  /* update course (per your body only needs title) */
+  /* update course */
   async function handleEditCourse(e: React.FormEvent) {
     e.preventDefault();
     if (!showEdit) return;
@@ -171,7 +203,9 @@ export default function CoursesPage() {
     try {
       await api.patch(`/courses/update-course/${showEdit.id}`, {
         title: editTitle.trim(),
-        fees: (editFees || '').trim() || undefined,
+        fees: editFees ? Number(editFees) : undefined,
+        startMonth: editStartMonth,
+        endMonth: editEndMonth,
       });
       setShowEdit(null);
       fetchCourses();
@@ -188,7 +222,6 @@ export default function CoursesPage() {
     try {
       await api.delete(`/courses/delete-course/${deleteId}`);
       setDeleteId(null);
-      // if last on page, go back one page
       if (rows.length === 1 && currentPage > 1) {
         setCurrentPage((p) => p - 1);
       } else {
@@ -199,176 +232,210 @@ export default function CoursesPage() {
     }
   }
 
-  /* toolbar: just the Add button (search stays in TableComponent) */
-const toolbarLeft = (
-  <div className="w-full flex flex-wrap items-center gap-2">
-    <button
-      onClick={() => {
-        setShowAdd(true);
-        setAddError(null);
-      }}
-      className="inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm
-                 border border-slate-300 dark:border-slate-700
-                 bg-white dark:bg-slate-900
-                 text-slate-900 dark:text-slate-100
-                 hover:bg-slate-50 dark:hover:bg-slate-800"
-    >
-      <PlusCircle size={16} />
-      Add Course
-    </button>
-  </div>
-);
-
-return (
-  <main className="min-h-screen p-4 sm:p-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-    <PageHeader title="Courses" description="Create, update, and manage courses" />
-
-    <div className="rounded-md shadow-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-      {loading && (
-        <p className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400">Loading courses…</p>
-      )}
-      <TableComponent
-        columns={columns}
-        data={tableData}
-        serverMode
-        toolbarLeft={toolbarLeft}
-        searchTerm={searchTerm}
-        onSearchTermChange={(v) => {
-          setCurrentPage(1);
-          setSearchTerm(v);
+  /* toolbar */
+  const toolbarLeft = (
+    <div className="w-full flex flex-wrap items-center gap-2">
+      <button
+        onClick={() => {
+          setShowAdd(true);
+          setAddError(null);
         }}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        onItemsPerPageChange={(n) => {
-          setCurrentPage(1);
-          setItemsPerPage(n);
-        }}
-        totalItems={totalItems}
-      />
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded text-sm
+                   border border-slate-300 dark:border-slate-700
+                   bg-white dark:bg-slate-900
+                   text-slate-900 dark:text-slate-100
+                   hover:bg-slate-50 dark:hover:bg-slate-800"
+      >
+        <PlusCircle size={16} />
+        Add Course
+      </button>
     </div>
+  );
 
-    {/* Add Course Modal */}
-    {showAdd && (
-      <Modal title="Add Course" onClose={() => setShowAdd(false)}>
-        <form onSubmit={handleAddCourse} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">
-              Title
-            </label>
-            <input
-              type="text"
-              value={addTitle}
-              onChange={(e) => setAddTitle(e.target.value)}
-              placeholder="e.g. Advanced Node.js Masterclass"
-              className="w-full rounded px-3 py-2 text-sm
-                         bg-white dark:bg-slate-900
-                         text-slate-900 dark:text-slate-100
-                         placeholder:text-slate-400 dark:placeholder:text-slate-500
-                         border border-slate-300 dark:border-slate-700
-                         focus:outline-none focus:ring-2 focus:ring-blue-500/60"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">
-              Fees
-            </label>
-            <input
-              type="text"
-              value={addFees}
-              onChange={(e) => setAddFees(e.target.value)}
-              placeholder="e.g. 99"
-              className="w-full rounded px-3 py-2 text-sm
-                         bg-white dark:bg-slate-900
-                         text-slate-900 dark:text-slate-100
-                         placeholder:text-slate-400 dark:placeholder:text-slate-500
-                         border border-slate-300 dark:border-slate-700
-                         focus:outline-none focus:ring-2 focus:ring-blue-500/60"
-            />
-          </div>
-          {addError && <p className="text-sm text-red-700 dark:text-red-400">{addError}</p>}
-          <button
-            type="submit"
-            disabled={savingAdd}
-            className="w-full rounded py-2 text-sm inline-flex items-center justify-center gap-2
-                       bg-slate-900 text-white hover:opacity-90 disabled:opacity-60
-                       dark:bg-slate-100 dark:text-slate-900"
-          >
-            <Save size={16} />
-            {savingAdd ? 'Saving…' : 'Save Course'}
-          </button>
-        </form>
-      </Modal>
-    )}
+  return (
+    <main className="min-h-screen p-4 sm:p-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      <PageHeader title="Courses" description="Create, update, and manage courses" />
 
-    {/* Edit Course Modal */}
-    {showEdit && (
-      <Modal title="Update Course" onClose={() => setShowEdit(null)}>
-        <form onSubmit={handleEditCourse} className="space-y-4">
-          <div className="grid grid-cols-1 gap-3">
+      <div className="rounded-md shadow-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        {loading && (
+          <p className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400">
+            Loading courses…
+          </p>
+        )}
+        <TableComponent
+          columns={columns}
+          data={tableData}
+          serverMode
+          toolbarLeft={toolbarLeft}
+          searchTerm={searchTerm}
+          onSearchTermChange={(v) => {
+            setCurrentPage(1);
+            setSearchTerm(v);
+          }}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(n) => {
+            setCurrentPage(1);
+            setItemsPerPage(n);
+          }}
+          totalItems={totalItems}
+        />
+      </div>
+
+      {/* Add Modal */}
+      {showAdd && (
+        <Modal title="Add Course" onClose={() => setShowAdd(false)}>
+          <form onSubmit={handleAddCourse} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">
-                Title
-              </label>
+              <label className="block text-sm font-medium mb-1">Title</label>
+              <input
+                type="text"
+                value={addTitle}
+                onChange={(e) => setAddTitle(e.target.value)}
+                placeholder="e.g. Advanced Node.js Masterclass"
+                className="w-full rounded px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Fees</label>
+              <input
+                type="text"
+                value={addFees}
+                onChange={(e) => setAddFees(e.target.value)}
+                placeholder="e.g. 99"
+                className="w-full rounded px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Start Month</label>
+              <select
+                value={startMonth}
+                onChange={(e) => setStartMonth(Number(e.target.value))}
+                className="w-full rounded px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+              >
+                {monthNames.map((m, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">End Month</label>
+              <select
+                value={endMonth}
+                onChange={(e) => setEndMonth(Number(e.target.value))}
+                className="w-full rounded px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+              >
+                {monthNames.map((m, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {addError && <p className="text-sm text-red-700">{addError}</p>}
+
+            <button
+              type="submit"
+              disabled={savingAdd}
+              className="w-full rounded py-2 text-sm inline-flex items-center justify-center gap-2
+                         bg-slate-900 text-white hover:opacity-90 disabled:opacity-60
+                         dark:bg-slate-100 dark:text-slate-900"
+            >
+              <Save size={16} />
+              {savingAdd ? 'Saving…' : 'Save Course'}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {/* Edit Modal */}
+      {showEdit && (
+        <Modal title="Update Course" onClose={() => setShowEdit(null)}>
+          <form onSubmit={handleEditCourse} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Title</label>
               <input
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Updated title"
-                className="w-full rounded px-3 py-2 text-sm
-                           bg-white dark:bg-slate-900
-                           text-slate-900 dark:text-slate-100
-                           placeholder:text-slate-400 dark:placeholder:text-slate-500
-                           border border-slate-300 dark:border-slate-700
-                           focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+                className="w-full rounded px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
               />
             </div>
 
-            {/* Intentionally not editing fees here to match your PATCH body spec */}
             <div>
-              <label className="block text-sm font-medium mb-1 text-slate-900 dark:text-slate-100">
-                Fees
-              </label>
+              <label className="block text-sm font-medium mb-1">Fees</label>
               <input
                 type="text"
                 value={editFees}
                 onChange={(e) => setEditFees(e.target.value)}
                 placeholder="e.g. 99"
-                className="w-full rounded px-3 py-2 text-sm
-                           bg-white dark:bg-slate-900
-                           text-slate-900 dark:text-slate-100
-                           placeholder:text-slate-400 dark:placeholder:text-slate-500
-                           border border-slate-300 dark:border-slate-700
-                           focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+                className="w-full rounded px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
               />
             </div>
-          </div>
 
-          {editError && <p className="text-sm text-red-700 dark:text-red-400">{editError}</p>}
-          <button
-            type="submit"
-            disabled={savingEdit}
-            className="w-full rounded py-2 text-sm inline-flex items-center justify-center gap-2
-                       bg-slate-900 text-white hover:opacity-90 disabled:opacity-60
-                       dark:bg-slate-100 dark:text-slate-900"
-          >
-            <Save size={16} />
-            {savingEdit ? 'Saving…' : 'Save Changes'}
-          </button>
-        </form>
-      </Modal>
-    )}
+            <div>
+              <label className="block text-sm font-medium mb-1">Start Month</label>
+              <select
+                value={editStartMonth}
+                onChange={(e) => setEditStartMonth(Number(e.target.value))}
+                className="w-full rounded px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+              >
+                {monthNames.map((m, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-    {/* Delete Confirmation */}
-    {deleteId && (
-      <ConfirmationModal
-        title="Delete Course"
-        description="Are you sure you want to delete this course?"
-        onCancel={() => setDeleteId(null)}
-        onConfirm={handleDelete}
-      />
-    )}
-  </main>
-);
+            <div>
+              <label className="block text-sm font-medium mb-1">End Month</label>
+              <select
+                value={editEndMonth}
+                onChange={(e) => setEditEndMonth(Number(e.target.value))}
+                className="w-full rounded px-3 py-2 text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"
+              >
+                {monthNames.map((m, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
 
+            {editError && <p className="text-sm text-red-700">{editError}</p>}
+
+            <button
+              type="submit"
+              disabled={savingEdit}
+              className="w-full rounded py-2 text-sm inline-flex items-center justify-center gap-2
+                         bg-slate-900 text-white hover:opacity-90 disabled:opacity-60
+                         dark:bg-slate-100 dark:text-slate-900"
+            >
+              <Save size={16} />
+              {savingEdit ? 'Saving…' : 'Save Changes'}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteId && (
+        <ConfirmationModal
+          title="Delete Course"
+          description="Are you sure you want to delete this course?"
+          onCancel={() => setDeleteId(null)}
+          onConfirm={handleDelete}
+        />
+      )}
+    </main>
+  );
 }
