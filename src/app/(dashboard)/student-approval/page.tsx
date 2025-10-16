@@ -155,8 +155,7 @@ export default function StudentApprovalPage() {
     setLoading(true);
     try {
       const res = await api.get<UsersResponse>('/users/get-all-users', {
-        
-         
+        courseId: courseFilter || undefined, // ✅ course filter
         page: currentPage,
         limit: itemsPerPage,          // ✅ uses selected per-page
         search: debouncedSearch || undefined, // ✅ debounced search
@@ -181,26 +180,15 @@ export default function StudentApprovalPage() {
   useEffect(() => {
     fetchUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [approvedFilter, feesFilter, debouncedSearch, currentPage, itemsPerPage]);
+  }, [approvedFilter, feesFilter, debouncedSearch, currentPage, itemsPerPage, courseFilter]);
 
   /* Apply course filter CLIENT-SIDE on current page rows */
-  const filteredByCourse = useMemo(() => {
-    if (!courseFilter) return serverRows;
-    return serverRows.filter((u) => {
-      const ids = parseAllowedCourses(u.allowedCourses);
-      return ids.includes(courseFilter);
-    });
-  }, [serverRows, courseFilter]);
 
   /* Derive table data with S.No AFTER local course filter (for current page view) */
-  const tableData = useMemo(
-    () =>
-      filteredByCourse.map((u, idx) => ({
-        ...u,
-        sNo: (currentPage - 1) * itemsPerPage + idx + 1,
-      })),
-    [filteredByCourse, currentPage, itemsPerPage]
-  );
+  const tableData = serverRows.map((u, idx) => ({
+    ...u,
+    sNo: (currentPage - 1) * itemsPerPage + idx + 1,
+  }));
 
   /* Actions */
   async function makeStudentFree(id: string) {
