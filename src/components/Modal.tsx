@@ -24,7 +24,7 @@ export default function Modal({ title, onClose, children, statusUser }: ModalPro
           {statusUser && (
           <div className="text-sm text-slate-500 dark:text-slate-400">
             {statusUser?.includes('Fees Not Paid') ? (
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Inactive due to{statusUser}</span>
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Inactive due to {statusUser}</span>
             ) : statusUser?.includes('Assignment Not Submitted') ? (
               <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">Inactive due to {statusUser}</span>
             ) : statusUser.includes("") ? (
