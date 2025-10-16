@@ -23,11 +23,19 @@ export default function Modal({ title, onClose, children, statusUser }: ModalPro
           {/* Status of User */}
           {statusUser && (
           <div className="text-sm text-slate-500 dark:text-slate-400">
-            {statusUser?.includes('N') ? (
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Active</span>
-            ) :  (
-              <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">Inactive</span>
-            )}
+            {statusUser?.includes('Fees Not Paid') ? (
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Inactive due to{statusUser}</span>
+            ) : statusUser?.includes('Assignment Not Submitted') ? (
+              <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">Inactive due to {statusUser}</span>
+            ) : statusUser.includes("") ? (
+              <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full">Active</span>
+            ): null}
+            
+          </div>
+          )}
+            {statusUser == null && (
+          <div className="text-sm text-slate-500 dark:text-slate-400">
+            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">Active</span>
             
           </div>
           )}

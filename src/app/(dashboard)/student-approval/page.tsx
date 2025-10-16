@@ -80,8 +80,8 @@ export default function StudentApprovalPage() {
   // courses
   const [courses, setCourses] = useState<CourseItem[]>([]);
   const [reason, setReason] = useState<ReasonItem[]>([
-    { id: '1', title: 'Fees Not Paid, Kindly Contact Coordinator +923182248934' },
-    { id: '2', title: 'Assignment Not Submitted on time, Kindly Contact Coordinator +923182248934' },
+    { id: '1', title: 'Fees Not Paid' },
+    { id: '2', title: 'Assignment Not Submitted' },
 
   ]);
 
@@ -111,7 +111,8 @@ export default function StudentApprovalPage() {
   // Delete user confirmation modal
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [deleteUserName, setDeleteUserName] = useState<string>('');
-
+  const [savingDelete, setSavingDelete] = useState(false);
+  const [savingGrant, setSavingGrant] = useState(false);
   // Build id -> title map
   const courseMap = useMemo(
     () => Object.fromEntries(courses.map((c) => [c.id, c.title])),
@@ -275,6 +276,8 @@ function toggleReason(title: string) {
       if (editPassword.trim()) body.password = editPassword.trim();
 
       await api.patch(`/users/update-user/${editUser.id}`, body);
+      setSavingGrant(false);
+      setSavingDelete(false);
       setEditUser(null);
       setSavingEdit(false);
       fetchUsers();
@@ -291,6 +294,7 @@ function toggleReason(title: string) {
 
   async function handleGiveAccess(id: string) {
      try {
+  
       await api.patch(`/users/give-user-access/${id}`,{"reason":"Approved by Admin"});
 
     } catch {
@@ -301,9 +305,10 @@ function toggleReason(title: string) {
   async function handleRemoveAccess(id: string,reason: string[]) {
      try {
       const res = await api.patch(`/users/revoke-user-access/${id}`,
-        {"reason":reason[0]});
+        {"remarks":reason[0]});
       setReasonSelection([])
      setRemoveReason(false)
+      // setSavingDelete(false);
       
     } catch {
       console.log('error in access');
@@ -530,7 +535,7 @@ function toggleReason(title: string) {
 
       {/* Edit User Modal */}
       {editUser && (
-        <Modal title={`Edit User — ${editUser.name}`} statusUser={editUser.isBlocked} onClose={() => setEditUser(null)}>
+        <Modal title={`Edit User — ${editUser.name}`} statusUser={editUser.remarks} onClose={() => setEditUser(null)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Name</label>
@@ -591,17 +596,23 @@ function toggleReason(title: string) {
     <div className="md:col-span-2">
               <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Access Permision</label>
               <div className="max-h-56 overflow-auto border rounded p-3 border-gray-200 dark:border-slate-700">
-                   <button
-              className="px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
-                         dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60"
-              onClick={() => handleGiveAccess(editUser.id)}
-            >
-              Give Access
-            </button>
+                     <button
+                  className={`px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
+                       dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60 ${savingGrant ? 'bg-green-500 dark:bg-green-500' : ''}`}
+                  onClick={() => {
+                  setSavingGrant(true);
+                  handleGiveAccess(editUser.id);
+                  }}
+                >
+                  Give Access
+                </button>
                   <button
-              className="px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
-                         dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60"
-              onClick={() => setRemoveReason(true)}
+              className={`px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
+                         dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60 ${savingDelete ? 'bg-red-500 text-white dark:bg-red-600' : ''}`}
+              onClick={() => {
+                setSavingDelete(true);
+                setRemoveReason(true);
+              }}
             >
               Remove Access
             </button>
