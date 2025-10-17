@@ -214,7 +214,7 @@ export default function TableComponent({
                       {/* Wrap cell content so long text will break/wrap after a threshold.
                           Use `break-all` for name/email to force breaks inside long continuous text. */}
                       <div
-                        className={`max-w-[30ch] whitespace-normal overflow-hidden ${
+                        className={`  ${
                           ['email', 'name'].includes(((col.accessor || "") as string).toLowerCase())
                             ? 'break-all'
                             : 'break-words'
