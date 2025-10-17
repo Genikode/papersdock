@@ -584,7 +584,7 @@ function toggleReason(title: string) {
     <div className="md:col-span-2">
               <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Access Permision</label>
               <div className="max-h-56 overflow-auto border rounded p-3 border-gray-200 dark:border-slate-700">
-                     <button
+                     <button disabled={editUser?.isBlocked==='Y'?false:true}
                   className={`px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
                        dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60 ${savingGrant ? 'bg-green-500 dark:bg-green-500' : ''}`}
                   onClick={() => {
@@ -594,7 +594,7 @@ function toggleReason(title: string) {
                 >
                   Give Access
                 </button>
-                  <button
+                  <button disabled={editUser?.isBlocked==='Y'?true:false}
               className={`px-3 py-1 border rounded border-gray-300 text-gray-800 hover:bg-gray-50
                          dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/60 ${savingDelete ? 'bg-red-500 text-white dark:bg-red-600' : ''}`}
               onClick={() => {
@@ -612,41 +612,41 @@ function toggleReason(title: string) {
                   const checked = reasonSelection.includes(c.title);
                   return (
                     <label key={c.id} className="flex items-center gap-2 py-1">
-                      <input type="checkbox" checked={checked} onChange={() => toggleReason(c.title)} />
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          if (!checked && editUser) {
+                            setReasonSelection([c.title]);
+                            handleRemoveAccess(editUser.id, [c.title]);
+                          }
+                        }}
+                      />
                       <span className="text-sm text-gray-800 dark:text-slate-100">{c.title}</span>
                     </label>
                   );
                 })}
-              <div className="flex justify-end gap-2 mt-2">
-        
-            <button
-              className="px-3 py-1 rounded text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60
-                         dark:bg-indigo-600 dark:hover:bg-indigo-500"
-              onClick={() => handleRemoveAccess(editUser.id,reasonSelection)}
-            >
-              Remove Access
-            </button>
-          </div>
+             
               </div>
             )}
               </div>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm mb-1 text-gray-700 dark:text-slate-300">Course Access</label>
-              <div className="max-h-56 overflow-auto border rounded p-3 border-gray-200 dark:border-slate-700">
+                <div className="h-25 overflow-y-auto border rounded p-3 border-gray-200 dark:border-slate-700">
                 {courses.length === 0 && (
                   <p className="text-sm text-gray-500 dark:text-slate-400">No courses found.</p>
                 )}
                 {courses.map((c) => {
                   const checked = editCourseIds.includes(c.id);
                   return (
-                    <label key={c.id} className="flex items-center gap-2 py-1">
-                      <input type="checkbox" checked={checked} onChange={() => toggleCourseInEdit(c.id)} />
-                      <span className="text-sm text-gray-800 dark:text-slate-100">{c.title}</span>
-                    </label>
+                  <label key={c.id} className="flex items-center gap-2 py-1">
+                    <input type="checkbox" checked={checked} onChange={() => toggleCourseInEdit(c.id)} />
+                    <span className="text-sm text-gray-800 dark:text-slate-100">{c.title}</span>
+                  </label>
                   );
                 })}
-              </div>
+                </div>
             </div>
           </div>
 

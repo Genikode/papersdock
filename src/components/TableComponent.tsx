@@ -211,7 +211,17 @@ export default function TableComponent({
                 >
                   {columns.map((col, colIdx) => (
                     <td key={colIdx} className="px-4 py-2 text-slate-800 dark:text-slate-200">
-                      {col.render ? col.render((row as any)[col.accessor], row) : (row as any)[col.accessor]}
+                      {/* Wrap cell content so long text will break/wrap after a threshold.
+                          Use `break-all` for name/email to force breaks inside long continuous text. */}
+                      <div
+                        className={`max-w-[30ch] whitespace-normal overflow-hidden ${
+                          ['email', 'name'].includes(((col.accessor || "") as string).toLowerCase())
+                            ? 'break-all'
+                            : 'break-words'
+                        }`}
+                      >
+                        {col.render ? col.render((row as any)[col.accessor], row) : (row as any)[col.accessor]}
+                      </div>
                     </td>
                   ))}
                 </tr>
