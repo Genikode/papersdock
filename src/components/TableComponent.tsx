@@ -215,7 +215,7 @@ export default function TableComponent({
                           Use `break-all` for name/email to force breaks inside long continuous text. */}
                       <div
                         className={`  ${
-                          ['email', 'name'].includes(((col.accessor || "") as string).toLowerCase())
+                          ['email', 'name', 'contact', 'parentsContact','approvedAt'].includes(((col.accessor || "") as string).toLowerCase())
                             ? 'break-all'
                             : 'break-words'
                         }`}
